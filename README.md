@@ -56,8 +56,8 @@ transformers accelerate scipy ftfy diffusers[torch] concurrent-log-handler \
 ```bash
 git clone https://github.com/dkackman/chiaSWARM.git
 cd chiaSWARM/src
-conda activate swarm # if you created an environment
-python -m swarm.initialize # only needed once - will take a long time if you've never used higging face models
+conda activate swarm # only if you created an environment
+python -m swarm.initialize # only needed once - will take a long time if you've never used hugging face models
 python -m swarm.worker
 ```
 
