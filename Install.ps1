@@ -35,7 +35,7 @@ else
     {
         try
         {
-            py -$version --version 2>&1 >$null
+            python -$version --version 2>&1 >$null
             $result = $?
         }
         catch
