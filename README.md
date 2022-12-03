@@ -1,72 +1,50 @@
 # chiaSWARM
 
-Distributed GPU compute
+Distributed GPU compute or "All these GPUs are idle now. Let's use em!"
 
-## Stabel Diffusion
+## Introduction
 
-Alpha: https://chiaswarm-dev.azurewebsites.net/
+The chiaSWARM is a distirbuted network of GPU nodes, that run AI and ML workloads on behalf of users that may not have the requiisite hardware.
 
-## Worker Node
+Soon(tm) nodes will be able to earn Compute Coins on the [chia blockchain](https://www.chia.net/) which can also be bought and sold.
 
-### Resources
+## Workloads
 
-- [Install nvidia drivers ubuntu](https://linuxconfig.org/how-to-install-the-nvidia-drivers-on-ubuntu-22-04)
-- [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- [NVIDIA Docker Overview](https://hub.docker.com/r/nvidia/cuda) - if you're going to use docker
+### Stable Diffusion
 
-### Prepare the Environment
+The first supported workload is various type of stable diffusion image generation and manipulation.
 
-#### Ubuntu 22.10
+Give it a try on the alpha network at <https://chiaswarm-dev.azurewebsites.net/>!
 
-```bash
-# install linux nvidia drivers
-ubuntu-drivers devices
-sudo ubuntu-drivers autoinstall # reboot after
-sudo apt install nvtop # this is just handy to ahve around
+## Becoming the SWARM
 
-# install miniconda
-curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
-bash /tmp/miniconda.sh
-conda update conda
-```
+While we test the network, nodes arte by invite only. To participate please contat mailto:admin@chiaswarm.ai.
 
-#### Windows
+From the repo root run `sh install.sh` on linux or `install.ps1` on windows.
 
-```powershell
-curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -o Miniconda3-latest-Windows-x86_64.exe
-./Miniconda3-latest-Windows-x86_64.exe
-```
+These scripts will create a virtual environment and install the swarm to it. To run the swarm worker:
 
-### Install Dependencies
+Linux
 
 ```bash
-# create environment
-# this is optional but create an environment now if desired
-conda create --name swarm python==3.10.4
-conda activate swarm
-
-# install dependencies
-conda install pytorch torchvision torchaudio pytorch-cuda=11.6 xformers \
-transformers accelerate scipy ftfy diffusers[torch] concurrent-log-handler \
--c conda-forge -c pytorch -c nvidia -c xformers/label/dev
-```
-
-### Get Code and Run
-
-```bash
-git clone https://github.com/dkackman/chiaSWARM.git
-cd chiaSWARM/src
-conda activate swarm # only if you created an environment
-python -m swarm.initialize # only needed once - will take a long time if you've never used hugging face models
+. ./activate
+python -m swarm.intialize # only needed once
 python -m swarm.worker
 ```
 
-If you see an error about `torch` not being available, leave and re-enter the environment and try again.
+Windows
 
-```bash
-conda deactivate
-conda activate fing
+```powershell
+venv\Scripts\activate
+python -m swarm.intialize # only needed once
+python -m swarm.worker
 ```
+
+The `swarm.intialize` ask for your [huggingface token](https://huggingface.co/docs/hub/security-tokens), your swarm access token and the swarm uri.
+
+The current swarm uri is <https://chiaswarm-dev.azurewebsites.net>.
+
+It will also download all of the needed machine learning models which will take quite some time. It only needs to be run once.
 
 ## Docker
 
@@ -77,11 +55,11 @@ First install the [NVidia Container Toolkit](https://docs.nvidia.com/datacenter/
 The docker image needs a bind mount for the huggingface model cache. Make sure the host machine has the cached models (typically in `~/.cahce/huggingface`).
 
 ```bash
-docker build -t dkackman/fing . -f worker.Dockerfile
+docker build -t chiaSWARM . -f Dockerfile
 docker run -it -v "/home/YOUR_USERNAME/.cache/huggingface:/root/.cache/huggingface/" \
     --gpus all \
     --env HUGGINGFACE_TOKEN=YOUR TOKEN \
     --env SDAAS_TOKEN=YOUR TOKEN \
-    --env SDAAS_URI=http://fing.kackman.net:9511 \
-    dkackman/fing
+    --env SDAAS_URI=https://chiaswarm-dev.azurewebsites.net \
+    chiaSWARM
 ```

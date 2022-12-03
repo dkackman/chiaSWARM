@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "module": "swarm.worker",
-            "cwd": "${workspaceFolder}/src/",
+            "cwd": "${workspaceFolder}/",
             "justMyCode": true
         },        
         {
@@ -17,7 +17,7 @@
             "type": "python",
             "request": "launch",
             "module": "swarm.initialize",
-            "cwd": "${workspaceFolder}/src/",
+            "cwd": "${workspaceFolder}/",
             "justMyCode": true
         }
     ]

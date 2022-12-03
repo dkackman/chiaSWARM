@@ -81,6 +81,7 @@ async def init():
             custom_pipeline=model[2],
         )
     print("done")
+    print("To run the swarm type 'python -m swarm.worker")
 
 
 asyncio.run(init())

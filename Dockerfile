@@ -12,12 +12,11 @@ RUN /miniconda/bin/conda init bash
 RUN /miniconda/bin/conda update conda
 RUN /miniconda/bin/conda update -n base -c defaults conda
 
-RUN /miniconda/bin/conda install pytorch torchvision torchaudio pytorch-cuda=11.6 xformers \
+RUN conda install -n base conda-forge::mamba
+RUN /miniconda/bin/mamba install pytorch torchvision torchaudio pytorch-cuda=11.6 xformers \
 transformers accelerate scipy ftfy diffusers[torch] concurrent-log-handler \
 -c conda-forge -c pytorch -c nvidia -c xformers/label/dev
 
-RUN find /miniconda/ -follow -type f -name '*.a' -delete && \
-    find /miniconda/ -follow -type f -name '*.js.map' -delete
 RUN /miniconda/bin/conda clean -afy
 
 COPY ./src /fing/
