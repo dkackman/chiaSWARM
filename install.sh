@@ -219,12 +219,12 @@ fi
 . ./activate
 # pip 20.x+ supports Linux binary wheels
 python -m pip install --upgrade pip
-python -m pip install wheel
+python -m pip install wheel setuptools
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler
 
 echo ""
-echo "swarm worker installation is now complete."
+echo "chiaSWARM worker installation is now complete."
 echo ""
 echo ""
 echo "Type '. ./activate' and then 'python -m swarm.initialize' to begin."
