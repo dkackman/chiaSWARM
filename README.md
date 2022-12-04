@@ -16,7 +16,7 @@ _This is NOT Proof of Work on chia._
 
 The first supported workload is various type of stable diffusion image generation and manipulation.
 
-Give it a try on the alpha network at <https://chiaswarm-dev.azurewebsites.net/>!
+Open an issue to gain acess and give it a try on the alpha network at <https://chiaswarm-dev.azurewebsites.net/>!
 
 ## Roadmap
 
