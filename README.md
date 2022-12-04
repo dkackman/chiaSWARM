@@ -16,6 +16,17 @@ The first supported workload is various type of stable diffusion image generatio
 
 Give it a try on the alpha network at <https://chiaswarm-dev.azurewebsites.net/>!
 
+## Roadmap
+
+- &check; Netowrking and core protocal
+- &check; Basic stable diffusion workloads (txt2image, img2img, various models)
+- More stable diffusion workloads (inpainting, upscaling, ongoing version bumps)
+- Compute Coin integration (earn, buy, sell, spend)
+- GPT workloads
+- Whatever else catches our fancy
+
+Suggestions, issues and puill requests welcome.
+
 ## Becoming the SWARM
 
 While we test the network, nodes arte by invite only. To participate please contat mailto:admin@chiaswarm.ai.
@@ -24,7 +35,7 @@ From the repo root run `sh install.sh` on linux or `install.ps1` on windows.
 
 These scripts will create a virtual environment and install the swarm to it. To run the swarm worker:
 
-Linux
+### Linux
 
 ```bash
 . ./activate
@@ -32,7 +43,7 @@ python -m swarm.intialize # only needed once
 python -m swarm.worker
 ```
 
-Windows
+### Windows
 
 ```powershell
 venv\Scripts\activate
