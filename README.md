@@ -1,6 +1,6 @@
 # chiaSWARM
 
-Distributed GPU compute or "All these GPUs are idle now. Let's use em for something other than PoW
+Distributed GPU compute or "All these GPUs are idle now. Let's use em for something other than PoW!"
 
 ## Introduction
 
