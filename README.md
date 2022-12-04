@@ -29,6 +29,8 @@ Suggestions, issues and puill requests welcome.
 
 ## Becoming the SWARM
 
+In order to run a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU; 30XX or better recommended. 
+
 While we test the network, nodes are by invite only. To participate please contact mailto:admin@chiaswarm.ai.
 
 From the repo root run `sh install.sh` on linux or `install.ps1` on windows.
