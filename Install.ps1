@@ -15,9 +15,9 @@ if (-not (Get-Item -ErrorAction SilentlyContinue "$env:windir\System32\msvcp140.
     Exit 1
 }
 
-if ($null -eq (Get-Command py -ErrorAction SilentlyContinue))
+if ($null -eq (Get-Command python -ErrorAction SilentlyContinue))
 {
-    Write-Output "Unable to find py"
+    Write-Output "Unable to find python"
     Write-Output "Note the check box during installation of Python to install the Python Launcher for Windows."
     Write-Output ""
     Write-Output "https://docs.python.org/3/using/windows.html#installation-steps"
@@ -35,7 +35,7 @@ else
     {
         try
         {
-            python -$version --version 2>&1 >$null
+            python --version 2>&1 >$null
             $result = $?
         }
         catch
@@ -59,11 +59,11 @@ else
     }
 }
 
-$fullPythonVersion = (py -$pythonVersion --version).split(" ")[1]
+$fullPythonVersion = (python --version).split(" ")[1]
 
 Write-Output "Python version is: $fullPythonVersion"
 
-py -$pythonVersion -m venv venv
+python -m venv venv
 
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
 venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
