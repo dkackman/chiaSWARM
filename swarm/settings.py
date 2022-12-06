@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Union
 import json
 import os
 from pathlib import Path
@@ -14,6 +14,7 @@ def load_settings():
     settings.log_filename = dict.get("log_filename", "log/generator.log")
     settings.sdaas_token = dict.get("sdaas_token", "")
     settings.sdaas_uri = dict.get("sdaas_uri", "http://localhost:9511")
+    settings.worker_name = dict.get("worker_name", "worker")
 
     # override settings file with environment vairables
     if not os.environ.get("HUGGINGFACE_TOKEN", None) is None:
@@ -24,6 +25,9 @@ def load_settings():
 
     if not os.environ.get("SDAAS_URI", None) is None:
         settings.sdaas_uri = os.environ.get("SDAAS_URI", "")
+
+    if not os.environ.get("SDAAS_WORKERNAME", None) is None:
+        settings.worker_name = os.environ.get("SDAAS_WORKERNAME", "")
 
     return settings
 
@@ -67,3 +71,4 @@ class Settings:
     log_filename: str = "log/generator.log"
     sdaas_token: str = ""
     sdaas_uri: str = ""
+    worker_name: str = "worker"

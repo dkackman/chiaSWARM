@@ -32,7 +32,7 @@ async def run_worker():
 
             response = requests.get(
                 f"{hive_uri}/work",
-                params={"worker_version": __version__},                
+                params={"worker_version": __version__},
                 headers={
                     "Content-type": "application/json",
                     "Authorization": f"Bearer {settings.sdaas_token}",
@@ -100,13 +100,12 @@ async def do_work(job):
 
         result = {
             "id": job["id"],
-            "model_name": job["model_name"],
-            "prompt": job["prompt"],
-            "negative_prompt": job["negative_prompt"],
             "content_type": content_type,
             "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
             "nsfw": pipeline_config.get("nsfw", False),
+            "worker_name": settings.worker_name,
         }
+
         requests.post(
             f"{hive_uri}/results",
             data=json.dumps(result),
