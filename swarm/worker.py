@@ -32,7 +32,10 @@ async def run_worker():
 
             response = requests.get(
                 f"{hive_uri}/work",
-                params={"worker_version": __version__},
+                params={
+                    "worker_version": __version__,
+                    "worker_name": settings.worker_name,
+                },
                 headers={
                     "Content-type": "application/json",
                     "Authorization": f"Bearer {settings.sdaas_token}",
