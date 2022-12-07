@@ -51,9 +51,20 @@ async def run_worker():
 
                 await asyncio.sleep(wait_seconds)
 
+            elif response.status_code == 400:
+                # this is when workers are not returning results within expectations
+                response_dict = response.json()
+                message = response_dict.pop("message", "bad worker")
+                print(f"{hive_uri} says {message}")
+                wait_seconds = response_dict.pop("wait_seconds", 120)
+                print(f"sleeping for {wait_seconds} seconds")
+
+                await asyncio.sleep(wait_seconds)
+
             else:
                 print(f"{hive_uri} returned {response.status_code}")
                 print("sleeping for 60 seconds")
+                
                 await asyncio.sleep(60)
 
         except Exception as e:
