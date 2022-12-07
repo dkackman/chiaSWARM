@@ -64,7 +64,7 @@ async def run_worker():
             else:
                 print(f"{hive_uri} returned {response.status_code}")
                 print("sleeping for 60 seconds")
-                
+
                 await asyncio.sleep(60)
 
         except Exception as e:

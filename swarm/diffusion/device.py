@@ -86,9 +86,9 @@ class Device:
             f"Loading {model_name} to device {self.device_id} - {torch.cuda.get_device_name(self.device_id)}"
         )
         # clear gpu cache
-        torch.cuda.set_device(self.device_id)
-        with torch.no_grad():
-            torch.cuda.empty_cache()
+        # torch.cuda.set_device(self.device_id)
+        # with torch.no_grad():
+        #    torch.cuda.empty_cache()
 
         # load the pipeline and send it to the gpu
         pipeline = pipeline_type.from_pretrained(
@@ -105,7 +105,7 @@ class Device:
             # not all pipelines support it
             pipeline.enable_attention_slicing()
         except:
-            print('error enable_attention_slicing')
+            print("error enable_attention_slicing")
 
         return pipeline.to(f"cuda:{self.device_id}")  # type: ignore
 

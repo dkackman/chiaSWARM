@@ -43,7 +43,14 @@ def generate_buffer(device: Device, **kwargs):
 
 
 def get_image(uri):
-    response = requests.get(uri)
+    head = requests.head(uri, allow_redirects=True)
+    content_length = head.headers.pop("Content-Length", 0)
+
+    print(f"Image size is {content_length} bytes")
+
+    # enforce size limit here - need error communication back to end user too
+
+    response = requests.get(uri, allow_redirects=True)
 
     # diffusers example resize everything to a square not sure if that a requiremnt or not
     image = Image.open(io.BytesIO(response.content)).convert("RGB").resize((512, 512))
