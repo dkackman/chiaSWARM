@@ -35,10 +35,10 @@ async def init():
             print("A Huggingface API token is required.")
             return
 
-        sdaas_token = input("sdaas token: ").strip()
+        sdaas_token = input("chiaSWARM token: ").strip()
 
         sdaas_uri = input(
-            "sdaas uri (https://chiaswarm-dev.azurewebsites.net): "
+            "chiaSWARM uri (https://chiaswarm-dev.azurewebsites.net): "
         ).strip()
         sdaas_uri = (
             "https://chiaswarm-dev.azurewebsites.net"
