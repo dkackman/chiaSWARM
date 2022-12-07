@@ -1,9 +1,10 @@
 from .diffusion.device import Device
 from urllib.parse import unquote
 import io
-from PIL import Image
+from PIL import Image, ImageDraw
 import requests
 from enum import Enum
+from diffusers import StableDiffusionImg2ImgPipeline
 
 
 class image_format_enum(str, Enum):
@@ -17,24 +18,29 @@ class audio_format_enum(str, Enum):
     json = "json"
 
 
-def generate_buffer(device: Device, **kwargs):
+def generate_buffer(device: Device, job, **kwargs):
+    # start_image_uri signals to use the img2img workflow
     format = kwargs.pop("format", "JPEG").upper()
     format = format if format != "JSON" else "JPEG"
+
     try:
+        if "start_image_uri" in job:
+            kwargs["init_image"] = get_image(job["start_image_uri"])
+            kwargs["strength"] = job.get("strength", 0.75)
+            kwargs["pipeline_type"] = StableDiffusionImg2ImgPipeline
+
         if "prompt" in kwargs:
             kwargs["prompt"] = clean_prompt(kwargs["prompt"])
 
         image, pipe_config = device(**kwargs)  # type: ignore
     except Exception as e:
         print(e)
-
+        message = "error generating image"
         if len(e.args) > 0:
-            if e.args[0] == "busy":
-                raise Exception(423)
-            if e.args[0] == "NSFW":
-                raise Exception(406)  # Not Acceptable
+            message = e.args[0]
 
-        raise Exception(500)
+        image = image_from_text(message)
+        pipe_config = {}
 
     buffer = image_to_buffer(image, format)
 
@@ -46,9 +52,11 @@ def get_image(uri):
     head = requests.head(uri, allow_redirects=True)
     content_length = head.headers.pop("Content-Length", 0)
 
-    print(f"Image size is {content_length} bytes")
-
-    # enforce size limit here - need error communication back to end user too
+    # to protect worker nodes, no external images over 2 MiB
+    if int(content_length) > 2097152:
+        raise Exception(
+            f"Input image too large.\nMax size is 2097152 bytes.\nImage was {content_length}."
+        )
 
     response = requests.get(uri, allow_redirects=True)
 
@@ -58,6 +66,14 @@ def get_image(uri):
     # if image.height > maxzise or image.width > maxzise:
     #    image.thumbnail((maxzise, maxzise), Image.Resampling.LANCZOS)
 
+    return image
+
+
+def image_from_text(text):
+    image = Image.new(mode="RGB", size=(256, 256))
+    draw = ImageDraw.Draw(image)
+
+    draw.text((5, 5), text, align="left")
     return image
 
 

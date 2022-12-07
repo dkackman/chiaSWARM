@@ -1,6 +1,6 @@
 from .diffusion.device import Device
 from .diffusion.device_pool import add_device_to_pool, remove_device_from_pool
-from .generator import generate_buffer, image_format_enum, get_image
+from .generator import generate_buffer, image_format_enum
 import torch
 import asyncio
 import logging
@@ -13,7 +13,6 @@ import base64
 import json
 import requests
 from datetime import datetime
-from diffusers import StableDiffusionImg2ImgPipeline
 from . import __version__
 
 
@@ -100,15 +99,10 @@ async def do_work(job):
         "error_on_nsfw": False,
     }
 
-    # start_image_uri signals to use the img2img workflow
-    if "start_image_uri" in job:
-        args["init_image"] = get_image(job["start_image_uri"])
-        args["strength"] = job.get("strength", 0.75)
-        args["pipeline_type"] = StableDiffusionImg2ImgPipeline
-
     try:
         buffer, pipeline_config, args = generate_buffer(
             device,
+            job,
             **args,
         )
 
