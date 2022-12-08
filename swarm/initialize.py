@@ -60,6 +60,8 @@ async def init():
     print("Preloading pipelines. This may take awhile...")
 
     models = [
+        ("stabilityai/stable-diffusion-2-1", "fp16", None),
+        ("stabilityai/stable-diffusion-2-1-base", "fp16", None),
         ("stabilityai/stable-diffusion-2", "fp16", None),
         ("stabilityai/stable-diffusion-2-base", "fp16", None),
         ("stabilityai/stable-diffusion-2-inpainting", "fp16", None),
