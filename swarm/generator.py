@@ -4,7 +4,7 @@ import io
 from PIL import Image, ImageDraw
 import requests
 from enum import Enum
-from diffusers import StableDiffusionImg2ImgPipeline
+from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionUpscalePipeline
 
 
 class image_format_enum(str, Enum):
@@ -19,14 +19,19 @@ class audio_format_enum(str, Enum):
 
 
 def generate_buffer(device: Device, job, **kwargs):
-    # start_image_uri signals to use the img2img workflow
     format = kwargs.pop("format", "JPEG").upper()
     format = format if format != "JSON" else "JPEG"
 
     try:
-        if "start_image_uri" in job:
+        # some workloads have different processing and arrguments - that happens here
+        if kwargs["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
+            kwargs["image"] = get_image(job["start_image_uri"]).resize((128, 128))
+            kwargs["pipeline_type"] = StableDiffusionUpscalePipeline   
+
+        # start_image_uri signals to use the img2img workflow
+        elif "start_image_uri" in job:
             kwargs["init_image"] = get_image(job["start_image_uri"])
-            kwargs["strength"] = job.get("strength", 0.75)
+            kwargs["strength"] = job.get("strength", 0.6)
             kwargs["pipeline_type"] = StableDiffusionImg2ImgPipeline
 
         if "prompt" in kwargs:
