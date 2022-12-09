@@ -4,7 +4,7 @@ import io
 from PIL import Image, ImageDraw
 import requests
 from enum import Enum
-from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionUpscalePipeline
+from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionUpscalePipeline, StableDiffusionInpaintPipeline
 
 
 class image_format_enum(str, Enum):
@@ -28,9 +28,14 @@ def generate_buffer(device: Device, job, **kwargs):
             kwargs["image"] = get_image(job["start_image_uri"]).resize((128, 128))
             kwargs["pipeline_type"] = StableDiffusionUpscalePipeline   
 
+        elif kwargs["model_name"] == "stabilityai/stable-diffusion-2-inpainting":
+            kwargs["image"] = get_image(job["start_image_uri"])
+            kwargs["mask_image"] = get_image(job["mask_image_uri"])
+            kwargs["pipeline_type"] = StableDiffusionInpaintPipeline   
+
         # start_image_uri signals to use the img2img workflow
         elif "start_image_uri" in job:
-            kwargs["init_image"] = get_image(job["start_image_uri"])
+            kwargs["image"] = get_image(job["start_image_uri"])
             kwargs["strength"] = job.get("strength", 0.6)
             kwargs["pipeline_type"] = StableDiffusionImg2ImgPipeline
 
