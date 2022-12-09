@@ -5,7 +5,6 @@ from PIL import Image
 from threading import Lock
 from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 
-
 class Device:
     device_id: int
     mutex: Lock
@@ -50,18 +49,19 @@ class Device:
             seed: Optional[int] = kwargs.pop("seed", None)
             if seed is None:
                 seed = torch.seed()
+  
             torch.manual_seed(seed)
 
             error_on_nsfw = kwargs.pop("error_on_nsfw", True)
-            p = pipeline(**kwargs)
+            p = pipeline(**kwargs)  # type: ignore
 
             # if only one image (the usual case) and nsfw raise exception
             if (
                 hasattr(p, "nsfw_content_detected")
-                and p.nsfw_content_detected is not None
-                and len(p.nsfw_content_detected) == 1
+                and p.nsfw_content_detected is not None # type: ignore 
+                and len(p.nsfw_content_detected) == 1 # type: ignore
             ):
-                for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):
+                for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected): # type: ignore
                     if error_on_nsfw:
                         raise Exception("NSFW")
 
@@ -69,7 +69,7 @@ class Device:
 
             pipeline.config["seed"] = seed
 
-            return (post_process(p.images), pipeline.config)
+            return (post_process(p.images), pipeline.config) # type: ignore
         finally:
             self.mutex.release()
 

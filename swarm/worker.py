@@ -95,6 +95,7 @@ async def do_work(job):
         "guidance_scale": job.get("guidance_scale", 12),
         "revision": revision,
         "torch_dtype": torch_dtype,
+        "seed": job.get("seed", None),
         "num_inference_steps": job.get("num_inference_steps", 25),
         "error_on_nsfw": False,
     }
@@ -112,6 +113,7 @@ async def do_work(job):
             "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
             "nsfw": pipeline_config.get("nsfw", False),
             "worker_name": settings.worker_name,
+            "pipeline_config": pipeline_config,
         }
 
         requests.post(
