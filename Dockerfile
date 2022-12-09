@@ -3,15 +3,16 @@ WORKDIR /sdaas
 
 # preapre the OS
 RUN apt-get update
-RUN apt-get -y install nvtop python3
+RUN apt-get -y install nvtop python3 python3-pip
 
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install wheel setuptools
 RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-RUN pip3 install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler
+RUN pip3 install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors
 
-COPY ./src /sdaas/
+COPY ./ /sdaas
 
+# this will be mounted as a bind point so the image can use the hosts model files
 RUN mkdir /root/.cache/huggingface/
 
 ENV SDAAS_ROOT=/sdaas/
@@ -22,7 +23,5 @@ ENV HUGGINGFACE_TOKEN=
 # CMD ["conda", "run", "-n", "fing", "python", "-m", "generator.worker"]
 
 
-# docker build -t chiaSWARM .
+# docker build -t chiaswarm .
 # docker run --gpus all --env HUGGINGFACE_TOKEN=<YOUR TOKEN> dkackman/fing
-
-# docker run -it -v "/home/don/.cache/huggingface:/root/.cache/huggingface/" --gpus all --env HUGGINGFACE_TOKEN=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 --env SDAAS_TOKEN=6aca390c-f14f-4b7f-9557-b45e9ee891dc --env SDAAS_URI=http://fing.kackman.net:9511 dkackman/fing
