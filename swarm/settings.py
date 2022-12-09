@@ -5,8 +5,12 @@ from pathlib import Path
 
 
 def load_settings():
-    with open(get_settings_full_path(), "r") as file:
-        dict = json.loads(file.read())
+    dict = {}
+    try:
+        with open(get_settings_full_path(), "r") as file:
+            dict = json.loads(file.read())
+    except:
+        print("no settings file")
 
     settings = Settings()
     settings.huggingface_token = dict.get("huggingface_token", True)
