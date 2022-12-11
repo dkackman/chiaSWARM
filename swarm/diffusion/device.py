@@ -100,13 +100,12 @@ class Device:
             scheduler=scheduler,
         ).to(f"cuda:{self.device_id}")  # type: ignore
         
-        try:
-            # until we figure out how to install xFormers without conda do this
-            # https://github.com/facebookresearch/xformers/issues/532
-            # not all pipelines support it
-            pipeline.enable_attention_slicing()
-        except:
-            print("error enable_attention_slicing")
+        info = torch.cuda.mem_get_info(self.device_id)
+        if info[1] < 9507949056: # if gpu mem is less than ~9GB
+            try:
+                pipeline.enable_attention_slicing()
+            except:
+                print("error enable_attention_slicing")
 
         return pipeline
 
