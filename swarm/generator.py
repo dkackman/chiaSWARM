@@ -8,6 +8,7 @@ from diffusers import (
     StableDiffusionImg2ImgPipeline,
     StableDiffusionUpscalePipeline,
     StableDiffusionInpaintPipeline,
+    StableDiffusionDepth2ImgPipeline,
 )
 
 
@@ -31,6 +32,11 @@ def generate_buffer(device: Device, job, **kwargs):
         if kwargs["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
             kwargs["image"] = get_image(job["start_image_uri"]).resize((128, 128))
             kwargs["pipeline_type"] = StableDiffusionUpscalePipeline
+
+        elif kwargs["model_name"] == "stabilityai/stable-diffusion-2-depth":
+            kwargs["image"] = get_image(job["start_image_uri"])
+            kwargs["strength"] = job.get("strength", 0.6)
+            kwargs["pipeline_type"] = StableDiffusionDepth2ImgPipeline
 
         elif (
             kwargs["model_name"] == "stabilityai/stable-diffusion-2-inpainting"

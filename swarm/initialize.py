@@ -90,6 +90,3 @@ async def init():
 
 
 asyncio.run(init())
-
-
-# https://raw.githubusercontent.com/Fantasy-Studio/Paint-by-Example/main/examples/image/example_1.png
