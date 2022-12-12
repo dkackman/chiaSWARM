@@ -64,7 +64,7 @@ async def init():
         ("stabilityai/stable-diffusion-2-1-base", "fp16", None),
         ("stabilityai/stable-diffusion-2", "fp16", None),
         ("stabilityai/stable-diffusion-2-base", "fp16", None),
-        #("stabilityai/stable-diffusion-2-depth", "fp16", None),
+        ("stabilityai/stable-diffusion-2-depth", "fp16", None),
         ("stabilityai/stable-diffusion-2-inpainting", "fp16", None),
         ("stabilityai/stable-diffusion-x4-upscaler", "fp16", None),
         ("Fantasy-Studio/Paint-by-Example", "main", None),
@@ -79,7 +79,7 @@ async def init():
         DiffusionPipeline.from_pretrained(
             model[0],
             use_auth_token=settings.huggingface_token,
-            #device_map="auto",
+            # device_map="auto",
             revision=model[1],
             torch_dtype=torch.float16,
             custom_pipeline=model[2],
@@ -89,3 +89,6 @@ async def init():
 
 
 asyncio.run(init())
+
+
+# https://raw.githubusercontent.com/Fantasy-Studio/Paint-by-Example/main/examples/image/example_1.png
