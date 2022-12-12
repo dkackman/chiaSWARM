@@ -76,6 +76,7 @@ async def init():
 
     # this makes sure that all of the diffusers are downloaded and cached
     for model in models:
+        print(f"Initializing {model[0]}/{model[1]}")
         DiffusionPipeline.from_pretrained(
             model[0],
             use_auth_token=settings.huggingface_token,
