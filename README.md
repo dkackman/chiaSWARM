@@ -66,7 +66,7 @@ It will also download all of the needed machine learning models which will take 
 
 ## Docker
 
-### still a work in progress
+### it builds but cuda runs into issues with driver mismatch. if anyone knows how to get cuda to work in a container please reach out!
 
 First install the [NVidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker) on the docker host.
 
@@ -74,7 +74,7 @@ The docker image needs a bind mount for the huggingface model cache. Make sure t
 
 ```bash
 docker build -t chiaSWARM . -f Dockerfile
-docker run -it -v "/home/YOUR_USERNAME/.cache/huggingface:/root/.cache/huggingface/" \
+docker run -v "/home/YOUR_USERNAME/.cache/huggingface:/root/.cache/huggingface/" \
     --gpus all \
     --env HUGGINGFACE_TOKEN=YOUR TOKEN \
     --env SDAAS_TOKEN=YOUR TOKEN \
