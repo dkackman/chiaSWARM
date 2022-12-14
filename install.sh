@@ -222,6 +222,7 @@ python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors
+pip -U git+https://github.com/huggingface/transformers.git
 
 echo ""
 echo "chiaSWARM worker installation is now complete."
