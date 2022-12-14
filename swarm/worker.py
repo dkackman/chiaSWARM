@@ -1,6 +1,6 @@
 from .diffusion.device import Device
 from .diffusion.device_pool import add_device_to_pool, remove_device_from_pool
-from .generator import generate_buffer, image_format_enum
+from .generator import generate_buffer
 import torch
 import asyncio
 import logging
@@ -14,7 +14,7 @@ import json
 import requests
 from datetime import datetime
 from . import __version__
-
+from .job_arguments import format_args
 
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
@@ -73,42 +73,19 @@ async def run_worker():
 
 
 async def do_work(job):
-    revision = "fp16"
-    if (
-        job["model_name"] == "nitrosocke/Future-Diffusion"
-        or job["model_name"] == "prompthero/openjourney"
-    ):
-        revision = "main"
-
-    torch_dtype = torch.float16
     device = remove_device_from_pool()
-    content_type = job.get("content_type", "image/jpeg")
-    format = (
-        image_format_enum.png if content_type == "image/png" else image_format_enum.jpeg
-    )
-
-    args = {
-        "prompt": job["prompt"],
-        "negative_prompt": job["negative_prompt"],
-        "model_name": job["model_name"],
-        "format": format,
-        "guidance_scale": job.get("guidance_scale", 12),
-        "revision": revision,
-        "torch_dtype": torch_dtype,
-        "seed": job.get("seed", None),
-        "num_inference_steps": job.get("num_inference_steps", 25),
-        "error_on_nsfw": False,
-    }
+    content_type = job.pop("content_type", "image/jpeg")
+    id = job.pop("id")
+    kwargs = format_args(job, content_type)
 
     try:
         buffer, pipeline_config, args = generate_buffer(
             device,
-            job,
-            **args,
+            **kwargs,
         )
 
         result = {
-            "id": job["id"],
+            "id": id,
             "content_type": content_type,
             "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
             "nsfw": pipeline_config.get("nsfw", False),
