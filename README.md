@@ -6,7 +6,7 @@ Distributed GPU compute or "All these GPUs are idle now. Let's use em for someth
 
 The chiaSWARM is a distributed network of GPU nodes, that run AI and ML workloads on behalf of users that may not have the requisite hardware.
 
-Soon(tm) nodes will be able to earn Compute Coins on the [chia blockchain](https://www.chia.net/) which can also be bought and sold.
+Soon(tm) nodes will be able to earn _swarmBUCKS_ on the [chia blockchain](https://www.chia.net/) which can also be bought and sold.
 
 _This is NOT Proof of Work on chia._
 
