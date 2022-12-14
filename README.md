@@ -22,9 +22,9 @@ Open an issue to gain acess and give it a try on the alpha network at <https://c
 
 - &check; Networking and core protocal
 - &check; Basic stable diffusion workloads (txt2image, img2img, various models)
-- &check; Image upscale and stable diffusion 2.1
-- More stable diffusion workloads (inpainting, ongoing version bumps)
-- Compute Coin integration (earn, buy, sell, spend)
+- &check; Image upscale, inpainting, and stable diffusion 2.1
+- More stable diffusion workloads (other interesting models & ongoing version bumps)
+- swarmBUCKS integration (earn, buy, sell, spend)
 - GPT workloads
 - Whatever else catches our fancy
 
