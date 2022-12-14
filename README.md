@@ -43,6 +43,7 @@ These scripts will create a virtual environment and install the swarm to it. To 
 ### Linux
 
 ```bash
+sh install.sh
 . ./activate
 python -m swarm.initialize # only needed once
 python -m swarm.worker
@@ -51,6 +52,7 @@ python -m swarm.worker
 ### Windows
 
 ```powershell
+.\install.ps1
 venv\Scripts\activate
 python -m swarm.initialize # only needed once
 python -m swarm.worker
