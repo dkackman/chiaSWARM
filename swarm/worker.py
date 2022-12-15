@@ -31,6 +31,7 @@ async def run_worker():
 
             response = requests.get(
                 f"{hive_uri}/work",
+                timeout=10,
                 params={
                     "worker_version": __version__,
                     "worker_name": settings.worker_name,
@@ -38,6 +39,7 @@ async def run_worker():
                 headers={
                     "Content-type": "application/json",
                     "Authorization": f"Bearer {settings.sdaas_token}",
+                    'user-agent': f'chiaSWARM.worker/{__version__}',
                 },
             )
 
@@ -90,6 +92,7 @@ async def do_work(job):
             "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
             "nsfw": pipeline_config.get("nsfw", False),
             "worker_name": settings.worker_name,
+            "worker_version": __version__,
             "pipeline_config": pipeline_config,
         }
 
