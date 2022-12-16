@@ -1,9 +1,8 @@
 from .diffusion.device import Device
-from .diffusion.device_pool import add_device_to_pool, remove_device_from_pool
-from .generator import generate_buffer
+from .generator import do_work
 from .log_setup import setup_logging
 from . import __version__
-from .job_arguments import format_args
+from .diffusion.device_pool import add_device_to_pool
 from .settings import (
     load_settings,
     resolve_path,
@@ -11,10 +10,9 @@ from .settings import (
 import torch
 import asyncio
 import logging
-import base64
-import json
 import requests
 from datetime import datetime
+import json
 
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
@@ -39,7 +37,7 @@ async def run_worker():
                 headers={
                     "Content-type": "application/json",
                     "Authorization": f"Bearer {settings.sdaas_token}",
-                    'user-agent': f'chiaSWARM.worker/{__version__}',
+                    "user-agent": f"chiaSWARM.worker/{__version__}",
                 },
             )
 
@@ -48,7 +46,15 @@ async def run_worker():
 
                 wait_seconds = response_dict.pop("wait_seconds", 10)
                 for job in response_dict["jobs"]:
-                    await do_work(job)
+                    result = await do_work(job)
+                    requests.post(
+                        f"{hive_uri}/results",
+                        data=json.dumps(result),
+                        headers={
+                            "Content-type": "application/json",
+                            "Authorization": f"Bearer {settings.sdaas_token}",
+                        },
+                    )
 
                 await asyncio.sleep(wait_seconds)
 
@@ -72,43 +78,6 @@ async def run_worker():
             print(e)  # this is if the work queue endpoint is unavailable
             print("sleeping for 120 seconds")
             await asyncio.sleep(120)
-
-
-async def do_work(job):
-    device = remove_device_from_pool()
-    content_type = job.pop("content_type", "image/jpeg")
-    id = job.pop("id")
-    kwargs = format_args(job, content_type)
-
-    try:
-        buffer, pipeline_config, args = generate_buffer(
-            device,
-            **kwargs,
-        )
-
-        result = {
-            "id": id,
-            "content_type": content_type,
-            "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
-            "nsfw": pipeline_config.get("nsfw", False),
-            "worker_name": settings.worker_name,
-            "worker_version": __version__,
-            "pipeline_config": pipeline_config,
-        }
-
-        requests.post(
-            f"{hive_uri}/results",
-            data=json.dumps(result),
-            headers={
-                "Content-type": "application/json",
-                "Authorization": f"Bearer {settings.sdaas_token}",
-            },
-        )
-
-    except Exception as e:
-        print(e)
-    finally:
-        add_device_to_pool(device)
 
 
 async def startup():

@@ -44,7 +44,6 @@ def format_args(job, content_type):
     args["torch_dtype"] = torch.float16
     args["guidance_scale"] = job.get("guidance_scale", 12)
     args["num_inference_steps"] = job.get("num_inference_steps", 25)
-    args["error_on_nsfw"] = False
 
     size = (job.get("height", 512), job.get("width", 512))
 

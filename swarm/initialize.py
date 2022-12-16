@@ -22,7 +22,6 @@ async def init():
     logging.info("init_app")
 
     overwrite = False
-
     if settings_exist() and "--reset" in sys.argv:
         overwrite = True
 
