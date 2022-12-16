@@ -1,6 +1,6 @@
 from .diffusion.device import Device
 from .diffusion.device_pool import remove_device_from_pool, add_device_to_pool
-import io
+from .format_converter import image_to_buffer
 from PIL import Image, ImageDraw
 import base64
 from .job_arguments import format_args
@@ -38,6 +38,7 @@ def generate_buffer(device: Device, **kwargs):
 
     try:
         image, pipe_config = device(**kwargs)  # type: ignore
+
     except Exception as e:
         print(e)
         message = "error generating image"
@@ -56,13 +57,3 @@ def image_from_text(text):
 
     draw.text((5, 5), text, align="left")
     return image
-
- 
-def image_to_buffer(image, content_type):
-    format =  "PNG" if content_type == 'image/png' else "JPEG"
-
-    buffer = io.BytesIO()
-    image.save(buffer, format=format)
-    buffer.seek(0)
-
-    return buffer
