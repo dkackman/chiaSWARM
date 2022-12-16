@@ -12,17 +12,6 @@ import io
 from enum import Enum
 
 
-class image_format_enum(str, Enum):
-    jpeg = "jpeg"
-    json = "json"
-    png = "png"
-
-
-class audio_format_enum(str, Enum):
-    wav = "wav"
-    json = "json"
-
-
 def format_args(job, content_type):
     # this is where all of the input arguments are raiotnalized and model specific
     # things set. if models proliferate this will need to be refactored
@@ -30,16 +19,13 @@ def format_args(job, content_type):
     if (
         job["model_name"] == "nitrosocke/Future-Diffusion"
         or job["model_name"] == "prompthero/openjourney"
+        or job["model_name"] == "riffusion/riffusion-model-v1"
     ):
         revision = "main"
 
-    format = (
-        image_format_enum.png if content_type == "image/png" else image_format_enum.jpeg
-    )
-
     args = job.copy()
 
-    args["format"] = format
+    args["content_type"] = content_type
     args["revision"] = revision
     args["torch_dtype"] = torch.float16
     args["guidance_scale"] = job.get("guidance_scale", 12)

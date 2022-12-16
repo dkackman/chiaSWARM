@@ -34,8 +34,7 @@ async def do_work(job):
 
 
 def generate_buffer(device: Device, **kwargs):
-    format = kwargs.pop("format", "JPEG").upper()
-    format = format if format != "JSON" else "JPEG"
+    content_type = kwargs.pop("content_type", "image/jpeg")
 
     try:
         image, pipe_config = device(**kwargs)  # type: ignore
@@ -48,7 +47,7 @@ def generate_buffer(device: Device, **kwargs):
         image = image_from_text(message)
         pipe_config = {"error": message}
 
-    return image_to_buffer(image, format), pipe_config
+    return image_to_buffer(image, content_type), pipe_config
 
 
 def image_from_text(text):
@@ -58,8 +57,10 @@ def image_from_text(text):
     draw.text((5, 5), text, align="left")
     return image
 
+ 
+def image_to_buffer(image, content_type):
+    format =  "PNG" if content_type == 'image/png' else "JPEG"
 
-def image_to_buffer(image, format):
     buffer = io.BytesIO()
     image.save(buffer, format=format)
     buffer.seek(0)

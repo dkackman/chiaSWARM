@@ -68,6 +68,7 @@ async def init():
         ("stabilityai/stable-diffusion-x4-upscaler", "fp16", None),
         ("nitrosocke/Future-Diffusion", "main", None),
         ("prompthero/openjourney", "main", None),
+        ("riffusion/riffusion-model-v1", "main", None),
         ("runwayml/stable-diffusion-v1-5", "fp16", None),
         ("runwayml/stable-diffusion-inpainting", "fp16", None),
     ]
@@ -78,13 +79,12 @@ async def init():
         DiffusionPipeline.from_pretrained(
             model[0],
             use_auth_token=settings.huggingface_token,
-            # device_map="auto",
             revision=model[1],
             torch_dtype=torch.float16,
             custom_pipeline=model[2],
         )
     print("done")
-    print("To run the swarm type 'python -m swarm.worker'")
+    print("To be the swarm type 'python -m swarm.worker'")
 
 
 asyncio.run(init())
