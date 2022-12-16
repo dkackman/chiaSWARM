@@ -1,20 +1,20 @@
 from .diffusion.device import Device
 from .diffusion.device_pool import add_device_to_pool, remove_device_from_pool
 from .generator import generate_buffer
-import torch
-import asyncio
-import logging
+from .log_setup import setup_logging
+from . import __version__
+from .job_arguments import format_args
 from .settings import (
     load_settings,
     resolve_path,
 )
-from .log_setup import setup_logging
+import torch
+import asyncio
+import logging
 import base64
 import json
 import requests
 from datetime import datetime
-from . import __version__
-from .job_arguments import format_args
 
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
@@ -64,14 +64,14 @@ async def run_worker():
 
             else:
                 print(f"{hive_uri} returned {response.status_code}")
-                print("sleeping for 60 seconds")
+                print("sleeping for 120 seconds")
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(120)
 
         except Exception as e:
             print(e)  # this is if the work queue endpoint is unavailable
-            print("sleeping for 60 seconds")
-            await asyncio.sleep(60)
+            print("sleeping for 120 seconds")
+            await asyncio.sleep(120)
 
 
 async def do_work(job):
