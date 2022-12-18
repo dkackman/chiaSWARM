@@ -22,9 +22,6 @@ class Device:
             raise Exception("busy")
 
         try:
-            # convert the name of this api parameter to the diffuser equivalent (name changed)
-            kwargs["num_images_per_prompt"] = kwargs.pop("num_images", 1)
-
             if "prompt" in kwargs:
                 logging.info(f"Prompt is {kwargs['prompt']}")
             self.log_device()
@@ -56,7 +53,7 @@ class Device:
 
             p = pipeline(**kwargs)  # type: ignore
 
-            # if only one image (the usual case) and nsfw raise exception
+            # if any image is nsfw flag the entire result
             if (
                 hasattr(p, "nsfw_content_detected")
                 and p.nsfw_content_detected is not None  # type: ignore

@@ -9,12 +9,11 @@ from diffusers import (
 )
 from PIL import Image
 import io
-from enum import Enum
 
 
 def format_args(job, content_type):
     # this is where all of the input arguments are raiotnalized and model specific
-    # things set. if models proliferate this will need to be refactored
+    # things set. TODO - if models proliferate this will need to be refactored
     revision = "fp16"
     if (
         job["model_name"] == "nitrosocke/Future-Diffusion"
@@ -33,7 +32,7 @@ def format_args(job, content_type):
 
     size = (job.get("height", 512), job.get("width", 512))
 
-    # some workloads have different processing and arrguments - that happens here
+    # some workloads have different processing and arguments - that happens here
     if args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
         args["image"] = get_image(job["start_image_uri"], (128, 128))
         args["pipeline_type"] = StableDiffusionUpscalePipeline
