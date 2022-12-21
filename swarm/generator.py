@@ -13,10 +13,11 @@ async def do_work(job):
     try:
         content_type = job.pop("content_type", "image/jpeg")
         id = job.pop("id")
-        kwargs = format_args(job, content_type)
+        kwargs = format_args(job)
 
         buffer, pipeline_config = generate_buffer(
             device,
+            content_type,
             **kwargs,
         )
 
@@ -33,9 +34,7 @@ async def do_work(job):
         add_device_to_pool(device)
 
 
-def generate_buffer(device: Device, **kwargs):
-    content_type = kwargs.pop("content_type", "image/jpeg")
-
+def generate_buffer(device: Device, content_type, **kwargs):
     try:
         image, pipe_config = device(**kwargs)  # type: ignore
 

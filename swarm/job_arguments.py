@@ -11,7 +11,7 @@ from PIL import Image
 import io
 
 
-def format_args(job, content_type):
+def format_args(job):
     # this is where all of the input arguments are raiotnalized and model specific
     # things set. TODO - if models proliferate this will need to be refactored
     revision = "fp16"
@@ -24,11 +24,8 @@ def format_args(job, content_type):
 
     args = job.copy()
 
-    args["content_type"] = content_type
     args["revision"] = revision
     args["torch_dtype"] = torch.float16
-    args["guidance_scale"] = job.get("guidance_scale", 12)
-    args["num_inference_steps"] = job.get("num_inference_steps", 25)
 
     size = (job.get("height", 512), job.get("width", 512))
 
@@ -50,8 +47,9 @@ def format_args(job, content_type):
 
     elif args["model_name"] == "stabilityai/stable-diffusion-2-depth":
         args["image"] = get_image(job["start_image_uri"], size)
-        args["strength"] = job.get("strength", 0.6)
         args["pipeline_type"] = StableDiffusionDepth2ImgPipeline
+        args.pop("height", None)
+        args.pop("width", None)
 
     # start_image_uri signals to use the img2img workflow for SD 1.5
     elif (
@@ -59,7 +57,6 @@ def format_args(job, content_type):
         and "start_image_uri" in job
     ):
         args["image"] = get_image(job["start_image_uri"], size)
-        args["strength"] = job.get("strength", 0.6)
         args["pipeline_type"] = StableDiffusionImg2ImgPipeline
         # this model will reject these two args
         args.pop("height", None)
@@ -67,6 +64,7 @@ def format_args(job, content_type):
 
     if "prompt" in args:
         args["prompt"] = clean_prompt(args["prompt"])
+
     if "negative_prompt" in args:
         args["negative_prompt"] = clean_prompt(args["negative_prompt"])
 
