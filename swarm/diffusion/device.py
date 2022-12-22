@@ -45,7 +45,7 @@ class Device:
                 kwargs.pop("pipeline_type", DiffusionPipeline),
             )
 
-            seed: Optional[int] = kwargs.pop("seed", None)
+            seed = kwargs.pop("seed", None)
             if seed is None:
                 seed = torch.seed()
 
