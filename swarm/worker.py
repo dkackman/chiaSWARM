@@ -25,7 +25,7 @@ async def run_worker():
 
     while True:
         try:
-            print(f"{datetime.now()}: Asking for work from {settings.sdaas_uri}...")
+            print(f"{datetime.now()}: Asking for work from {hive_uri}...")
 
             response = requests.get(
                 f"{hive_uri}/work",
