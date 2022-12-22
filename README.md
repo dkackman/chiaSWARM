@@ -6,7 +6,7 @@ Distributed GPU compute or "All these GPUs are idle now. Let's use em for someth
 
 The chiaSWARM is a distributed network of GPU nodes, that run AI and ML workloads on behalf of users that may not have the requisite hardware.
 
-Soon(tm) nodes will be able to earn _swarmBUCKS_ on the [chia blockchain](https://www.chia.net/) which can also be bought and sold.
+Soon(tm) nodes will be able to earn _swarm_ on the [chia blockchain](https://www.chia.net/) which can also be bought and sold.
 
 _This is NOT Proof of Work on chia._
 
@@ -24,15 +24,15 @@ Open an issue to gain acess and give it a try on the alpha network at <https://c
 - &check; Basic stable diffusion workloads (txt2image, img2img, various models)
 - &check; Image upscale, inpainting, and stable diffusion 2.1
 - More stable diffusion workloads (other interesting models & ongoing version bumps)
-- swarmBUCKS integration (earn, buy, sell, spend)
+- _swarm integration (earn, buy, sell, spend)
 - GPT workloads
 - Whatever else catches our fancy
 
-Suggestions, issues and puill requests welcome.
+Suggestions, issues and pull requests welcome.
 
 ## Becoming the SWARM
 
-In order to run a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU; 30XX or better recommended. 
+In order to be a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU; 30XX or better recommended. 
 
 While we test the network, nodes are by invite only. To participate please contact mailto:admin@chiaswarm.ai.
 
