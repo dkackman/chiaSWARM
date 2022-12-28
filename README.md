@@ -1,5 +1,7 @@
 # chiaSWARM
 
+[![CodeQL](https://github.com/dkackman/chiaSWARM/actions/workflows/codeql.yml/badge.svg)](https://github.com/dkackman/chiaSWARM/actions/workflows/codeql.yml)
+
 Distributed GPU compute or "All these GPUs are idle now. Let's use em for something other than PoW!"
 
 ## Introduction
