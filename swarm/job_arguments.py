@@ -13,18 +13,8 @@ import io
 
 def format_args(job):
     # this is where all of the input arguments are raiotnalized and model specific
-    # things set. TODO - if models proliferate this will need to be refactored
-    revision = "fp16"
-    if (
-        job["model_name"] == "nitrosocke/Future-Diffusion"
-        or job["model_name"] == "prompthero/openjourney"
-        or job["model_name"] == "riffusion/riffusion-model-v1"
-    ):
-        revision = "main"
-
     args = job.copy()
 
-    args["revision"] = revision
     args["torch_dtype"] = torch.float16
 
     size = (job.get("height", 512), job.get("width", 512))
@@ -52,10 +42,7 @@ def format_args(job):
         args.pop("width", None)
 
     # start_image_uri signals to use the img2img workflow for SD 1.5
-    elif (
-        args["model_name"] == "runwayml/stable-diffusion-v1-5"
-        and "start_image_uri" in job
-    ):
+    elif "start_image_uri" in job:
         args["image"] = get_image(job["start_image_uri"], size)
         args["pipeline_type"] = StableDiffusionImg2ImgPipeline
         # this model will reject these two args
@@ -96,7 +83,7 @@ def get_image(uri, size):
     response = requests.get(uri, allow_redirects=True)
 
     # diffusers example resize everything to a square not sure if that a requiremnt or not
-    image = Image.open(io.BytesIO(response.content)).convert("RGB").resize(size)
+    image = Image.open(io.BytesIO(response.content)).convert("RGB")  # .resize(size)
     # maxzise = 512
     # if image.height > maxzise or image.width > maxzise:
     #    image.thumbnail((maxzise, maxzise), Image.Resampling.LANCZOS)

@@ -58,23 +58,25 @@ async def init():
     logging.debug(f"Torch version {torch.__version__}")
     print("Preloading pipelines. This may take awhile...")
 
-    models = [
+    known_models = [
         ("stabilityai/stable-diffusion-2-1", "fp16", None),
         ("stabilityai/stable-diffusion-2-1-base", "fp16", None),
-        ("stabilityai/stable-diffusion-2", "fp16", None),
-        ("stabilityai/stable-diffusion-2-base", "fp16", None),
         ("stabilityai/stable-diffusion-2-depth", "fp16", None),
         ("stabilityai/stable-diffusion-2-inpainting", "fp16", None),
         ("stabilityai/stable-diffusion-x4-upscaler", "fp16", None),
         ("nitrosocke/Future-Diffusion", "main", None),
+        ("nitrosocke/Nitro-Diffusion", "main", None),
+        ("nitrosocke/Ghibli-Diffusion", "main", None),
+        ("nitrosocke/redshift-diffusion", "main", None),
         ("prompthero/openjourney", "main", None),
         ("riffusion/riffusion-model-v1", "main", None),
         ("runwayml/stable-diffusion-v1-5", "fp16", None),
         ("runwayml/stable-diffusion-inpainting", "fp16", None),
+        ("Envvi/Inkpunk-Diffusion", "main", None),
     ]
 
     # this makes sure that all of the diffusers are downloaded and cached
-    for model in models:
+    for model in known_models:
         print(f"Initializing {model[0]}/{model[1]}")
         DiffusionPipeline.from_pretrained(
             model[0],
