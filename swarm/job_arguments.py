@@ -12,9 +12,9 @@ import io
 
 
 def format_args(job):
-    if not job.has_key("revision"):
+    if not "revision" in job.keys():
         job["revision"] = "fp16"
-        
+
     # this is where all of the input arguments are raiotnalized and model specific
     args = job.copy()
 
