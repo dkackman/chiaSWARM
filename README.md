@@ -19,7 +19,7 @@ _This is NOT Proof of Work on chia._
 
 The first supported workload is various type of stable diffusion image generation and manipulation.
 
-Open an issue to gain acess and give it a try on the alpha network at <https://chiaswarm-dev.azurewebsites.net/>!
+Open an issue to gain acess and give it a try on [the beta network](https://chiaswarm.ai/)!
 
 ## Roadmap
 
@@ -63,7 +63,7 @@ python -m swarm.worker
 
 The `swarm.initialize` command will ask for your [huggingface token](https://huggingface.co/docs/hub/security-tokens), your swarm access token and the swarm uri.
 
-The current swarm uri is <https://chiaswarm.ai/>.
+The current swarm uri is <https://chiaswarm.ai>.
 
 It will also download all of the needed machine learning models which will take quite some time. It only needs to be run once.
 
