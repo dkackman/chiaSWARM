@@ -13,13 +13,16 @@ async def do_work(job):
     try:
         content_type = job.pop("content_type", "image/jpeg")
         id = job.pop("id")
-        kwargs = format_args(job)
+        try:
+            kwargs = format_args(job)
 
-        buffer, pipeline_config = generate_buffer(
-            device,
-            content_type,
-            **kwargs,
-        )
+            buffer, pipeline_config = generate_buffer(
+                device,
+                content_type,
+                **kwargs,
+            )
+        except Exception as e:
+            buffer, pipeline_config = exception_image(e, "image/jpeg")
 
         return {
             "id": id,
@@ -34,18 +37,24 @@ async def do_work(job):
         add_device_to_pool(device)
 
 
+def exception_image(e, content_type):
+    print(e)
+    message = "error generating image"
+    if len(e.args) > 0:
+        message = e.args[0]
+
+    image = image_from_text(message)
+    pipe_config = {"error": message}
+
+    return image_to_buffer(image, content_type), pipe_config
+
+
 def generate_buffer(device: Device, content_type, **kwargs):
     try:
         image, pipe_config = device(**kwargs)  # type: ignore
 
     except Exception as e:
-        print(e)
-        message = "error generating image"
-        if len(e.args) > 0:
-            message = e.args[0]
-
-        image = image_from_text(message)
-        pipe_config = {"error": message}
+        return exception_image(e, content_type)
 
     return image_to_buffer(image, content_type), pipe_config
 

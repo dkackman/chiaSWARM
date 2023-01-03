@@ -76,6 +76,12 @@ def clean_prompt(str):
 def get_image(uri, size):
     head = requests.head(uri, allow_redirects=True)
     content_length = head.headers.pop("Content-Length", 0)
+    content_type = head.headers.pop("Content-Type", "")
+
+    if not content_type.startswith("image"):
+        raise Exception(
+            f"Input does not appear to be an image.\nContent type was {content_type}."
+        )
 
     # to protect worker nodes, no external images over 2 MiB
     if int(content_length) > 2097152:
@@ -85,10 +91,4 @@ def get_image(uri, size):
 
     response = requests.get(uri, allow_redirects=True)
 
-    # diffusers example resize everything to a square not sure if that a requiremnt or not
-    image = Image.open(io.BytesIO(response.content)).convert("RGB")  # .resize(size)
-    # maxzise = 512
-    # if image.height > maxzise or image.width > maxzise:
-    #    image.thumbnail((maxzise, maxzise), Image.Resampling.LANCZOS)
-
-    return image
+    return Image.open(io.BytesIO(response.content)).convert("RGB")
