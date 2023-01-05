@@ -10,6 +10,8 @@ from diffusers import (
 from PIL import Image
 import io
 
+max_size = 1024
+
 
 def format_args(job):
     if not "revision" in job.keys():
@@ -20,11 +22,17 @@ def format_args(job):
 
     args["torch_dtype"] = torch.float16
 
-    size = (job.get("height", 512), job.get("width", 512))
+    size = None
+    if "height" in job and "width" in job:
+        size = (job["height"], job["width"])
+        if size[0] > max_size or size[1] > max_size:
+            raise Exception(
+                f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
+            )
 
     # some workloads have different processing and arguments - that happens here
     if args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
-        args["image"] = get_image(job["start_image_uri"], (128, 128))
+        args["image"] = get_image(job["start_image_uri"], None)
         args["pipeline_type"] = StableDiffusionUpscalePipeline
         # this model will reject these two args
         args.pop("height", None)
@@ -91,4 +99,13 @@ def get_image(uri, size):
 
     response = requests.get(uri, allow_redirects=True)
 
-    return Image.open(io.BytesIO(response.content)).convert("RGB")
+    image = Image.open(io.BytesIO(response.content)).convert("RGB")
+
+    # if we have a desired size and the image is alrger than it, scale the image down
+    if size != None and (image.height > size[0] or image.width > size[1]):
+        image.thumbnail(size, Image.Resampling.LANCZOS)
+
+    elif image.height > max_size or image.width > max_size:
+        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+
+    return image
