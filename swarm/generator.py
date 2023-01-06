@@ -24,10 +24,13 @@ async def do_work(job):
         except Exception as e:
             buffer, pipeline_config = exception_image(e, "image/jpeg")
 
+        thumb_buffer = make_thumbnail(buffer)
+
         return {
             "id": id,
             "content_type": content_type,
             "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
+            "thumbnail": base64.b64encode(thumb_buffer.getvalue()).decode("UTF-8"),
             "nsfw": pipeline_config.get("nsfw", False),
             "worker_version": __version__,
             "pipeline_config": pipeline_config,
@@ -35,6 +38,12 @@ async def do_work(job):
 
     finally:
         add_device_to_pool(device)
+
+
+def make_thumbnail(buffer):
+    image = Image.open(buffer).convert("RGB")
+    image.thumbnail((100, 100), Image.Resampling.LANCZOS)
+    return image_to_buffer(image, "image/jpeg", "web_low")
 
 
 def exception_image(e, content_type):
