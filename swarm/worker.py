@@ -47,7 +47,7 @@ async def run_worker():
                 wait_seconds = response_dict.pop("wait_seconds", 10)
                 for job in response_dict["jobs"]:
                     result = await do_work(job)
-                    requests.post(
+                    result = requests.post(
                         f"{hive_uri}/results",
                         data=json.dumps(result),
                         headers={
@@ -55,6 +55,7 @@ async def run_worker():
                             "Authorization": f"Bearer {settings.sdaas_token}",
                         },
                     )
+                    print(result.json())
 
                 await asyncio.sleep(wait_seconds)
 
