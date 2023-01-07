@@ -73,6 +73,7 @@ async def init():
         ("runwayml/stable-diffusion-v1-5", "fp16", None),
         ("runwayml/stable-diffusion-inpainting", "fp16", None),
         ("Envvi/Inkpunk-Diffusion", "main", None),
+        ("nousr/robo-diffusion", "main", None),
     ]
 
     # this makes sure that all of the diffusers are downloaded and cached
