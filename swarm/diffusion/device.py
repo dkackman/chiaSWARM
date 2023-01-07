@@ -104,7 +104,7 @@ class Device:
 
         if is_xformers_available():
             try:
-                pipeline.enable_xformers_memory_efficient_attention(True)
+                pipeline.enable_xformers_memory_efficient_attention()
             except Exception as e:
                 print(
                     "Could not enable memory efficient attention. Make sure xformers is installed"
