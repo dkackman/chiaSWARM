@@ -16,6 +16,7 @@ from diffusers import DiffusionPipeline
 import torch
 from . import __version__
 import sys
+import requests
 
 
 async def init():
@@ -36,14 +37,8 @@ async def init():
 
         sdaas_token = input("chiaSWARM token: ").strip()
 
-        sdaas_uri = input(
-            "chiaSWARM uri (https://chiaswarm-dev.azurewebsites.net): "
-        ).strip()
-        sdaas_uri = (
-            "https://chiaswarm-dev.azurewebsites.net"
-            if len(sdaas_uri) == 0
-            else sdaas_uri
-        )
+        sdaas_uri = input("chiaSWARM uri (https://chiaswarm.ai): ").strip()
+        sdaas_uri = "https://chiaswarm.ai" if len(sdaas_uri) == 0 else sdaas_uri
 
         settings.huggingface_token = token
         settings.sdaas_token = sdaas_token
@@ -57,37 +52,41 @@ async def init():
     logging.debug(f"Version {__version__}")
     logging.debug(f"Torch version {torch.__version__}")
     print("Preloading pipelines. This may take awhile...")
-
-    known_models = [
-        ("stabilityai/stable-diffusion-2-1", "fp16", None),
-        ("stabilityai/stable-diffusion-2-1-base", "fp16", None),
-        ("stabilityai/stable-diffusion-2-depth", "fp16", None),
-        ("stabilityai/stable-diffusion-2-inpainting", "fp16", None),
-        ("stabilityai/stable-diffusion-x4-upscaler", "fp16", None),
-        ("nitrosocke/Future-Diffusion", "main", None),
-        ("nitrosocke/Nitro-Diffusion", "main", None),
-        ("nitrosocke/Ghibli-Diffusion", "main", None),
-        ("nitrosocke/redshift-diffusion", "main", None),
-        ("prompthero/openjourney", "main", None),
-        ("riffusion/riffusion-model-v1", "main", None),
-        ("runwayml/stable-diffusion-v1-5", "fp16", None),
-        ("runwayml/stable-diffusion-inpainting", "fp16", None),
-        ("Envvi/Inkpunk-Diffusion", "main", None),
-        ("nousr/robo-diffusion", "main", None),
-    ]
+    known_models = get_models_from_hive(f"{settings.sdaas_uri.rstrip('/')}/")
 
     # this makes sure that all of the diffusers are downloaded and cached
     for model in known_models:
-        print(f"Initializing {model[0]}/{model[1]}")
+        model_name = model["model_name"]
+        revision = model["revision"]
+        print(f"Initializing {model_name}/{revision}")
         DiffusionPipeline.from_pretrained(
-            model[0],
+            model_name,
             use_auth_token=settings.huggingface_token,
-            revision=model[1],
+            revision=revision,
             torch_dtype=torch.float16,
-            custom_pipeline=model[2],
         )
     print("done")
     print("To be the swarm type 'python -m swarm.worker'")
+
+
+def get_models_from_hive(hive_uri):
+    print("Fetching known model list")
+
+    try:
+        response = requests.get(
+            f"{hive_uri}data/models.json",
+            timeout=10,
+            headers={
+                "user-agent": f"chiaSWARM.worker/{__version__}",
+            },
+        )
+        data = response.json()
+        print("done")
+
+        return data["models"]
+    except Exception as e:
+        print(e)
+        return []
 
 
 asyncio.run(init())
