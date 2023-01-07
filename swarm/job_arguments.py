@@ -14,25 +14,30 @@ max_size = 1024
 
 
 def format_args(job):
-    if not "revision" in job.keys():
-        job["revision"] = "fp16"
-
-    # this is where all of the input arguments are raiotnalized and model specific
     args = job.copy()
 
+    if not "revision" in args.keys():
+        args["revision"] = "fp16"
+
+    # this is where all of the input arguments are raiotnalized and model specific
     args["torch_dtype"] = torch.float16
 
     size = None
-    if "height" in job and "width" in job:
-        size = (job["height"], job["width"])
+    if "height" in args and "width" in args:
+        size = (args["height"], args["width"])
         if size[0] > max_size or size[1] > max_size:
             raise Exception(
                 f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
             )
 
+    if "start_image_uri" in args:
+        args["image"] = get_image(args.pop("start_image_uri"), size)
+
+    if "mask_image_uri" in args:
+        args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
+
     # some workloads have different processing and arguments - that happens here
     if args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
-        args["image"] = get_image(job["start_image_uri"], None)
         args["pipeline_type"] = StableDiffusionUpscalePipeline
         # this model will reject these two args
         args.pop("height", None)
@@ -42,19 +47,15 @@ def format_args(job):
         args["model_name"] == "stabilityai/stable-diffusion-2-inpainting"
         or args["model_name"] == "runwayml/stable-diffusion-inpainting"
     ):
-        args["image"] = get_image(job["start_image_uri"], size)
-        args["mask_image"] = get_image(job["mask_image_uri"], size)
         args["pipeline_type"] = StableDiffusionInpaintPipeline
 
     elif args["model_name"] == "stabilityai/stable-diffusion-2-depth":
-        args["image"] = get_image(job["start_image_uri"], size)
         args["pipeline_type"] = StableDiffusionDepth2ImgPipeline
         args.pop("height", None)
         args.pop("width", None)
 
-    # start_image_uri signals to use the img2img workflow for SD 1.5
-    elif "start_image_uri" in job:
-        args["image"] = get_image(job["start_image_uri"], size)
+    # having an image signals to use the img2img workflow for SD 1.5
+    elif "image" in args:
         args["pipeline_type"] = StableDiffusionImg2ImgPipeline
         # this model will reject these two args
         args.pop("height", None)
@@ -65,10 +66,6 @@ def format_args(job):
 
     if "negative_prompt" in args:
         args["negative_prompt"] = clean_prompt(args["negative_prompt"])
-
-    # get rid of anything that shouldn't be passed to the pipeline
-    args.pop("start_image_uri", None)
-    args.pop("mask_image_uri", None)
 
     return args
 
