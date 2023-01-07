@@ -44,7 +44,7 @@ async def run_worker():
             if response.ok:
                 response_dict = response.json()
 
-                wait_seconds = response_dict.pop("wait_seconds", 10)
+                wait_seconds = response_dict.pop("wait_seconds", 11)
                 for job in response_dict["jobs"]:
                     result = await do_work(job)
                     result = requests.post(
@@ -64,7 +64,7 @@ async def run_worker():
                 response_dict = response.json()
                 message = response_dict.pop("message", "bad worker")
                 print(f"{hive_uri} says {message}")
-                wait_seconds = response_dict.pop("wait_seconds", 120)
+                wait_seconds = response_dict.pop("wait_seconds", 121)
                 print(f"sleeping for {wait_seconds} seconds")
 
                 await asyncio.sleep(wait_seconds)
@@ -73,12 +73,12 @@ async def run_worker():
                 print(f"{hive_uri} returned {response.status_code}")
                 print("sleeping for 120 seconds")
 
-                await asyncio.sleep(120)
+                await asyncio.sleep(121)
 
         except Exception as e:
             print(e)  # this is if the work queue endpoint is unavailable
             print("sleeping for 120 seconds")
-            await asyncio.sleep(120)
+            await asyncio.sleep(121)
 
 
 async def startup():
