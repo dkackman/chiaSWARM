@@ -221,7 +221,8 @@ fi
 python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors
+pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors triton
+pip install -U --pre xformers
 pip -U git+https://github.com/huggingface/transformers.git
 
 echo ""
