@@ -7,6 +7,7 @@ from .job_arguments import format_args
 from . import __version__
 import hashlib
 
+
 async def do_work(job):
     device = remove_device_from_pool()
 
@@ -34,7 +35,7 @@ async def do_work(job):
             "nsfw": pipeline_config.get("nsfw", False),
             "worker_version": __version__,
             "pipeline_config": pipeline_config,
-            "sha256_hash": hashlib.sha256(buffer.getvalue()).hexdigest()
+            "sha256_hash": hashlib.sha256(buffer.getvalue()).hexdigest(),
         }
 
     finally:
