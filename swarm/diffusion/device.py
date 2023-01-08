@@ -57,7 +57,7 @@ class Device:
             if (
                 hasattr(p, "nsfw_content_detected")
                 and p.nsfw_content_detected is not None  # type: ignore
-                and len(p.nsfw_content_detected) == 1  # type: ignore
+                and len(p.nsfw_content_detected) >= 1  # type: ignore
             ):
                 for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):  # type: ignore
                     pipeline.config["nsfw"] = True
@@ -80,10 +80,6 @@ class Device:
         logging.debug(
             f"Loading {model_name} to device {self.device_id} - {torch.cuda.get_device_name(self.device_id)}"
         )
-        # clear gpu cache
-        # torch.cuda.set_device(self.device_id)
-        # with torch.no_grad():
-        #    torch.cuda.empty_cache()
 
         # load the pipeline and send it to the gpu
         pipeline = pipeline_type.from_pretrained(
