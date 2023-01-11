@@ -57,9 +57,9 @@ python -m swarm.worker
 If, when running the powershell script you see an erro about not being able to run scripts, you will need to enable powershell script execution with an [execution policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.3).
 
 ```powershell
+# this part needs to be run as an adminstrator
 Set-ExecutionPolicy Unrestricted
 ```
-
 
 
 ```powershell
