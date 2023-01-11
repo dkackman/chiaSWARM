@@ -54,6 +54,14 @@ python -m swarm.worker
 
 ### Windows
 
+If, when running the powershell script you see an erro about not being able to run scripts, you will need to enable powershell script execution with an [execution policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.3).
+
+```powershell
+Set-ExecutionPolicy RemoteSigned
+```
+
+
+
 ```powershell
 .\install.ps1
 venv\Scripts\activate
