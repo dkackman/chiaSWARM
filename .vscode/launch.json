@@ -19,6 +19,14 @@
             "module": "swarm.initialize",
             "cwd": "${workspaceFolder}/",
             "justMyCode": true
+        },
+        {
+            "name": "test",
+            "type": "python",
+            "request": "launch",
+            "module": "swarm.test",
+            "cwd": "${workspaceFolder}/",
+            "justMyCode": true
         }
     ]
 }
