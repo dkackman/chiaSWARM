@@ -67,11 +67,10 @@ python -m venv venv
 
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
 venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler triton
-venv\scripts\pip install -U --pre xformers
-venv\scripts\pip -U git+https://github.com/huggingface/transformers.git
+venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler transformers
+venv\scripts\pip install -U git+https://github.com/huggingface/transformers.git
 
 Write-Output ""
 Write-Output "chiaSWARM worker installation is now complete."
 Write-Output ""
-Write-Output "Type '. ./activate' and then 'python -m swarm.initialize' to begin."
+Write-Output "Type '.\venv\scripts\activate' and then 'python -m swarm.initialize' to begin."
