@@ -96,7 +96,7 @@ async def startup():
 
     for i in range(0, torch.cuda.device_count()):
         logging.info(f"Adding cuda device {i} - {torch.cuda.get_device_name(i)}")
-        add_device_to_pool(Device(i, settings.huggingface_token))
+        add_device_to_pool(Device(i))
 
 
 if __name__ == "__main__":

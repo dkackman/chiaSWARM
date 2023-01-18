@@ -7,7 +7,7 @@ test_job = {
     "model_name": "stabilityai/stable-diffusion-2-1",
     "prompt": "spoons",
     "num_inference_steps": 50,
-    "include_imagination_video": True,
+    "outputs": ["main_result", "inference_video", "inference_image_strip"],
 }
 
 
