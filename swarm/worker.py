@@ -25,7 +25,7 @@ async def run_worker():
 
     while True:
         try:
-            print(f"{datetime.now()}: Asking for work from {hive_uri}...")
+            print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
 
             response = requests.get(
                 f"{hive_uri}/work",
@@ -46,16 +46,21 @@ async def run_worker():
 
                 wait_seconds = response_dict.pop("wait_seconds", 11)
                 for job in response_dict["jobs"]:
+                    print("Got work")
                     result = await do_work(job)
-                    result = requests.post(
+                    resultResponse = requests.post(
                         f"{hive_uri}/results",
                         data=json.dumps(result),
                         headers={
                             "Content-type": "application/json",
                             "Authorization": f"Bearer {settings.sdaas_token}",
+                            "user-agent": f"chiaSWARM.worker/{__version__}",
                         },
                     )
-                    print(result.json())
+                    if resultResponse.status_code == 500:
+                        print(f"The hive returned an error: {resultResponse.reason}")
+                    else:
+                        print(resultResponse.json())
 
                 await asyncio.sleep(wait_seconds)
 
