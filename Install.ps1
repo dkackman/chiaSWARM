@@ -67,7 +67,7 @@ python -m venv venv
 
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
 venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler transformers
+venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler transformers moviepy
 venv\scripts\pip install -U git+https://github.com/huggingface/transformers.git
 
 Write-Output ""

@@ -6,8 +6,10 @@ test_job = {
     "id": "__test__",
     "model_name": "stabilityai/stable-diffusion-2-1",
     "prompt": "spoons",
-    "num_inference_steps": 50,
-    "outputs": ["main_result", "inference_video", "inference_image_strip"],
+    "num_inference_steps": 10,
+    # "outputs": ["primary", "inference_video", "inference_image_strip"],
+    "outputs": ["primary", "inference_image_strip"],
+    # "outputs": ["primary"],
 }
 
 

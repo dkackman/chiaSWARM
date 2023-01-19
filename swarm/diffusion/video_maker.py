@@ -10,3 +10,4 @@ def make_video(images, duration_seconds):
     fps = len(pils) / duration_seconds
     clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(pils, fps=fps)
     clip.write_videofile("/home/don/my_video.webm")
+    return {}

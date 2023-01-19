@@ -70,7 +70,7 @@ async def init():
 
 
 def get_models_from_hive(hive_uri):
-    print("Fetching known model list from the hive...")
+    print(f"Fetching known model list from the hive at {hive_uri}...")
 
     try:
         response = requests.get(

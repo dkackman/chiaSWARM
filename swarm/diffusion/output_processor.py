@@ -1,12 +1,16 @@
 from .video_maker import make_video
-from PIL import Image
+import hashlib
+import io
+from PIL import Image, ImageDraw
+import base64
 
 
 class OutputProcessor:
-    def __init__(self, output_list):
+    def __init__(self, output_list, main_content_type):
         self.intermediate_images = []
         self.outputs = []
         self.output_list = output_list
+        self.main_content_type = main_content_type
 
     def need_intermediates(self):
         return (
@@ -24,19 +28,48 @@ class OutputProcessor:
     def add_outputs(self, images):
         self.outputs.extend(images)
 
-    def get_video(self):
-        if "inference_video" in self.output_list:
-            make_video(self.intermediate_images + [self.outputs[0]], 5)
+    def get_results(self):
+        results = {}
+        if "primary" in self.output_list:
+            primary_result = post_process(self.outputs)
+            primary_result_buffer = image_to_buffer(
+                primary_result, self.main_content_type
+            )
+            results["primary"] = make_result(
+                primary_result_buffer, self.main_content_type
+            )
 
-    def get_final_image(self):
-        if "main_result" in self.output_list:
-            return post_process(self.outputs)
-
-    def get_strip(self):
         if "inference_image_strip" in self.output_list:
-            return image_grid(
+            image_strip = image_grid(
                 self.intermediate_images, 1, len(self.intermediate_images)
             )
+            image_strip_buffer = image_to_buffer(image_strip, "image/jpeg")
+            results["inference_image_strip"] = make_result(
+                image_strip_buffer, "image/jpeg"
+            )
+
+        if "inference_video" in self.output_list:
+            video = make_video(self.intermediate_images + [self.outputs[0]], 5)
+            video_buffer = image_to_buffer(video, "video/webm")
+            results["inference_video"] = make_result(video_buffer, "video/webm")
+
+        return results
+
+
+def make_result(buffer, content_type):
+    thumbnail_buffer = make_thumbnail(buffer)
+    return {
+        "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
+        "content_type": content_type,
+        "thumbnail": base64.b64encode(thumbnail_buffer.getvalue()).decode("UTF-8"),
+        "sha256_hash": hashlib.sha256(buffer.getvalue()).hexdigest(),
+    }
+
+
+def make_thumbnail(buffer):
+    image = Image.open(buffer).convert("RGB")
+    image.thumbnail((100, 100), Image.Resampling.LANCZOS)
+    return image_to_buffer(image, "image/jpeg", "web_low")
 
 
 def post_process(image_list) -> Image.Image:
@@ -65,3 +98,19 @@ def image_grid(image_list, rows, cols) -> Image.Image:
         grid.paste(img, box=(i % cols * w, i // cols * h))
 
     return grid
+
+
+def image_to_buffer(image, content_type, quality="web_high"):
+    if content_type.startswith("image"):
+        buffer = io.BytesIO()
+        if content_type == "image/png":
+            image.save(buffer, format="PNG")
+        else:
+            image.save(
+                buffer, format="JPEG", quality=quality, optimize=True, progressive=True
+            )
+
+        buffer.seek(0)
+        return buffer
+
+    raise NotImplementedError(content_type)

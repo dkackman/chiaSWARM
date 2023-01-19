@@ -3,7 +3,6 @@ import logging
 from threading import Lock
 from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 from diffusers.utils.import_utils import is_xformers_available
-from datetime import datetime
 from .output_processor import OutputProcessor
 
 
@@ -49,9 +48,13 @@ class Device:
 
             torch.manual_seed(seed)
 
-            output_processor = OutputProcessor(kwargs.pop("outputs", ["main_result"]))
+            output_processor = OutputProcessor(
+                kwargs.pop("outputs", ["primary"]),
+                kwargs.pop("content_type", "image/jpeg"),
+            )
 
             if output_processor.need_intermediates():
+                print("Capturing latents")
 
                 def latents_callback(i, t, latents):
                     output_processor.add_latents(pipeline, latents)  # type: ignore
@@ -73,9 +76,8 @@ class Device:
             pipeline.config["seed"] = seed
 
             output_processor.add_outputs(p.images)  # type: ignore
-            output_processor.get_video()
 
-            return (output_processor.get_final_image(), pipeline.config)  # type: ignore
+            return (output_processor.get_results(), pipeline.config)  # type: ignore
 
         finally:
             self.mutex.release()
