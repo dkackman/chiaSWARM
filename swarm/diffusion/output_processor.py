@@ -52,7 +52,7 @@ class OutputProcessor:
 
         if "inference_video" in self.output_list:
             thumbnail, video_buffer = make_video(
-                self.intermediate_images + [self.outputs[0]], 5
+                self.intermediate_images + [self.outputs[0].convert("RGB")], 5
             )
             thumbnail_buffer = image_to_buffer(thumbnail, "image/jpeg", "web_low")
             results["inference_video"] = make_result(
@@ -73,7 +73,7 @@ def make_result(buffer, thumb, content_type):
 
 
 def make_thumbnail(buffer):
-    image = Image.open(buffer).convert("RGB")
+    image = Image.open(buffer).convert("RGB")  # type: ignore
     image.thumbnail((100, 100), Image.Resampling.LANCZOS)
     return image_to_buffer(image, "image/jpeg", "web_low")
 
