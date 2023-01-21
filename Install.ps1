@@ -66,8 +66,9 @@ Write-Output "Python version is: $fullPythonVersion"
 python -m venv venv
 
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
+
 venv\scripts\pip install torch torchvision torchaudio
-venv\scripts\pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton
+venv\scripts\pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
 venv\scripts\pip install -U git+https://github.com/huggingface/transformers.git
 
 Write-Output ""

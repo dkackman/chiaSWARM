@@ -29,18 +29,18 @@ async def init():
     if not settings_exist() or overwrite:
         settings = Settings()
 
-        print("Provide the following details for the intial configuration:\n")
-        token = input("Huggingface API token: ").strip()
-        if len(token) == 0:
-            print("A Huggingface API token is required.")
-            return
+        # print("Provide the following details for the intial configuration:\n")
+        # token = input("Huggingface API token: ").strip()
+        # if len(token) == 0:
+        #     print("A Huggingface API token is required.")
+        #     return
 
         sdaas_token = input("chiaSWARM token: ").strip()
 
         sdaas_uri = input("chiaSWARM uri (https://chiaswarm.ai): ").strip()
         sdaas_uri = "https://chiaswarm.ai" if len(sdaas_uri) == 0 else sdaas_uri
 
-        settings.huggingface_token = token
+        # settings.huggingface_token = token
         settings.sdaas_token = sdaas_token
         settings.sdaas_uri = sdaas_uri
 
@@ -61,7 +61,7 @@ async def init():
         print(f"Initializing {model_name}/{revision}")
         DiffusionPipeline.from_pretrained(
             model_name,
-            use_auth_token=settings.huggingface_token,
+            # use_auth_token=settings.huggingface_token,
             revision=revision,
             torch_dtype=torch.float16,
         )
@@ -70,7 +70,7 @@ async def init():
 
 
 def get_models_from_hive(hive_uri):
-    print("Fetching known model list")
+    print(f"Fetching known model list from the hive at {hive_uri}...")
 
     try:
         response = requests.get(

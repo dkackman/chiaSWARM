@@ -1,19 +1,18 @@
-from typing import Optional
 import torch
 import logging
-from PIL import Image
 from threading import Lock
 from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 from diffusers.utils.import_utils import is_xformers_available
+from .output_processor import OutputProcessor
 
 
 class Device:
     device_id: int
     mutex: Lock
 
-    def __init__(self, device_id: int, auth_token) -> None:
+    def __init__(self, device_id: int) -> None:
         self.device_id = device_id
-        self.auth_token = auth_token
+        # self.auth_token = auth_token
         self.mutex = Lock()
 
     def __call__(self, **kwargs):
@@ -26,15 +25,13 @@ class Device:
                 logging.info(f"Prompt is {kwargs['prompt']}")
             self.log_device()
 
-            # if no scheduler is provided default to DPMSolverMultistepScheduler
-            scheduler = kwargs.pop("scheduler", None)
             model_name = kwargs.pop("model_name")
-            if scheduler is None:
-                scheduler = DPMSolverMultistepScheduler.from_pretrained(
-                    model_name,
-                    use_auth_token=self.auth_token,
-                    subfolder="scheduler",
-                )
+
+            scheduler = DPMSolverMultistepScheduler.from_pretrained(
+                model_name,
+                # use_auth_token=self.auth_token,
+                subfolder="scheduler",
+            )
 
             pipeline = self.get_pipeline(
                 model_name,
@@ -51,9 +48,23 @@ class Device:
 
             torch.manual_seed(seed)
 
+            output_processor = OutputProcessor(
+                kwargs.pop("outputs", ["primary"]),
+                kwargs.pop("content_type", "image/jpeg"),
+            )
+
+            if output_processor.need_intermediates():
+                print("Capturing latents")
+
+                def latents_callback(i, t, latents):
+                    output_processor.add_latents(pipeline, latents)  # type: ignore
+
+                kwargs["callback"] = latents_callback
+                kwargs["callback_steps"] = 5
+
             p = pipeline(**kwargs)  # type: ignore
 
-            # if any image is nsfw flag the entire result
+            # if any image is nsfw, flag the entire result
             if (
                 hasattr(p, "nsfw_content_detected")
                 and p.nsfw_content_detected is not None  # type: ignore
@@ -64,7 +75,10 @@ class Device:
 
             pipeline.config["seed"] = seed
 
-            return (post_process(p.images), pipeline.config)  # type: ignore
+            output_processor.add_outputs(p.images)  # type: ignore
+
+            return (output_processor.get_results(), pipeline.config)  # type: ignore
+
         finally:
             self.mutex.release()
 
@@ -84,7 +98,7 @@ class Device:
         # load the pipeline and send it to the gpu
         pipeline = pipeline_type.from_pretrained(
             model_name,
-            use_auth_token=self.auth_token,
+            # use_auth_token=self.auth_token,
             revision=revision,
             torch_dtype=torch_dtype,
             custom_pipeline=custom_pipeline,
@@ -113,31 +127,3 @@ class Device:
         logging.debug(
             f"Using device# {self.device_id} - {torch.cuda.get_device_name(self.device_id)}"
         )
-
-
-def post_process(image_list) -> Image.Image:
-    num_images = len(image_list)
-    if num_images == 1:
-        image = image_list[0]
-    elif num_images == 2:
-        image = image_grid(image_list, 1, 2)
-    elif num_images <= 4:
-        image = image_grid(image_list, 2, 2)
-    elif num_images <= 6:
-        image = image_grid(image_list, 2, 3)
-    elif num_images <= 9:
-        image = image_grid(image_list, 3, 3)
-    else:
-        raise (Exception("too many images"))
-
-    return image
-
-
-def image_grid(image_list, rows, cols) -> Image.Image:
-    w, h = image_list[0].size
-    grid = Image.new("RGB", size=(cols * w, rows * h))
-
-    for i, img in enumerate(image_list):
-        grid.paste(img, box=(i % cols * w, i // cols * h))
-
-    return grid

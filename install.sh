@@ -220,8 +220,9 @@ fi
 # pip 20.x+ supports Linux binary wheels
 python -m pip install --upgrade pip
 python -m pip install wheel setuptools
+
 pip install torch torchvision torchaudio
-pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton
+pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
 pip install -U git+https://github.com/huggingface/transformers.git
 
 echo ""
