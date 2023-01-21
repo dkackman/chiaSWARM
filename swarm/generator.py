@@ -47,6 +47,7 @@ def exception_image(e, content_type):
     image = image_from_text(message)
     pipe_config = {"error": message}
 
+    buffer = image_to_buffer(image, content_type)
     return {
-        "primary": make_result(image_to_buffer(image, content_type), content_type)
+        "primary": make_result(buffer, buffer, content_type)
     }, pipe_config
