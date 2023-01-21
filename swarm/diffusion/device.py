@@ -60,7 +60,7 @@ class Device:
                     output_processor.add_latents(pipeline, latents)  # type: ignore
 
                 kwargs["callback"] = latents_callback
-                kwargs["callback_steps"] = 4
+                kwargs["callback_steps"] = 5
 
             p = pipeline(**kwargs)  # type: ignore
 

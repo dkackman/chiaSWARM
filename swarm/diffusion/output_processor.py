@@ -1,7 +1,7 @@
 from .video_maker import make_video
 import hashlib
 import io
-from PIL import Image, ImageDraw
+from PIL import Image
 import base64
 
 
@@ -41,9 +41,11 @@ class OutputProcessor:
 
         if "inference_image_strip" in self.output_list:
             image_strip = image_grid(
-                self.intermediate_images, 1, len(self.intermediate_images)
+                self.intermediate_images + [self.outputs[0]],
+                1,
+                len(self.intermediate_images) + 1,
             )
-            image_strip_buffer = image_to_buffer(image_strip, "image/jpeg")
+            image_strip_buffer = image_to_buffer(image_strip, "image/jpeg", "web_low")
             results["inference_image_strip"] = make_result(
                 image_strip_buffer, "image/jpeg"
             )
