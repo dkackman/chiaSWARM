@@ -36,7 +36,7 @@ class OutputProcessor:
                 primary_result, self.main_content_type
             )
             results["primary"] = make_result(
-                primary_result_buffer, self.main_content_type
+                primary_result_buffer, primary_result_buffer, self.main_content_type
             )
 
         if "inference_image_strip" in self.output_list:
@@ -47,19 +47,23 @@ class OutputProcessor:
             )
             image_strip_buffer = image_to_buffer(image_strip, "image/jpeg", "web_low")
             results["inference_image_strip"] = make_result(
-                image_strip_buffer, "image/jpeg"
+                image_strip_buffer, image_strip_buffer, "image/jpeg"
             )
 
         if "inference_video" in self.output_list:
-            video = make_video(self.intermediate_images + [self.outputs[0]], 5)
-            video_buffer = image_to_buffer(video, "video/webm")
-            results["inference_video"] = make_result(video_buffer, "video/webm")
+            thumbnail, video_buffer = make_video(
+                self.intermediate_images + [self.outputs[0]], 5
+            )
+            thumbnail_buffer = image_to_buffer(thumbnail, "image/jpeg", "web_low")
+            results["inference_video"] = make_result(
+                video_buffer, thumbnail_buffer, "video/webm"
+            )
 
         return results
 
 
-def make_result(buffer, content_type):
-    thumbnail_buffer = make_thumbnail(buffer)
+def make_result(buffer, thumb, content_type):
+    thumbnail_buffer = make_thumbnail(thumb)
     return {
         "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
         "content_type": content_type,
