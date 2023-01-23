@@ -7,6 +7,7 @@ from .settings import (
     load_settings,
     resolve_path,
     settings_exist,
+    save_file,
 )
 
 import asyncio
@@ -81,6 +82,8 @@ def get_models_from_hive(hive_uri):
             },
         )
         data = response.json()
+        save_file(data, "models.json")
+
         print("done")
 
         return data["models"]

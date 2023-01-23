@@ -64,6 +64,15 @@ def get_settings_dir():
     return Path(dir).expanduser()
 
 
+def save_file(data, filename):
+    dir = Path(get_settings_dir())
+    dir.mkdir(0o770, parents=True, exist_ok=True)
+    full_path = dir.joinpath(filename)
+
+    with open(full_path, "w") as file:
+        file.write(json.dumps(data, indent=2))
+
+
 def get_settings_full_path():
     return Path(get_settings_dir()).joinpath("settings.json")
 
