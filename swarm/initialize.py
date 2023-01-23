@@ -7,6 +7,7 @@ from .settings import (
     load_settings,
     resolve_path,
     settings_exist,
+    save_file,
 )
 
 import asyncio
@@ -35,10 +36,10 @@ async def init():
         #     print("A Huggingface API token is required.")
         #     return
 
-        sdaas_token = input("chiaSWARM token: ").strip()
-
         sdaas_uri = input("chiaSWARM uri (https://chiaswarm.ai): ").strip()
         sdaas_uri = "https://chiaswarm.ai" if len(sdaas_uri) == 0 else sdaas_uri
+
+        sdaas_token = input("chiaSWARM token: ").strip()
 
         # settings.huggingface_token = token
         settings.sdaas_token = sdaas_token
@@ -81,6 +82,8 @@ def get_models_from_hive(hive_uri):
             },
         )
         data = response.json()
+        save_file(data, "models.json")
+
         print("done")
 
         return data["models"]
