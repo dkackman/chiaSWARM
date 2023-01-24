@@ -1,32 +1,39 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Worker",
-            "type": "python",
-            "request": "launch",
-            "module": "swarm.worker",
-            "cwd": "${workspaceFolder}/",
-            "justMyCode": true
-        },        
-        {
-            "name": "Init",
-            "type": "python",
-            "request": "launch",
-            "module": "swarm.initialize",
-            "cwd": "${workspaceFolder}/",
-            "justMyCode": true
-        },
-        {
-            "name": "test",
-            "type": "python",
-            "request": "launch",
-            "module": "swarm.test",
-            "cwd": "${workspaceFolder}/",
-            "justMyCode": true
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PowerShell Launch Current File",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${file}",
+      "cwd": "${cwd}"
+    },
+    {
+      "name": "Worker",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.worker",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
+      "name": "Init",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.initialize",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
+      "name": "test",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.test",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    }
+  ]
 }

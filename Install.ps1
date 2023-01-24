@@ -1,13 +1,11 @@
 $ErrorActionPreference = "Stop"
 
-if ([Environment]::Is64BitOperatingSystem -eq $false)
-{
+if ([Environment]::Is64BitOperatingSystem -eq $false) {
     Write-Output "chiaSWARM requires a 64-bit Windows installation"
     Exit 1
 }
 
-if (-not (Get-Item -ErrorAction SilentlyContinue "$env:windir\System32\msvcp140.dll").Exists)
-{
+if (-not (Get-Item -ErrorAction SilentlyContinue "$env:windir\System32\msvcp140.dll").Exists) {
     Write-Output "Unable to find Visual C++ Runtime DLLs"
     Write-Output ""
     Write-Output "Download and install the Visual C++ Redistributable for Visual Studio 2019 package from:"
@@ -15,8 +13,7 @@ if (-not (Get-Item -ErrorAction SilentlyContinue "$env:windir\System32\msvcp140.
     Exit 1
 }
 
-if ($null -eq (Get-Command python -ErrorAction SilentlyContinue))
-{
+if ($null -eq (Get-Command python -ErrorAction SilentlyContinue)) {
     Write-Output "Unable to find python"
     Write-Output "Note the check box during installation of Python to install the Python Launcher for Windows."
     Write-Output ""
@@ -25,32 +22,26 @@ if ($null -eq (Get-Command python -ErrorAction SilentlyContinue))
 }
 
 $supportedPythonVersions = "3.10", "3.9", "3.8", "3.7"
-if ("$env:INSTALL_PYTHON_VERSION" -ne "")
-{
+if ("$env:INSTALL_PYTHON_VERSION" -ne "") {
     $pythonVersion = $env:INSTALL_PYTHON_VERSION
 }
-else
-{
-    foreach ($version in $supportedPythonVersions)
-    {
-        try
-        {
-            python --version 2>&1 >$null
-            $result = $?
+else {
+    foreach ($version in $supportedPythonVersions) {
+        try {
+            $pver = (python --version).split(" ")[1]
+            $result = $pver.StartsWith($version)
         }
-        catch
-        {
+        catch {
             $result = $false
         }
-        if ($result)
-        {
+        if ($result) {
             $pythonVersion = $version
             break
         }
     }
+    Write-Output $pythonVersion
 
-    if (-not $pythonVersion)
-    {
+    if (-not $pythonVersion) {
         $reversedPythonVersions = $supportedPythonVersions.clone()
         [array]::Reverse($reversedPythonVersions)
         $reversedPythonVersions = $reversedPythonVersions -join ", "
@@ -67,8 +58,8 @@ python -m venv venv
 
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
 
-venv\scripts\pip install torch torchvision torchaudio
-venv\scripts\pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
+venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
+venv\scripts\pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 moviepy
 venv\scripts\pip install -U git+https://github.com/huggingface/transformers.git
 
 Write-Output ""
