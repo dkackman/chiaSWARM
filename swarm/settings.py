@@ -31,7 +31,7 @@ def load_settings():
         settings.sdaas_uri = os.environ.get("SDAAS_URI", "")
 
     if not os.environ.get("SDAAS_WORKERNAME", None) is None:
-        settings.worker_name = os.environ.get("SDAAS_WORKERNAME", "")
+        settings.worker_name = os.environ.get("SDAAS_WORKERNAME", "worker")
 
     return settings
 

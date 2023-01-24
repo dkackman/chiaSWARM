@@ -60,12 +60,17 @@ async def init():
         model_name = model["model_name"]
         revision = model["revision"]
         print(f"Initializing {model_name}/{revision}")
-        DiffusionPipeline.from_pretrained(
-            model_name,
-            # use_auth_token=settings.huggingface_token,
-            revision=revision,
-            torch_dtype=torch.float16,
-        )
+        try:
+            DiffusionPipeline.from_pretrained(
+                model_name,
+                # use_auth_token=settings.huggingface_token,
+                revision=revision,
+                torch_dtype=torch.float16,
+            )
+        except Exception as e:
+            print(f"Failed to initialize {model_name}/{revision}")
+            logging.error(e)
+
     print("done")
     print("To be the swarm type 'python -m swarm.worker'")
 
@@ -89,6 +94,7 @@ def get_models_from_hive(hive_uri):
         return data["models"]
     except Exception as e:
         print(e)
+        logging.error(e)
         return []
 
 
