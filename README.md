@@ -26,9 +26,11 @@ Open an issue to gain acess and give it a try on [the beta network](https://chia
 - &check; Networking and core protocal
 - &check; Basic stable diffusion workloads (txt2image, img2img, various models)
 - &check; Image upscale, inpainting, and stable diffusion 2.1
+- &check; Docker
 - More stable diffusion workloads (other interesting models & ongoing version bumps)
-- _swarm integration (earn, buy, sell, spend)
+- XCH integration
 - GPT workloads
+- REAL ESRGAN image upscale and face fixing
 - Whatever else catches our fancy
 
 Suggestions, issues and pull requests welcome.
