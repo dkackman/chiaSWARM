@@ -1,7 +1,11 @@
 import torch
 import logging
 from threading import Lock
-from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
+from diffusers import (
+    DiffusionPipeline,
+    DPMSolverMultistepScheduler,
+    StableDiffusionInstructPix2PixPipeline,
+)
 from diffusers.utils.import_utils import is_xformers_available
 from .output_processor import OutputProcessor
 
@@ -33,13 +37,17 @@ class Device:
                 subfolder="scheduler",
             )
 
+            pipeline_type = DiffusionPipeline
+            if model_name == "timbrooks/instruct-pix2pix":
+                pipeline_type = StableDiffusionInstructPix2PixPipeline
+
             pipeline = self.get_pipeline(
                 model_name,
                 kwargs.pop("revision"),
                 kwargs.pop("custom_pipeline", None),
                 kwargs.pop("torch_dtype", torch.float16),
                 scheduler,
-                kwargs.pop("pipeline_type", DiffusionPipeline),
+                kwargs.pop("pipeline_type", pipeline_type),
             )
 
             seed = kwargs.pop("seed", None)
@@ -101,25 +109,25 @@ class Device:
             # use_auth_token=self.auth_token,
             revision=revision,
             torch_dtype=torch_dtype,
-            custom_pipeline=custom_pipeline,
-            scheduler=scheduler,
+            # custom_pipeline=custom_pipeline,
+            # scheduler=scheduler,
         ).to(
             f"cuda:{self.device_id}"
         )  # type: ignore
 
-        try:
-            pipeline.enable_attention_slicing()
-        except:
-            print("error enable_attention_slicing")
+        # try:
+        #     pipeline.enable_attention_slicing()
+        # except:
+        #     print("error enable_attention_slicing")
 
-        if is_xformers_available():
-            try:
-                pipeline.enable_xformers_memory_efficient_attention()
-            except Exception as e:
-                print(
-                    "Could not enable memory efficient attention. Make sure xformers is installed"
-                    f" correctly and a GPU is available: {e}"
-                )
+        # if is_xformers_available():
+        #     try:
+        #         pipeline.enable_xformers_memory_efficient_attention()
+        #     except Exception as e:
+        #         print(
+        #             "Could not enable memory efficient attention. Make sure xformers is installed"
+        #             f" correctly and a GPU is available: {e}"
+        #         )
 
         return pipeline
 
