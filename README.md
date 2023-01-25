@@ -35,7 +35,7 @@ Suggestions, issues and pull requests welcome.
 
 ## Becoming the SWARM
 
-In order to be a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU; 30XX or better recommended. 
+In order to be a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU; 30XX or better recommended.
 
 While we test the network, nodes are by invite only. To participate please contact mailto:admin@chiaswarm.ai.
 
@@ -61,7 +61,6 @@ If, when running the powershell script you see an erro about not being able to r
 Set-ExecutionPolicy Unrestricted
 ```
 
-
 ```powershell
 .\install.ps1
 venv\Scripts\activate
@@ -77,18 +76,21 @@ It will also download all of the needed machine learning models which will take 
 
 ## Docker
 
-### it builds but cuda runs into issues with driver mismatch. if anyone knows how to get cuda to work in a container please reach out!
-
-First install the [NVidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker) on the docker host.
-
-The docker image needs a bind mount for the huggingface model cache. Make sure the host machine has the cached models (typically in `~/.cache/huggingface`).
+The docker image needs a bind mount for the huggingface model cache. Set the `src` in the example below property to `~/.cache/huggingface` or `C:\Users\don\.cache\huggingface`.
 
 ```bash
-docker build -t chiaSWARM . -f Dockerfile
-docker run -v "/home/YOUR_USERNAME/.cache/huggingface:/root/.cache/huggingface/" \
+docker pull dkackman/chiaswarm
+
+# only needs to be run once. files will be cached on the host
+docker run \
+    --mount "src=/home/YOUR_USERNAME/.cache/huggingface,target=/root/.cache/huggingface/" \
+    dkackman/chiaswarm \
+    python -m swarm.initialize --silent
+
+# starts the swarm worker 
+docker run \
+    --mount "src=/home/YOUR_USERNAME/.cache/huggingface,target=/root/.cache/huggingface/" \
     --gpus all \
-    --env HUGGINGFACE_TOKEN=YOUR TOKEN \
     --env SDAAS_TOKEN=YOUR TOKEN \
-    --env SDAAS_URI=https://chiaswarm-dev.azurewebsites.net \
-    chiaSWARM
+    dkackman/chiaswarm
 ```

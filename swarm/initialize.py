@@ -27,7 +27,7 @@ async def init():
     if settings_exist() and "--reset" in sys.argv:
         overwrite = True
 
-    if not settings_exist() or overwrite:
+    if (not "--silent" in sys.argv) and (not settings_exist() or overwrite):
         settings = Settings()
 
         # print("Provide the following details for the intial configuration:\n")
