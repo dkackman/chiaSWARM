@@ -1,19 +1,26 @@
-FROM python:3.10.6-slim
+FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
 
-RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 gcc git
+RUN apt-get update
+
+# silence tzdaata
+RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get install -y tzdata
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+
+RUN apt-get install -y libgl1 libglib2.0-0 gcc git python3.10
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_ROOT_USER_ACTION=ignore
 
-WORKDIR /sdaas
-
-RUN python3 -m pip install --upgrade pip
+RUN python -m pip install --upgrade pip
 RUN python -m pip install wheel setuptools
 
-RUN pip install torch torchvision torchaudio
+# RUN pip install torch torchvision torchaudio
 RUN pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
 RUN pip install -U git+https://github.com/huggingface/transformers.git
 
+WORKDIR /sdaas
 COPY ./ /sdaas
 
 # this will be mounted as a bind point so the image can use the host's model files
@@ -27,5 +34,5 @@ CMD ["python", "-m", "swarm.worker"]
 
 
 # docker build -t dkackman/chiaswarm .
-# docker run -it --gpus all --mount type=bind,src=C:\Users\don\.cache\huggingface,target=/root/.cache/huggingface/ --env HUGGINGFACE_TOKEN=<YOUR TOKEN> dkackman/chiaswarm /bin/bash
-# docker run --gpus all --mount type=bind,src=C:\Users\don\.cache\huggingface,target=/root/.cache/huggingface/ --env HUGGINGFACE_TOKEN=<YOUR TOKEN> dkackman/chiaswarm
+# docker run -it --gpus all --mount type=bind,src=C:\Users\don\.cache\huggingface,target=/root/.cache/huggingface/ --env SDAAS_TOKEN=<YOUR TOKEN> dkackman/chiaswarm /bin/bash
+# docker run --gpus all --mount type=bind,src=C:\Users\don\.cache\huggingface,target=/root/.cache/huggingface/ --env SDAAS_TOKEN=<YOUR TOKEN> dkackman/chiaswarm
