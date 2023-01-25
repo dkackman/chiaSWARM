@@ -78,7 +78,7 @@ It will also download all of the needed machine learning models which will take 
 
 ## Docker
 
-The docker image needs a bind mount for the huggingface model cache. Set `src` in the example below as apprpriate to `/home/USER_NAME/.cache/huggingface` or `C:\Users\USER_NAME\.cache\huggingface`.
+The docker image needs a bind mount for the huggingface model cache. Set `src` in the example below as appropriate to `/home/USER_NAME/.cache/huggingface` or `C:\Users\USER_NAME\.cache\huggingface`.
 
 ```bash
 docker pull dkackman/chiaswarm
