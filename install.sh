@@ -222,9 +222,7 @@ python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 
 pip install torch torchvision torchaudio
-pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
-pip install -U git+https://github.com/huggingface/transformers.git
-
+pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
 echo ""
 echo "chiaSWARM worker installation is now complete."
 echo ""

@@ -59,8 +59,8 @@ python -m venv venv
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
 
 venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
-venv\scripts\pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 moviepy
-venv\scripts\pip install -U git+https://github.com/huggingface/transformers.git
+venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 moviepy
+
 
 Write-Output ""
 Write-Output "chiaSWARM worker installation is now complete."
