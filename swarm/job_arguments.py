@@ -32,7 +32,7 @@ def format_args(job):
             )
 
     if "start_image_uri" in args:
-        args["image"] = get_image(args.pop("start_image_uri"), size)
+        args["image"] = download_image(args.pop("start_image_uri"))
 
     if "mask_image_uri" in args:
         args["mask_image"] = get_image(args.pop("start_image_uri"), size)
