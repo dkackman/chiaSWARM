@@ -39,7 +39,6 @@ else {
             break
         }
     }
-    Write-Output $pythonVersion
 
     if (-not $pythonVersion) {
         $reversedPythonVersions = $supportedPythonVersions.clone()
@@ -53,6 +52,11 @@ else {
 $fullPythonVersion = (python --version).split(" ")[1]
 
 Write-Output "Python version is: $fullPythonVersion"
+
+# remove the venv if it exists
+if (Test-Path -Path ".\venv" -PathType Container) {
+    Remove-Item -LiteralPath ".\venv" -Recurse -Force
+}
 
 python -m venv venv
 
