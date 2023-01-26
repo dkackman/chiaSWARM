@@ -17,8 +17,7 @@ RUN python -m pip install --upgrade pip
 RUN python -m pip install wheel setuptools
 
 # RUN pip install torch torchvision torchaudio
-RUN pip install diffusers[torch] accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
-RUN pip install -U git+https://github.com/huggingface/transformers.git
+RUN pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
 
 WORKDIR /sdaas
 COPY ./ /sdaas
@@ -27,6 +26,8 @@ COPY ./ /sdaas
 RUN mkdir /root/.cache/huggingface/
 
 ENV SDAAS_ROOT=/sdaas/
+
+# these are the configurable settings for the worker
 ENV SDAAS_TOKEN=
 ENV SDAAS_URI=https://chiaswarm.ai
 ENV SDAAS_WORKERNAME=dock_worker
