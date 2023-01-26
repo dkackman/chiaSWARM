@@ -32,19 +32,21 @@ def format_args(job):
             )
 
     if "start_image_uri" in args:
-        args["image"] = download_image(args.pop("start_image_uri"))
+        args["image"] = get_image(args.pop("start_image_uri"), size)
 
     if "mask_image_uri" in args:
-        args["mask_image"] = get_image(args.pop("start_image_uri"), size)
+        args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
     # some workloads have different processing and arguments - that happens here
     # TODO data drive this from the model meta data (and schedulers)
     if args["model_name"] == "timbrooks/instruct-pix2pix":
         args["pipeline_type"] = StableDiffusionInstructPix2PixPipeline
+        args.pop("height", None)
+        args.pop("width", None)
+
+        # this model defaults to 100, which we don't want
         if "num_inference_steps" not in args:
-            args[
-                "num_inference_steps"
-            ] = 50  # this model defaults to 100, which we don't want
+            args["num_inference_steps"] = 50
 
     elif args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
         args["pipeline_type"] = StableDiffusionUpscalePipeline
