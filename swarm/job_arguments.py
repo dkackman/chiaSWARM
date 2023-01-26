@@ -6,8 +6,9 @@ from diffusers import (
     StableDiffusionUpscalePipeline,
     StableDiffusionInpaintPipeline,
     StableDiffusionDepth2ImgPipeline,
+    StableDiffusionInstructPix2PixPipeline,
 )
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 
 max_size = 1024
@@ -31,13 +32,21 @@ def format_args(job):
             )
 
     if "start_image_uri" in args:
-        args["image"] = get_image(args.pop("start_image_uri"), size)
+        args["image"] = download_image(args.pop("start_image_uri"))
 
     if "mask_image_uri" in args:
-        args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
+        args["mask_image"] = get_image(args.pop("start_image_uri"), size)
 
     # some workloads have different processing and arguments - that happens here
-    if args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
+    # TODO data drive this from the model meta data (and schedulers)
+    if args["model_name"] == "timbrooks/instruct-pix2pix":
+        args["pipeline_type"] = StableDiffusionInstructPix2PixPipeline
+        if "num_inference_steps" not in args:
+            args[
+                "num_inference_steps"
+            ] = 50  # this model defaults to 100, which we don't want
+
+    elif args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
         args["pipeline_type"] = StableDiffusionUpscalePipeline
         # this model will reject these two args
         args.pop("height", None)
@@ -78,6 +87,14 @@ def clean_prompt(str):
     return cleaned
 
 
+def download_image(url):
+    image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGB")
+
+    return image
+
+
 def get_image(uri, size):
     head = requests.head(uri, allow_redirects=True)
     content_length = head.headers.pop("Content-Length", 0)
@@ -88,15 +105,13 @@ def get_image(uri, size):
             f"Input does not appear to be an image.\nContent type was {content_type}."
         )
 
-    # to protect worker nodes, no external images over 2 MiB
-    if int(content_length) > 2097152:
+    # to protect worker nodes, no external images over 3 MiB
+    if int(content_length) > 1048576 * 3:
         raise Exception(
-            f"Input image too large.\nMax size is 2097152 bytes.\nImage was {content_length}."
+            f"Input image too large.\nMax size is {1048576 * 3} bytes.\nImage was {content_length}."
         )
 
-    response = requests.get(uri, allow_redirects=True)
-
-    image = Image.open(io.BytesIO(response.content)).convert("RGB")
+    image = download_image(uri)
 
     # if we have a desired size and the image is alrger than it, scale the image down
     if size != None and (image.height > size[0] or image.width > size[1]):

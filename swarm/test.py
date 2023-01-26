@@ -1,6 +1,11 @@
 from .generator import do_work
 from .worker import startup
 import asyncio
+import PIL
+import requests
+import torch
+from diffusers import StableDiffusionInstructPix2PixPipeline
+from .job_arguments import download_image
 
 test_job = {
     "id": "__test__",
@@ -11,6 +16,30 @@ test_job = {
     "outputs": ["primary", "inference_image_strip"],
     # "outputs": ["primary"],
 }
+
+
+async def pix2pix():
+    model_id = "timbrooks/instruct-pix2pix"
+
+    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(
+        model_id, torch_dtype=torch.float16
+    ).to(  # type: ignore
+        "cuda"
+    )
+
+    url = "https://huggingface.co/datasets/diffusers/diffusers-images-docs/resolve/main/mountain.png"
+
+    image = download_image(url)
+
+    prompt = "make the mountains snowy"
+    pipe = pipe(
+        prompt,
+        image=image,
+        num_inference_steps=20,
+        image_guidance_scale=1.5,
+        guidance_scale=7,
+    )  # type: ignore
+    pipe.images[0].save("snowy_mountains.png")  # type: ignore
 
 
 async def run_test():
@@ -28,4 +57,4 @@ async def run_test():
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test())
+    asyncio.run(pix2pix())
