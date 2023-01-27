@@ -28,6 +28,7 @@ Open an issue to gain acess and give it a try on [the beta network](https://chia
 - &check; Image upscale, inpainting, and stable diffusion 2.1
 - &check; Docker
 - More stable diffusion workloads (other interesting models & ongoing version bumps)
+  - See the current [list of supported models](https://chiaswarm.ai/about)
 - XCH integration
 - GPT workloads
 - REAL ESRGAN image upscale and face fixing
@@ -43,7 +44,7 @@ While we test the network, nodes are by invite only. To participate please conta
 
 From the repo root run `sh install.sh` on linux or `install.ps1` on windows.
 
-These scripts will create a virtual environment and install the swarm to it. To run the swarm worker:
+These scripts will create a virtual environment and install the swarm to it.
 
 ### Linux
 
