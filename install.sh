@@ -198,19 +198,12 @@ fi
 echo "Python version is $INSTALL_PYTHON_VERSION"
 
 
-# If version of `python` and "$INSTALL_PYTHON_VERSION" does not match, clear old version
-VENV_CLEAR=""
-if [ -e venv/bin/python ]; then
-  VENV_PYTHON_VER=$(venv/bin/python -V)
-  TARGET_PYTHON_VER=$($INSTALL_PYTHON_PATH -V)
-  if [ "$VENV_PYTHON_VER" != "$TARGET_PYTHON_VER" ]; then
-    echo "existing python version in venv is $VENV_PYTHON_VER while target python version is $TARGET_PYTHON_VER"
-    echo "Refreshing venv modules..."
-    VENV_CLEAR="--clear"
-  fi
+if [ -d "venv" ]; then
+  rm ./venv -rf
 fi
 
-$INSTALL_PYTHON_PATH -m venv venv $VENV_CLEAR
+
+$INSTALL_PYTHON_PATH -m venv venv
 if [ ! -f "activate" ]; then
   ln -s venv/bin/activate .
 fi
