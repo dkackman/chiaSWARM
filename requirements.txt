@@ -28,7 +28,7 @@ proglog==0.1.10
 psutil==5.9.4
 pycodestyle==2.10.0
 pyflakes==3.0.1
-pyre-extensions==0.0.23
+pyre-extensions==0.0.30
 pywin32==305
 PyYAML==6.0
 regex==2022.10.31
