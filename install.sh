@@ -197,12 +197,12 @@ if [ "$PYTHON_MAJOR_VER" -ne "3" ] || [ "$PYTHON_MINOR_VER" -lt "7" ] || [ "$PYT
 fi
 echo "Python version is $INSTALL_PYTHON_VERSION"
 
-
+# delete the venv folder if present
 if [ -d "venv" ]; then
   rm ./venv -rf
 fi
 
-
+# create the venv and add soft link to activate
 $INSTALL_PYTHON_PATH -m venv venv
 if [ ! -f "activate" ]; then
   ln -s venv/bin/activate .
@@ -215,7 +215,7 @@ python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 
 pip install torch torchvision torchaudio
-pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers==0.0.16rc425 triton moviepy
+pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers triton moviepy
 echo ""
 echo "chiaSWARM worker installation is now complete."
 echo ""
