@@ -5,6 +5,56 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "tiny chat",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.pyg",
+      "args": [
+        "-m",
+        "PygmalionAI/pygmalion-350m"
+      ],
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
+      "name": "small chat",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.pyg",
+      "args": [
+        "-m",
+        "PygmalionAI/pygmalion-1.3b"
+      ],
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
+      "name": "medium chat",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.pyg",
+      "args": [
+        "-m",
+        "PygmalionAI/pygmalion-2.7b"
+      ],
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
+      "name": "large chat",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.pyg",
+      "args": [
+        "-m",
+        "PygmalionAI/pygmalion-6b",
+        "-d",
+        "cpu"
+      ],
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
       "name": "Python: Current File",
       "type": "python",
       "request": "launch",
