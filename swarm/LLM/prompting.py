@@ -1,7 +1,7 @@
 import logging
 import typing as t
 
-from parsing import parse_messages_from_str
+from .parsing import parse_messages_from_str
 
 logger = logging.getLogger(__name__)
 
@@ -14,19 +14,21 @@ def build_prompt_for(
     example_dialogue: t.Optional[str] = None,
     world_scenario: t.Optional[str] = None,
 ) -> str:
-    '''Converts all the given stuff into a proper input prompt for the model.'''
+    """Converts all the given stuff into a proper input prompt for the model."""
 
     # If example dialogue is given, parse the history out from it and append
     # that at the beginning of the dialogue history.
-    example_history = parse_messages_from_str(
-        example_dialogue, ["You", char_name]) if example_dialogue else []
+    example_history = (
+        parse_messages_from_str(example_dialogue, ["You", char_name])
+        if example_dialogue
+        else []
+    )
     concatenated_history = [*example_history, *history]
 
     # Construct the base turns with the info we already have.
     prompt_turns = [
         # TODO(11b): Shouldn't be here on the original 350M.
         "<START>",
-
         # TODO(11b): Arbitrary limit. See if it's possible to vary this
         # based on available context size and VRAM instead.
         *concatenated_history[-8:],

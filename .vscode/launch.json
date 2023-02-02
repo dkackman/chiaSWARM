@@ -8,7 +8,7 @@
       "name": "tiny chat",
       "type": "python",
       "request": "launch",
-      "module": "swarm.pyg",
+      "module": "swarm.chat",
       "args": [
         "-m",
         "PygmalionAI/pygmalion-350m"
@@ -20,7 +20,7 @@
       "name": "small chat",
       "type": "python",
       "request": "launch",
-      "module": "swarm.pyg",
+      "module": "swarm.chat",
       "args": [
         "-m",
         "PygmalionAI/pygmalion-1.3b"
@@ -32,10 +32,10 @@
       "name": "medium chat",
       "type": "python",
       "request": "launch",
-      "module": "swarm.pyg",
+      "module": "swarm.chat",
       "args": [
         "-m",
-        "PygmalionAI/pygmalion-2.7b"
+        "bigscience/bloomz-3b"
       ],
       "cwd": "${workspaceFolder}/",
       "justMyCode": true
@@ -44,10 +44,10 @@
       "name": "large chat",
       "type": "python",
       "request": "launch",
-      "module": "swarm.pyg",
+      "module": "swarm.chat",
       "args": [
         "-m",
-        "PygmalionAI/pygmalion-6b",
+        "bigscience/bloomz-7b1",
         "-d",
         "cpu"
       ],
