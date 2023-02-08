@@ -38,7 +38,7 @@ Suggestions, issues and pull requests welcome.
 
 ## Becoming the SWARM
 
-In order to be a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU; 30XX or better recommended.
+In order to be a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU with at least 8GB of VRAM; 30XX or better recommended.
 
 Follow [the installation instructions](https://github.com/dkackman/chiaSWARM/wiki/Installation) to get started.
 
