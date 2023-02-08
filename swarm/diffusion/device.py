@@ -11,6 +11,12 @@ class Device:
     mutex: Lock
 
     def __init__(self, device_id: int) -> None:
+        mem_info = torch.cuda.mem_get_info(device_id)
+        if mem_info[1] < 8000000000:
+            raise Exception(
+                f"Not enough memory on device {device_id}. At least 8GB VRAM is required"
+            )
+
         self.device_id = device_id
         # self.auth_token = auth_token
         self.mutex = Lock()

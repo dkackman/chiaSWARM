@@ -9,7 +9,6 @@ from diffusers import (
     StableDiffusionInstructPix2PixPipeline,
 )
 from PIL import Image, ImageOps
-import io
 
 max_size = 1024
 
