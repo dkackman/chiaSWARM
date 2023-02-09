@@ -6,6 +6,7 @@ import requests
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline
 from .job_arguments import download_image
+from .pez import pez
 
 test_job = {
     "id": "__test__",
@@ -18,6 +19,12 @@ test_job = {
 }
 
 
+async def test_pex():
+    pez(
+        "http://www.trbimg.com/img-537a9d05/turbine/la-trb-at-indy-course-vintage-race-cars-20140519"
+    )
+
+
 async def pix2pix():
     model_id = "timbrooks/instruct-pix2pix"
 
@@ -28,7 +35,6 @@ async def pix2pix():
     )
 
     url = "https://huggingface.co/datasets/diffusers/diffusers-images-docs/resolve/main/mountain.png"
-
     image = download_image(url)
 
     prompt = "make the mountains snowy"
@@ -57,4 +63,4 @@ async def run_test():
 
 
 if __name__ == "__main__":
-    asyncio.run(pix2pix())
+    asyncio.run(test_pex())

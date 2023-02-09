@@ -89,7 +89,7 @@ def clean_prompt(str):
 
 
 def download_image(url):
-    image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)
+    image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)  # type: ignore
     image = ImageOps.exif_transpose(image)
     image = image.convert("RGB")
 
