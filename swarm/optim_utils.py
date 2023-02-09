@@ -1,3 +1,6 @@
+#
+# this and all the open clip stuff is from https://github.com/YuxinWenRick/hard-prompts-made-easy
+#
 import random
 import numpy as np
 import requests
