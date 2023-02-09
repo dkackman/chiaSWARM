@@ -1,6 +1,6 @@
 #
 # this and all the open clip stuff is from https://github.com/YuxinWenRick/hard-prompts-made-easy
-#
+# and licensed this https://github.com/YuxinWenRick/hard-prompts-made-easy/blob/main/LICENSE.md
 import random
 import numpy as np
 import requests
