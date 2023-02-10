@@ -1,5 +1,5 @@
-from .diffusion.device_pool import remove_device_from_pool, add_device_to_pool
-from .diffusion.output_processor import make_result, image_to_buffer
+from .gpu.device_pool import remove_device_from_pool, add_device_to_pool
+from .diffusion.output_processor import make_result, image_to_buffer, make_text_result
 from PIL import Image, ImageDraw
 from .job_arguments import format_args
 from . import __version__
@@ -11,12 +11,16 @@ async def do_work(job):
     try:
         id = job.pop("id")
         try:
-            kwargs = format_args(job)
-            artifacts, pipeline_config = device(**kwargs)  # type: ignore
+            worker_function, kwargs = format_args(job)
+            artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
 
         except Exception as e:
             content_type = job.get("content_type", "image/jpeg")
-            artifacts, pipeline_config = exception_image(e, content_type)
+            print(e)
+            if content_type.startswith("image/"):
+                artifacts, pipeline_config = exception_image(e, content_type)
+            else:
+                artifacts, pipeline_config = exception_message(e, content_type)
 
         return {
             "id": id,
@@ -39,7 +43,6 @@ def image_from_text(text):
 
 
 def exception_image(e, content_type):
-    print(e)
     message = "error generating image"
     if len(e.args) > 0:
         message = e.args[0]
@@ -48,6 +51,14 @@ def exception_image(e, content_type):
     pipe_config = {"error": message}
 
     buffer = image_to_buffer(image, content_type)
-    return {
-        "primary": make_result(buffer, buffer, content_type)
-    }, pipe_config
+    return {"primary": make_result(buffer, buffer, content_type)}, pipe_config
+
+
+def exception_message(e, content_type):
+    message = "error generating image"
+    if len(e.args) > 0:
+        message = e.args[0]
+
+    pipe_config = {"error": message}
+
+    return {"primary": make_text_result(str(e))}, pipe_config

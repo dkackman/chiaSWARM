@@ -1,8 +1,8 @@
-from .diffusion.device import Device
+from .gpu.device import Device
 from .generator import do_work
 from .log_setup import setup_logging
 from . import __version__
-from .diffusion.device_pool import add_device_to_pool
+from .gpu.device_pool import add_device_to_pool
 from .settings import (
     load_settings,
     resolve_path,
@@ -47,7 +47,10 @@ async def run_worker():
                 wait_seconds = response_dict.pop("wait_seconds", 11)
                 for job in response_dict["jobs"]:
                     print("Got work")
+
+                    # main worker function
                     result = await do_work(job)
+
                     resultResponse = requests.post(
                         f"{hive_uri}/results",
                         data=json.dumps(result),

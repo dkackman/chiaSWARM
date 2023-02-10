@@ -3,6 +3,7 @@ import hashlib
 import io
 from PIL import Image
 import base64
+import json
 
 
 class OutputProcessor:
@@ -69,6 +70,15 @@ def make_result(buffer, thumb, content_type):
         "content_type": content_type,
         "thumbnail": base64.b64encode(thumbnail_buffer.getvalue()).decode("UTF-8"),
         "sha256_hash": hashlib.sha256(buffer.getvalue()).hexdigest(),
+    }
+
+
+def make_text_result(string):
+    caption = {"caption": string}
+    return {
+        "blob": base64.b64encode(bytes(json.dumps(caption), "utf-8")).decode("UTF-8"),
+        "content_type": "application/json",
+        "sha256_hash": hashlib.sha256(string.encode()).hexdigest(),
     }
 
 

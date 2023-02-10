@@ -1,8 +1,6 @@
 from .generator import do_work
 from .worker import startup
 import asyncio
-import PIL
-import requests
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline
 from .job_arguments import download_image

@@ -14,6 +14,7 @@ import asyncio
 import logging
 from .log_setup import setup_logging
 from diffusers import DiffusionPipeline
+from transformers import AutoTokenizer
 import torch
 from . import __version__
 import sys
@@ -60,10 +61,15 @@ async def init():
         model_name = model["model_name"]
         revision = model["revision"]
         print(f"Initializing {model_name}/{revision}")
+
+        loader = DiffusionPipeline
+        if "img2txt" in model["pipelines"]:
+            loader = AutoTokenizer
+
         try:
-            DiffusionPipeline.from_pretrained(
+            # this will cause diffusers to fetch the latest model data
+            loader.from_pretrained(
                 model_name,
-                # use_auth_token=settings.huggingface_token,
                 revision=revision,
                 torch_dtype=torch.float16,
             )
@@ -91,7 +97,7 @@ def get_models_from_hive(hive_uri):
 
         print("done")
 
-        return data["models"]
+        return data["models"] + data["language_models"]
     except Exception as e:
         print(e)
         logging.error(e)

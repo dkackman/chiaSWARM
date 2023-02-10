@@ -9,6 +9,8 @@ from diffusers import (
     StableDiffusionInstructPix2PixPipeline,
 )
 from PIL import Image, ImageOps
+from .diffusion.diffusion_func import diffusion_callback
+from .captioning.caption_image import caption_callback
 
 max_size = 1024
 
@@ -16,10 +18,24 @@ max_size = 1024
 def format_args(job):
     args = job.copy()
 
+    if args.pop("workflow", None) == "img2txt":
+        return format_img2txt_args(args)
+
+    return format_stable_diffusion_Args(args)
+
+
+def format_img2txt_args(args):
+    if "start_image_uri" in args:
+        args["image"] = get_image(args.pop("start_image_uri"), None)
+
+    return caption_callback, args
+
+
+def format_stable_diffusion_Args(args):
     if not "revision" in args.keys():
         args["revision"] = "fp16"
 
-    # this is where all of the input arguments are raiotnalized and model specific
+    # this is where all of the input arguments are rationalized and model specific
     args["torch_dtype"] = torch.float16
 
     size = None
@@ -77,7 +93,7 @@ def format_args(job):
     if "negative_prompt" in args:
         args["negative_prompt"] = clean_prompt(args["negative_prompt"])
 
-    return args
+    return diffusion_callback, args
 
 
 def clean_prompt(str):
