@@ -97,6 +97,9 @@ async def startup():
     logging.info(f"Version {__version__}")
     logging.debug(f"Torch version {torch.__version__}")
 
+    torch.backends.cudnn.benchmark = True  # type: ignore
+    torch.backends.cuda.matmul.allow_tf32 = True  # type: ignore
+
     for i in range(0, torch.cuda.device_count()):
         logging.info(f"Adding cuda device {i} - {torch.cuda.get_device_name(i)}")
         add_device_to_pool(Device(i))

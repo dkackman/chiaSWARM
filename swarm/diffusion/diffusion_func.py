@@ -34,6 +34,8 @@ def diffusion_callback(device_id, model_name, **kwargs):
         kwargs["callback"] = latents_callback
         kwargs["callback_steps"] = 5
 
+    pipeline.unet.load_attn_procs("lora-library/lora-dreambooth-sample-dog")  # type: ignore
+    # pipeline.unet.load_attn_procs("C:\\Users\\don\\src\\github\\dkackman\\chiaSWARM\\swarm\\loras\\", weight_name="rfktrsTechnotrexV10_rfktrsTechnotrexV10.safetensors", local_files_only=True)  # type: ignore
     p = pipeline(**kwargs)  # type: ignore
 
     # if any image is nsfw, flag the entire result
@@ -73,6 +75,7 @@ def get_pipeline(
 
     try:
         pipeline.enable_attention_slicing()
+        # pipeline.enable_sequential_cpu_offload()
     except:
         print("error enable_attention_slicing")
 
