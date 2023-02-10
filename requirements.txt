@@ -46,5 +46,5 @@ typing-inspect==0.8.0
 typing_extensions==4.4.0
 urllib3==1.26.14
 wcwidth==0.2.6
-xformers==0.0.16rc425
+xformers==0.0.17.dev446
 zipp==3.12.1
