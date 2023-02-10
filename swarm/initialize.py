@@ -56,8 +56,8 @@ async def init():
         print(f"Initializing {model_name}/{revision}")
 
         loader = DiffusionPipeline
-        if "model_type" in model:
-            loader = get_transformers_type(model["model_type"])
+        if "parameters" in model:
+            loader = get_transformers_type(model["parameters"]["model_type"])
 
         try:
             # this will cause diffusers to fetch the latest model data
