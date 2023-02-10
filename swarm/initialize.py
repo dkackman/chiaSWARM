@@ -9,12 +9,11 @@ from .settings import (
     settings_exist,
     save_file,
 )
-
+from .type_helpers import get_transformers_type
 import asyncio
 import logging
 from .log_setup import setup_logging
 from diffusers import DiffusionPipeline
-from transformers import AutoTokenizer
 import torch
 from . import __version__
 import sys
@@ -30,12 +29,6 @@ async def init():
 
     if (not "--silent" in sys.argv) and (not settings_exist() or overwrite):
         settings = Settings()
-
-        # print("Provide the following details for the intial configuration:\n")
-        # token = input("Huggingface API token: ").strip()
-        # if len(token) == 0:
-        #     print("A Huggingface API token is required.")
-        #     return
 
         sdaas_uri = input("chiaSWARM uri (https://chiaswarm.ai): ").strip()
         sdaas_uri = "https://chiaswarm.ai" if len(sdaas_uri) == 0 else sdaas_uri
@@ -63,8 +56,8 @@ async def init():
         print(f"Initializing {model_name}/{revision}")
 
         loader = DiffusionPipeline
-        if "img2txt" in model["pipelines"]:
-            loader = AutoTokenizer
+        if "model_type" in model:
+            loader = get_transformers_type(model["model_type"])
 
         try:
             # this will cause diffusers to fetch the latest model data
@@ -97,7 +90,7 @@ def get_models_from_hive(hive_uri):
 
         print("done")
 
-        return data["models"] + data["language_models"]
+        return data["language_models"] + data["models"]
     except Exception as e:
         print(e)
         logging.error(e)

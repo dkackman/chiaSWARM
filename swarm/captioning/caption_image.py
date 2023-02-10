@@ -1,10 +1,6 @@
 import torch
 from ..diffusion.output_processor import make_text_result
-
-
-def get_type(type_name):
-    module = __import__("transformers")
-    return getattr(module, type_name)
+from ..type_helpers import get_transformers_type
 
 
 def caption_callback(device_id, model_name, **kwargs):
@@ -12,8 +8,9 @@ def caption_callback(device_id, model_name, **kwargs):
     results = {}
     try:
         print("Image captioning...")
-        processor_type = get_type(kwargs.pop("processor_type", "BlipProcessor"))
-        model_type = get_type(kwargs.pop("model_type", "BlipForConditionalGeneration"))
+        model_params = kwargs.pop("parameters")
+        processor_type = get_transformers_type(model_params["processor_type"])
+        model_type = get_transformers_type(model_params["model_type"])
         processor = processor_type.from_pretrained(model_name)  # type: ignore
         model = model_type.from_pretrained(  # type: ignore
             model_name, torch_dtype=torch.float16
@@ -23,9 +20,14 @@ def caption_callback(device_id, model_name, **kwargs):
 
         image = kwargs["image"]
 
-        # unconditional image captioning
-        inputs = processor(image, return_tensors="pt").to(f"cuda:{device_id}", torch.float16)  # type: ignore
+        if "prompt" in kwargs and len(kwargs["prompt"]) > 0:
+            # conditional image captioning and VQA
+            inputs = processor(image, kwargs["prompt"], return_tensors="pt")
+        else:
+            # unconditional image captioning
+            inputs = processor(image, return_tensors="pt")
 
+        inputs = inputs.to(f"cuda:{device_id}", torch.float16)  # type: ignore
         out = model.generate(**inputs)
         caption = processor.decode(out[0], skip_special_tokens=True)
         results["primary"] = make_text_result(caption)

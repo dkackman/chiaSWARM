@@ -28,6 +28,9 @@ def format_img2txt_args(args):
     if "start_image_uri" in args:
         args["image"] = get_image(args.pop("start_image_uri"), None)
 
+    if "prompt" in args:
+        args["prompt"] = clean_prompt(args["prompt"])
+
     return caption_callback, args
 
 
