@@ -4,6 +4,7 @@ import asyncio
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline
 from .job_arguments import download_image
+from .video.pix2pix import infer
 
 test_job = {
     "id": "__test__",
@@ -14,6 +15,10 @@ test_job = {
     "outputs": ["primary", "inference_image_strip"],
     # "outputs": ["primary"],
 }
+
+
+async def v():
+    infer("Make her a robot", "D:\\tmp\\video.mp4", 1024, 2)
 
 
 async def pix2pix():
@@ -55,4 +60,4 @@ async def run_test():
 
 
 if __name__ == "__main__":
-    asyncio.run(pix2pix())
+    asyncio.run(v())
