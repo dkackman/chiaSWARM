@@ -37,7 +37,7 @@ def pix2pix(
     generator = torch.Generator("cuda").manual_seed(seed)
 
     try:
-        image = Image.open(image)
+        image = Image.open(f"d:\\tmp\\{image}")
         ratio = min(height / image.height, width / image.width)
         image = image.resize(
             (int(image.width * ratio), int(image.height * ratio)), Image.LANCZOS
@@ -95,7 +95,7 @@ def get_frames(video_in):
         ret, frame = cap.read()
         if ret == False:
             break
-        cv2.imwrite("kang" + str(i) + ".jpg", frame)
+        cv2.imwrite("d:\\tmp\\kang" + str(i) + ".jpg", frame)
         frames.append("kang" + str(i) + ".jpg")
         i += 1
 
@@ -135,8 +135,8 @@ def infer(prompt, video_in, seed_in, trim_value):
         rgb_im = images[0].convert("RGB")
 
         # exporting the image
-        rgb_im.save(f"result_img-{i}.jpg")
-        result_frames.append(f"result_img-{i}.jpg")
+        rgb_im.save(f"d:\\tmp\\result_img-{i}.jpg")
+        result_frames.append(f"d:\\tmp\\result_img-{i}.jpg")
         print("frame " + i + "/" + str(n_frame) + ": done;")
 
     final_vid = create_video(result_frames, fps)

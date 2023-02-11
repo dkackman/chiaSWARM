@@ -18,7 +18,7 @@ test_job = {
 
 
 async def v():
-    infer("Make her a robot", "D:\\tmp\\video.mp4", 1024, 2)
+    infer("Make her a robot", "D:\\tmp\\video.mp4", 1024, 0.5)
 
 
 async def pix2pix():
