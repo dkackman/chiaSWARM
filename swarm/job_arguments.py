@@ -11,6 +11,7 @@ from diffusers import (
 from PIL import Image, ImageOps
 from .diffusion.diffusion_func import diffusion_callback
 from .captioning.caption_image import caption_callback
+from .video.vid2vid import model_video_callback
 
 max_size = 1024
 
@@ -18,10 +19,21 @@ max_size = 1024
 def format_args(job):
     args = job.copy()
 
-    if args.pop("workflow", None) == "img2txt":
+    workflow = args.pop("workflow", None)
+    if workflow == "img2txt":
         return format_img2txt_args(args)
 
-    return format_stable_diffusion_Args(args)
+    if workflow == "vid2vid":
+        return format_vid2vid_args(args)
+
+    return format_stable_diffusion_args(args)
+
+
+def format_vid2vid_args(args):
+    if "prompt" in args:
+        args["prompt"] = clean_prompt(args["prompt"])
+
+    return model_video_callback, args
 
 
 def format_img2txt_args(args):
@@ -34,7 +46,7 @@ def format_img2txt_args(args):
     return caption_callback, args
 
 
-def format_stable_diffusion_Args(args):
+def format_stable_diffusion_args(args):
     if not "revision" in args.keys():
         args["revision"] = "fp16"
 
