@@ -6,6 +6,8 @@ from PIL import Image
 from moviepy.editor import *
 from ..diffusion.output_processor import make_result
 from io import BytesIO
+import tempfile
+import pathlib
 
 
 def model_video_callback(device_id, model_name, **kwargs):
@@ -25,49 +27,55 @@ def model_video_callback(device_id, model_name, **kwargs):
     image_guidance_scale = kwargs.pop("image_guidance_scale", 1.5)
     num_inference_steps = kwargs.pop("num_inference_steps", 15)
 
-    video_file_path = download_video(kwargs.pop("video_uri"))
-    break_vid = get_frames(video_file_path)
-    step = 1
-    frames_list = break_vid[0]
-    fps = break_vid[1]
-    n_frame = int(len(frames_list) / step)
-    result_frames = []
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        temp_dir = pathlib.Path(tmpdirname)
+        video_file_path = download_video(temp_dir, kwargs.pop("video_uri"))
+        break_vid = get_frames(temp_dir, video_file_path)
+        step = 1
+        frames_list = break_vid[0]
+        fps = break_vid[1]
+        n_frame = int(len(frames_list) / step)
+        result_frames = []
 
-    for frame in frames_list[0::step]:
-        print(f"{frame} of {n_frame}")
+        nsfw_content_detected = False
+        for frame in frames_list[0::step]:
+            print(f"{frame} of {n_frame}")
 
-        pix2pix_img = pix2pix(
-            pipeline,
-            prompt,
-            guidance_scale,
-            image_guidance_scale,
-            frame,
-            num_inference_steps,
-            negative_prompt,
-            512,
-            512,
-        )
-        images = pix2pix_img[0]
-        rgb_im = images[0].convert("RGB")
+            pix2pix_img = img2img(
+                pipeline,
+                prompt,
+                guidance_scale,
+                image_guidance_scale,
+                frame,
+                num_inference_steps,
+                negative_prompt,
+                512,
+                512,
+            )
+            images = pix2pix_img[0]
+            nsfw_content_detected = pix2pix_img[1] or nsfw_content_detected
+            rgb_im = images[0].convert("RGB")
 
-        # exporting the image
-        rgb_im.save(f"/tmp/result_img-{frame}.jpg")
-        result_frames.append(f"/tmp/result_img-{frame}.jpg")
+            # exporting the image
+            file_path = str(temp_dir.joinpath(f"{frame}.vid2vid.jpg"))
+            rgb_im.save(file_path)
+            result_frames.append(file_path)
 
-    final_filepath = create_video(result_frames, fps / step)
-    with open(final_filepath, "rb") as video_file:
-        video_buffer = BytesIO(video_file.read())
+        final_filepath = create_video(temp_dir, result_frames, fps / step)
+        with open(final_filepath, "rb") as video_file:
+            video_buffer = BytesIO(video_file.read())
 
-    with open(result_frames[0], "rb") as thumb_file:
-        thumb_buffer = BytesIO(thumb_file.read())
+        with open(result_frames[0], "rb") as thumb_file:
+            thumb_buffer = BytesIO(thumb_file.read())
 
-    results["primary"] = make_result(video_buffer, thumb_buffer, "video/mp4")
+        results["primary"] = make_result(video_buffer, thumb_buffer, "video/mp4")
+        pipeline_config["nsfw"] = nsfw_content_detected
 
-    return results, pipeline_config
+        return results, pipeline_config
 
 
-def download_video(video_uri):
-    file_path = "/tmp/video.mp4"
+def download_video(tmpdir, video_uri):
+    file_path = str(tmpdir.joinpath("video.mp4"))
     response = requests.get(video_uri, allow_redirects=True, stream=True)
     if response.ok:
         with open(file_path, "wb") as f:
@@ -86,7 +94,7 @@ def download_video(video_uri):
     return file_path
 
 
-def pix2pix(
+def img2img(
     pipeline,
     prompt,
     text_guidance_scale,
@@ -97,7 +105,7 @@ def pix2pix(
     width,
     height,
 ):
-    image = Image.open(f"/tmp/{image}")
+    image = Image.open(image)
     ratio = min(height / image.height, width / image.width)
     image = image.resize(
         (int(image.width * ratio), int(image.height * ratio)), Image.LANCZOS
@@ -115,25 +123,26 @@ def pix2pix(
     return result.images, result.nsfw_content_detected
 
 
-def get_frames(video_in):
+def get_frames(temp_dir, video_in):
     frames = []
     # resize the video
     clip = VideoFileClip(video_in)
 
+    resized_video_path = str(temp_dir.joinpath("video_resized.mp4"))
     # check fps
     if clip.fps > 30:
         print("vide rate is over 30, resetting to 30")
         clip_resized = clip.resize(height=512)  # type: ignore
-        clip_resized.write_videofile("/tmp/video_resized.mp4", fps=30)
+        clip_resized.write_videofile(resized_video_path, fps=30)
     else:
         print("video rate is OK")
         clip_resized = clip.resize(height=512)  # type: ignore
-        clip_resized.write_videofile("/tmp/video_resized.mp4", fps=clip.fps)
+        clip_resized.write_videofile(resized_video_path, fps=clip.fps)
 
     print("video resized to 512 height")
 
     # Opens the Video file with CV2
-    cap = cv2.VideoCapture("/home/don/video_resized.mp4")
+    cap = cv2.VideoCapture(resized_video_path)
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     i = 0
@@ -141,8 +150,9 @@ def get_frames(video_in):
         ret, frame = cap.read()
         if ret == False:
             break
-        cv2.imwrite(f"/tmp/kang{i}.jpg", frame)
-        frames.append(f"kang{i}.jpg")
+        image_path = str(temp_dir.joinpath(f"kang{i}.jpg"))
+        cv2.imwrite(image_path, frame)
+        frames.append(image_path)
         i += 1
 
     cap.release()
@@ -151,8 +161,9 @@ def get_frames(video_in):
     return frames, fps
 
 
-def create_video(frames, fps):
+def create_video(temp_dir, frames, fps):
+    video_path = str(temp_dir.joinpath("movie.mp4"))
     clip = ImageSequenceClip(frames, fps=fps)
-    clip.write_videofile("/home/don/movie.mp4", fps=fps)
+    clip.write_videofile(video_path, fps=fps)
 
-    return "/home/don/movie.mp4"
+    return video_path
