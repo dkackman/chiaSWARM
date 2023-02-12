@@ -76,6 +76,21 @@ def model_video_callback(device_id, model_name, **kwargs):
 
 
 def download_video(tmpdir, video_uri):
+    head = requests.head(video_uri, allow_redirects=True)
+    content_length = head.headers.pop("Content-Length", 0)
+    content_type = head.headers.pop("Content-Type", "")
+
+    if not content_type.startswith("video"):
+        raise Exception(
+            f"Input does not appear to be an video.\nContent type was {content_type}."
+        )
+
+    # to protect worker nodes, no external videos over 30 MiB
+    if int(content_length) > 1048576 * 30:
+        raise Exception(
+            f"Input video too large.\nMax size is {1048576 * 30} bytes.\nImage was {content_length}."
+        )
+
     file_path = str(tmpdir.joinpath("vid2vid.mp4"))
     response = requests.get(video_uri, allow_redirects=True, stream=True)
     if response.ok:
