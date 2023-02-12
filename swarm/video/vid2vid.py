@@ -91,7 +91,7 @@ def download_video(tmpdir, video_uri):
             f"Input video too large.\nMax size is {1048576 * 30} bytes.\nImage was {content_length}."
         )
 
-    file_path = str(tmpdir.joinpath("vid2vid.mp4"))
+    file_path = str(tmpdir.joinpath("input.mp4"))
     response = requests.get(video_uri, allow_redirects=True, stream=True)
     if response.ok:
         with open(file_path, "wb") as f:
@@ -178,7 +178,7 @@ def get_frames(temp_dir, video_in):
 
 
 def create_video(temp_dir, frames, fps):
-    video_path = str(temp_dir.joinpath("movie.mp4"))
+    video_path = str(temp_dir.joinpath("output.mp4"))
     clip = ImageSequenceClip(frames, fps=fps)
     clip.write_videofile(video_path, fps=fps)
 
