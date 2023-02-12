@@ -14,9 +14,9 @@ test_job = {
 vid2vid_job = {
     "id": "__test__",
     "model_name": "timbrooks/instruct-pix2pix",
-    "prompt": "make him into a robot",
-    "negative_prompt": "ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, ugly, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, out of frame, ugly, extra limbs, bad anatomy, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, too many fingers, long neck",
-    "num_inference_steps": 15,
+    "prompt": "make it sunny",
+    "negative_prompt": "ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, blurry, bad anatomy, bad proportions, cloned face, disfigured, out of frame, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, long neck",
+    "num_inference_steps": 10,
     "workflow": "vid2vid",
     "video_uri": "https://nftfactory.blob.core.windows.net/images/Pexels%20Videos%202795750.mp4",
     "outputs": ["primary"],

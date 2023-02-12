@@ -31,14 +31,14 @@ def model_video_callback(device_id, model_name, **kwargs):
         temp_dir = pathlib.Path(tmpdirname)
         video_file_path = download_video(temp_dir, kwargs.pop("video_uri"))
         break_vid = get_frames(temp_dir, video_file_path)
-        step = 1
+        stride = 1
         frames_list = break_vid[0]
         fps = break_vid[1]
-        n_frame = int(len(frames_list) / step)
+        n_frame = int(len(frames_list) / stride)
         result_frames = []
 
         nsfw_content_detected = False
-        for frame in frames_list[0::step]:
+        for frame in frames_list[0::stride]:
             print(f"{frame} of {n_frame}")
 
             pix2pix_img = img2img(
@@ -61,7 +61,7 @@ def model_video_callback(device_id, model_name, **kwargs):
             rgb_im.save(file_path)
             result_frames.append(file_path)
 
-        final_filepath = create_video(temp_dir, result_frames, fps / step)
+        final_filepath = create_video(temp_dir, result_frames, fps / stride)
         with open(final_filepath, "rb") as video_file:
             video_buffer = BytesIO(video_file.read())
 
@@ -70,12 +70,13 @@ def model_video_callback(device_id, model_name, **kwargs):
 
         results["primary"] = make_result(video_buffer, thumb_buffer, "video/mp4")
         pipeline_config["nsfw"] = nsfw_content_detected
+        pipeline_config["cost"] = 512 * 512 * num_inference_steps * len(result_frames)
 
         return results, pipeline_config
 
 
 def download_video(tmpdir, video_uri):
-    file_path = str(tmpdir.joinpath("video.mp4"))
+    file_path = str(tmpdir.joinpath("vid2vid.mp4"))
     response = requests.get(video_uri, allow_redirects=True, stream=True)
     if response.ok:
         with open(file_path, "wb") as f:
@@ -120,7 +121,7 @@ def img2img(
         guidance_scale=text_guidance_scale,
     )
 
-    return result.images, result.nsfw_content_detected
+    return result.images, result.nsfw_content_detected[0]
 
 
 def get_frames(temp_dir, video_in):

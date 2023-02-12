@@ -51,8 +51,6 @@ def format_stable_diffusion_args(args):
         args["revision"] = "fp16"
 
     # this is where all of the input arguments are rationalized and model specific
-    args["torch_dtype"] = torch.float16
-
     size = None
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])

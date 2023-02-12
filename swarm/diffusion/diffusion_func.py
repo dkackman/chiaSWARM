@@ -1,23 +1,23 @@
 import torch
 import logging
-from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
+from diffusers import (
+    DiffusionPipeline,
+    DPMSolverMultistepScheduler,
+    EulerAncestralDiscreteScheduler,
+)
 from diffusers.utils.import_utils import is_xformers_available
 from .output_processor import OutputProcessor
 
 
 def diffusion_callback(device_id, model_name, **kwargs):
-    scheduler = DPMSolverMultistepScheduler.from_pretrained(
-        model_name,
-        subfolder="scheduler",
-    )
-
     pipeline = get_pipeline(
         device_id,
         model_name,
         kwargs.pop("revision"),
-        kwargs.pop("torch_dtype", torch.float16),
-        scheduler,
         kwargs.pop("pipeline_type", DiffusionPipeline),
+    )
+    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(  # type: ignore
+        pipeline.scheduler.config  # type: ignore
     )
 
     output_processor = OutputProcessor(
@@ -53,8 +53,6 @@ def get_pipeline(
     device_id: int,
     model_name: str,
     revision: str,
-    torch_dtype,
-    scheduler,
     pipeline_type,
 ):
     logging.debug(
@@ -65,11 +63,11 @@ def get_pipeline(
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=revision,
-        torch_dtype=torch_dtype,
-        scheduler=scheduler,
+        torch_dtype=torch.float16,
     ).to(
         f"cuda:{device_id}"
     )  # type: ignore
+    pipeline.unet.to(memory_format=torch.channels_last)  # type: ignore
 
     try:
         pipeline.enable_attention_slicing()
