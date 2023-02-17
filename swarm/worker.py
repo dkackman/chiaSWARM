@@ -23,6 +23,9 @@ async def run_worker():
 
     logging.info("worker")
 
+    # TODO: expand for multip GPU
+    mem_info = torch.cuda.mem_get_info()
+
     while True:
         try:
             print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
@@ -33,6 +36,7 @@ async def run_worker():
                 params={
                     "worker_version": __version__,
                     "worker_name": settings.worker_name,
+                    "vram": mem_info[1],
                 },
                 headers={
                     "Content-type": "application/json",
