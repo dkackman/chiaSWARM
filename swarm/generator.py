@@ -20,12 +20,12 @@ async def do_work(job):
             if content_type.startswith("image/"):
                 artifacts, pipeline_config = exception_image(e, content_type)
             else:
-                artifacts, pipeline_config = exception_message(e, content_type)
+                artifacts, pipeline_config = exception_message(e)
 
         return {
             "id": id,
             "artifacts": artifacts,
-            "nsfw": pipeline_config.get("nsfw", False),
+            "nsfw": pipeline_config.get("nsfw", False),  # type ignore
             "worker_version": __version__,
             "pipeline_config": pipeline_config,
         }
@@ -54,7 +54,7 @@ def exception_image(e, content_type):
     return {"primary": make_result(buffer, buffer, content_type)}, pipe_config
 
 
-def exception_message(e, content_type):
+def exception_message(e):
     message = "error generating image"
     if len(e.args) > 0:
         message = e.args[0]
