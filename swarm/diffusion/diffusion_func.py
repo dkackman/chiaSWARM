@@ -10,10 +10,6 @@ from .output_processor import OutputProcessor
 
 def diffusion_callback(device_id, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
-    scheduler = scheduler_type.from_pretrained(
-        model_name,
-        subfolder="scheduler",
-    )
 
     pipeline = get_pipeline(
         device_id,
@@ -21,7 +17,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
         kwargs.pop("revision"),
         kwargs.pop("pipeline_type", DiffusionPipeline),
     )
-    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(  # type: ignore
+    pipeline.scheduler = scheduler_type.from_config(  # type: ignore
         pipeline.scheduler.config  # type: ignore
     )
 
