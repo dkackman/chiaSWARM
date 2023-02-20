@@ -11,6 +11,7 @@ from diffusers import (
 from PIL import Image, ImageOps
 from .diffusion.diffusion_func import diffusion_callback
 from .captioning.caption_image import caption_callback
+from .type_helpers import get_type
 
 max_size = 1024
 
@@ -38,7 +39,7 @@ def format_stable_diffusion_Args(args):
     if not "revision" in args.keys():
         args["revision"] = "fp16"
 
-    # this is where all of the input arguments are rationalized and model specific
+    # this is where all of the input arguments are rationalized and made model specific
     args["torch_dtype"] = torch.float16
 
     size = None
@@ -56,7 +57,6 @@ def format_stable_diffusion_Args(args):
         args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
     # some workloads have different processing and arguments - that happens here
-    # TODO data drive this from the model meta data (and schedulers)
     if args["model_name"] == "timbrooks/instruct-pix2pix":
         args["pipeline_type"] = StableDiffusionInstructPix2PixPipeline
         args.pop("height", None)
@@ -96,6 +96,9 @@ def format_stable_diffusion_Args(args):
     if "negative_prompt" in args:
         args["negative_prompt"] = clean_prompt(args["negative_prompt"])
 
+    args["scheduler_type"] = get_type(
+        "diffusers", args.pop("scheduler_type", "DPMSolverMultistepScheduler")
+    )
     return diffusion_callback, args
 
 

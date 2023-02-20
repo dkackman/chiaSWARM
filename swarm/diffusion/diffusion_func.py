@@ -1,12 +1,16 @@
 import torch
 import logging
-from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
+from diffusers import (
+    DiffusionPipeline,
+    DPMSolverMultistepScheduler,
+)
 from diffusers.utils.import_utils import is_xformers_available
 from .output_processor import OutputProcessor
 
 
 def diffusion_callback(device_id, model_name, **kwargs):
-    scheduler = DPMSolverMultistepScheduler.from_pretrained(
+    scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
+    scheduler = scheduler_type.from_pretrained(
         model_name,
         subfolder="scheduler",
     )

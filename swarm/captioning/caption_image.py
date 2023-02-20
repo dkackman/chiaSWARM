@@ -1,6 +1,6 @@
 import torch
 from ..diffusion.output_processor import make_text_result
-from ..type_helpers import get_transformers_type
+from ..type_helpers import get_type
 
 
 def caption_callback(device_id, model_name, **kwargs):
@@ -9,8 +9,8 @@ def caption_callback(device_id, model_name, **kwargs):
     try:
         print("Image captioning...")
         model_params = kwargs.pop("parameters")
-        processor_type = get_transformers_type(model_params["processor_type"])
-        model_type = get_transformers_type(model_params["model_type"])
+        processor_type = get_type("transformers", model_params["processor_type"])
+        model_type = get_type("transformers", model_params["model_type"])
         processor = processor_type.from_pretrained(model_name)  # type: ignore
         model = model_type.from_pretrained(  # type: ignore
             model_name, torch_dtype=torch.float16

@@ -9,7 +9,7 @@ from .settings import (
     settings_exist,
     save_file,
 )
-from .type_helpers import get_transformers_type
+from .type_helpers import get_type
 import asyncio
 import logging
 from .log_setup import setup_logging
@@ -57,7 +57,7 @@ async def init():
 
         loader = DiffusionPipeline
         if "parameters" in model:
-            loader = get_transformers_type(model["parameters"]["model_type"])
+            loader = get_type("transformers", model["parameters"]["model_type"])
 
         try:
             # this will cause diffusers to fetch the latest model data

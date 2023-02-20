@@ -13,16 +13,12 @@ def load_settings():
         print("no settings file")
 
     settings = Settings()
-    # settings.huggingface_token = dict.get("huggingface_token", True)
+
     settings.log_level = dict.get("log_level", "WARN")
     settings.log_filename = dict.get("log_filename", "log/generator.log")
     settings.sdaas_token = dict.get("sdaas_token", "")
     settings.sdaas_uri = dict.get("sdaas_uri", "http://localhost:9511")
     settings.worker_name = dict.get("worker_name", "worker")
-
-    # override settings file with environment vairables
-    # if not os.environ.get("HUGGINGFACE_TOKEN", None) is None:
-    #    settings.huggingface_token = os.environ.get("HUGGINGFACE_TOKEN", "")
 
     if not os.environ.get("SDAAS_TOKEN", None) is None:
         settings.sdaas_token = os.environ.get("SDAAS_TOKEN", "")
