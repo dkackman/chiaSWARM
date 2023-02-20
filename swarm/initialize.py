@@ -54,12 +54,12 @@ async def init():
         model_name = model["model_name"]
         revision = model["revision"]
         print(f"Initializing {model_name}/{revision}")
-
-        loader = DiffusionPipeline
-        if "parameters" in model:
-            loader = get_type("transformers", model["parameters"]["model_type"])
-
         try:
+            loader = DiffusionPipeline
+            parameters = model.pop("parameters", {})
+            if "model_type" in parameters:
+                loader = get_type("transformers", parameters["model_type"])
+
             # this will cause diffusers to fetch the latest model data
             loader.from_pretrained(
                 model_name,
