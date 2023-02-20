@@ -1,7 +1,7 @@
 import torch
 import logging
 from diffusers import (
-    DiffusionPipeline,
+    StableDiffusionPipeline,
     DPMSolverMultistepScheduler,
 )
 from diffusers.utils.import_utils import is_xformers_available
@@ -15,7 +15,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
         device_id,
         model_name,
         kwargs.pop("revision"),
-        kwargs.pop("pipeline_type", DiffusionPipeline),
+        kwargs.pop("pipeline_type", StableDiffusionPipeline),
     )
     pipeline.scheduler = scheduler_type.from_config(  # type: ignore
         pipeline.scheduler.config  # type: ignore

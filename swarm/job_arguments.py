@@ -1,13 +1,5 @@
-import torch
 from urllib.parse import unquote
 import requests
-from diffusers import (
-    StableDiffusionImg2ImgPipeline,
-    StableDiffusionUpscalePipeline,
-    StableDiffusionInpaintPipeline,
-    StableDiffusionDepth2ImgPipeline,
-    StableDiffusionInstructPix2PixPipeline,
-)
 from PIL import Image, ImageOps
 from .diffusion.diffusion_func import diffusion_callback
 from .captioning.caption_image import caption_callback
@@ -50,11 +42,7 @@ def format_img2txt_args(args):
 
 
 def format_stable_diffusion_args(args):
-    if not "revision" in args.keys():
-        args["revision"] = "fp16"
-
     # this is where all of the input arguments are rationalized and model specific
-
     size = None
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])
@@ -65,41 +53,31 @@ def format_stable_diffusion_args(args):
 
     if "start_image_uri" in args:
         args["image"] = get_image(args.pop("start_image_uri"), size)
+        # if there is an input image and pipeline type is not specified then default it to img2img
+        if "pipeline_type" not in args:
+            args["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
     if "mask_image_uri" in args:
         args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
-    # some workloads have different processing and arguments - that happens here
-    if args["model_name"] == "timbrooks/instruct-pix2pix":
-        args["pipeline_type"] = StableDiffusionInstructPix2PixPipeline
-        args.pop("height", None)
-        args.pop("width", None)
+    parameters = args.pop("parameters", {})
+    args["pipeline_type"] = get_type(
+        "diffusers", parameters.pop("pipeline_type", "StableDiffusionSAGPipeline")
+    )
+    args["scheduler_type"] = get_type(
+        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
+    )
 
-        # this model defaults to 100, which we don't want
-        if "num_inference_steps" not in args:
-            args["num_inference_steps"] = 50
+    # default num_inference_steps if not set
+    if "num_inference_steps" not in args:
+        args["num_inference_steps"] = 30
 
-    elif args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler":
-        args["pipeline_type"] = StableDiffusionUpscalePipeline
-        # this model will reject these two args
-        args.pop("height", None)
-        args.pop("width", None)
-
-    elif (
-        args["model_name"] == "stabilityai/stable-diffusion-2-inpainting"
-        or args["model_name"] == "runwayml/stable-diffusion-inpainting"
+    # some pipelines don't like it when they get size arguments
+    if (
+        args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler"
+        or args["model_name"] == "stabilityai/stable-diffusion-2-depth"
+        or args["model_name"] == "timbrooks/instruct-pix2pix"
     ):
-        args["pipeline_type"] = StableDiffusionInpaintPipeline
-
-    elif args["model_name"] == "stabilityai/stable-diffusion-2-depth":
-        args["pipeline_type"] = StableDiffusionDepth2ImgPipeline
-        args.pop("height", None)
-        args.pop("width", None)
-
-    # having an image signals to use the img2img workflow for SD 1.5
-    elif "image" in args:
-        args["pipeline_type"] = StableDiffusionImg2ImgPipeline
-        # this model will reject these two args
         args.pop("height", None)
         args.pop("width", None)
 
@@ -109,9 +87,6 @@ def format_stable_diffusion_args(args):
     if "negative_prompt" in args:
         args["negative_prompt"] = clean_prompt(args["negative_prompt"])
 
-    args["scheduler_type"] = get_type(
-        "diffusers", args.pop("scheduler_type", "DPMSolverMultistepScheduler")
-    )
     return diffusion_callback, args
 
 
