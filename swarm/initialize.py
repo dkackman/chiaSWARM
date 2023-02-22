@@ -79,7 +79,7 @@ def get_models_from_hive(hive_uri):
 
     try:
         response = requests.get(
-            f"{hive_uri}data/models.json",
+            f"{hive_uri}api/models",
             timeout=10,
             headers={
                 "user-agent": f"chiaSWARM.worker/{__version__}",
