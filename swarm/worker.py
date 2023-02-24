@@ -2,7 +2,7 @@ from .gpu.device import Device
 from .generator import do_work
 from .log_setup import setup_logging
 from . import __version__
-from .gpu.device_pool import add_device_to_pool
+from .gpu.device_pool import add_device_to_pool, remove_device_from_pool
 from .settings import (
     load_settings,
     resolve_path,
@@ -23,74 +23,79 @@ async def run_worker():
 
     logging.info("worker")
 
-    # TODO: expand for multip GPU
-    mem_info = torch.cuda.mem_get_info()
-
+    wait_seconds = 0
     while True:
+        await asyncio.sleep(wait_seconds)
+        device = remove_device_from_pool()  # this will block if all gpus are busy
+        wait_seconds = 11
+
         try:
-            print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
-
-            response = requests.get(
-                f"{hive_uri}/work",
-                timeout=10,
-                params={
-                    "worker_version": __version__,
-                    "worker_name": settings.worker_name,
-                    "vram": mem_info[1],
-                },
-                headers={
-                    "Content-type": "application/json",
-                    "Authorization": f"Bearer {settings.sdaas_token}",
-                    "user-agent": f"chiaSWARM.worker/{__version__}",
-                },
-            )
-
-            if response.ok:
-                response_dict = response.json()
-
-                wait_seconds = response_dict.pop("wait_seconds", 11)
-                for job in response_dict["jobs"]:
-                    print("Got work")
-
-                    # main worker function
-                    result = await do_work(job)
-
-                    resultResponse = requests.post(
-                        f"{hive_uri}/results",
-                        data=json.dumps(result),
-                        headers={
-                            "Content-type": "application/json",
-                            "Authorization": f"Bearer {settings.sdaas_token}",
-                            "user-agent": f"chiaSWARM.worker/{__version__}",
-                        },
-                    )
-                    if resultResponse.status_code == 500:
-                        print(f"The hive returned an error: {resultResponse.reason}")
-                    else:
-                        print(resultResponse.json())
-
-                await asyncio.sleep(wait_seconds)
-
-            elif response.status_code == 400:
-                # this is when workers are not returning results within expectations
-                response_dict = response.json()
-                message = response_dict.pop("message", "bad worker")
-                print(f"{hive_uri} says {message}")
-                wait_seconds = response_dict.pop("wait_seconds", 121)
-                print(f"sleeping for {wait_seconds} seconds")
-
-                await asyncio.sleep(wait_seconds)
-
-            else:
-                print(f"{hive_uri} returned {response.status_code}")
-                print("sleeping for 120 seconds")
-
-                await asyncio.sleep(121)
+            await ask_for_work(device)
 
         except Exception as e:
             print(e)  # this is if the work queue endpoint is unavailable
-            print("sleeping for 120 seconds")
-            await asyncio.sleep(121)
+            wait_seconds = 121
+
+        finally:
+            add_device_to_pool(device)
+
+
+async def ask_for_work(device):
+    print(
+        f"{datetime.now()}: Device {device.device_id} asking for work from the hive at {hive_uri}..."
+    )
+    mem_info = torch.cuda.mem_get_info(device.device_id)
+    response = requests.get(
+        f"{hive_uri}/work",
+        timeout=10,
+        params={
+            "worker_version": __version__,
+            "worker_name": f"{settings.worker_name}:{device.device_id}",
+            "vram": mem_info[1],
+        },
+        headers={
+            "Content-type": "application/json",
+            "Authorization": f"Bearer {settings.sdaas_token}",
+            "user-agent": f"chiaSWARM.worker/{__version__}",
+        },
+    )
+
+    if response.ok:
+        response_dict = response.json()
+        for job in response_dict["jobs"]:
+            await spawn_task(job, device)
+
+    elif response.status_code == 400:
+        # this is when workers are not returning results within expectations
+        response_dict = response.json()
+        message = response_dict.pop("message", "bad worker")
+        print(f"{hive_uri} says {message}")
+        response.raise_for_status()
+
+    else:
+        print(f"{hive_uri} returned {response.status_code}")
+        response.raise_for_status()
+
+
+async def spawn_task(job, device):
+    print(f"Device {device.device_id} got work")
+
+    # main worker function
+    result = await do_work(job)
+
+    resultResponse = requests.post(
+        f"{hive_uri}/results",
+        data=json.dumps(result),
+        headers={
+            "Content-type": "application/json",
+            "Authorization": f"Bearer {settings.sdaas_token}",
+            "user-agent": f"chiaSWARM.worker/{__version__}",
+        },
+    )
+    if resultResponse.status_code == 500:
+        print(f"The hive returned an error: {resultResponse.reason}")
+    else:
+        print(f"Device {device.device_id} {resultResponse.json()}")
 
 
 async def startup():

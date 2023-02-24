@@ -4,9 +4,6 @@ from threading import Lock
 
 
 class Device:
-    device_id: int
-    mutex: Lock
-
     def __init__(self, device_id: int) -> None:
         mem_info = torch.cuda.mem_get_info(device_id)
         if mem_info[1] < 8000000000:
