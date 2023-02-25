@@ -33,7 +33,7 @@ async def run_worker():
             await ask_for_work(device)
 
         except Exception as e:
-            print(e)  # this is if the work queue endpoint is unavailable
+            print(e)
             wait_seconds = 121
 
         finally:
@@ -81,7 +81,7 @@ async def spawn_task(job, device):
     print(f"Device {device.device_id} got work")
 
     # main worker function
-    result = await do_work(job)
+    result = await do_work(job, device)
 
     resultResponse = requests.post(
         f"{hive_uri}/results",

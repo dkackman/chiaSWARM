@@ -1,37 +1,30 @@
-from .gpu.device_pool import remove_device_from_pool, add_device_to_pool
 from .diffusion.output_processor import make_result, image_to_buffer, make_text_result
 from PIL import Image, ImageDraw
 from .job_arguments import format_args
 from . import __version__
 
 
-async def do_work(job):
-    device = remove_device_from_pool()
-
+async def do_work(job, device):
+    id = job.pop("id")
     try:
-        id = job.pop("id")
-        try:
-            worker_function, kwargs = format_args(job)
-            artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
+        worker_function, kwargs = format_args(job)
+        artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
 
-        except Exception as e:
-            content_type = job.get("content_type", "image/jpeg")
-            print(e)
-            if content_type.startswith("image/"):
-                artifacts, pipeline_config = exception_image(e, content_type)
-            else:
-                artifacts, pipeline_config = exception_message(e)
+    except Exception as e:
+        content_type = job.get("content_type", "image/jpeg")
+        print(e)
+        if content_type.startswith("image/"):
+            artifacts, pipeline_config = exception_image(e, content_type)
+        else:
+            artifacts, pipeline_config = exception_message(e)
 
-        return {
-            "id": id,
-            "artifacts": artifacts,
-            "nsfw": pipeline_config.get("nsfw", False),  # type ignore
-            "worker_version": __version__,
-            "pipeline_config": pipeline_config,
-        }
-
-    finally:
-        add_device_to_pool(device)
+    return {
+        "id": id,
+        "artifacts": artifacts,
+        "nsfw": pipeline_config.get("nsfw", False),  # type ignore
+        "worker_version": __version__,
+        "pipeline_config": pipeline_config,
+    }
 
 
 def image_from_text(text):

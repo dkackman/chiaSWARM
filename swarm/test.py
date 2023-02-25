@@ -1,7 +1,8 @@
 from .generator import do_work
 from .worker import startup
 import asyncio
-
+from . import __version__
+from .gpu.device_pool import remove_device_from_pool
 
 test_job = {
     "id": "__test__",
@@ -26,7 +27,7 @@ vid2vid_job = {
 async def run_test(job):
     await startup()
     try:
-        result = await do_work(job)
+        result = await do_work(job, remove_device_from_pool())
 
         if "error" in result["pipeline_config"]:
             print(result["pipeline_config"]["error"])
