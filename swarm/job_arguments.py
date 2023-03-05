@@ -51,16 +51,16 @@ def format_stable_diffusion_args(args):
                 f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
             )
 
+    parameters = args.pop("parameters", {})
     if "start_image_uri" in args:
         args["image"] = get_image(args.pop("start_image_uri"), size)
         # if there is an input image and pipeline type is not specified then default it to img2img
-        if "pipeline_type" not in args:
-            args["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
+        if "pipeline_type" not in parameters:
+            parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
     if "mask_image_uri" in args:
         args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
-    parameters = args.pop("parameters", {})
     args["pipeline_type"] = get_type(
         "diffusers", parameters.pop("pipeline_type", "StableDiffusionSAGPipeline")
     )
