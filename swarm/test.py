@@ -39,4 +39,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(vid2vid_job))
+    asyncio.run(run_test(test_job))
