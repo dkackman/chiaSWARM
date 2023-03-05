@@ -53,12 +53,18 @@ def format_stable_diffusion_args(args):
 
     parameters = args.pop("parameters", {})
     if "start_image_uri" in args:
+        args.pop("height", None)
+        args.pop("width", None)
+
         args["image"] = get_image(args.pop("start_image_uri"), size)
         # if there is an input image and pipeline type is not specified then default it to img2img
         if "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
     if "mask_image_uri" in args:
+        args.pop("height", None)
+        args.pop("width", None)
+
         args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
     args["pipeline_type"] = get_type(
