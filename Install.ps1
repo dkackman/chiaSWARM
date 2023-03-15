@@ -62,7 +62,7 @@ python -m venv venv
 
 venv\scripts\python -m pip install --upgrade pip setuptools wheel
 
-venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
+venv\scripts\pip install torch==1.13.1 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
 venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers moviepy opencv-python
 
 

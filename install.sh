@@ -214,7 +214,7 @@ fi
 python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 
-pip install torch torchvision torchaudio
+pip install torch==1.13.1 torchvision torchaudio
 pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers triton moviepy opencv-python
 echo ""
 echo "chiaSWARM worker installation is now complete."
