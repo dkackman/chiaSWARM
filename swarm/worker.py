@@ -101,7 +101,8 @@ async def spawn_task(job, device):
 async def startup():
     if not torch.cuda.is_available():
         raise Exception("CUDA not present. Quitting.")
-
+    
+    torch.set_float32_matmul_precision('high')
     setup_logging(resolve_path(settings.log_filename), settings.log_level)
     logging.info(f"Version {__version__}")
     logging.debug(f"Torch version {torch.__version__}")

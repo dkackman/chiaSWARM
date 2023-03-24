@@ -1,22 +1,23 @@
 import torch
-import logging
 from diffusers import (
     StableDiffusionPipeline,
     DPMSolverMultistepScheduler,
 )
-from diffusers.utils.import_utils import is_xformers_available
 from .output_processor import OutputProcessor
 
 
 def diffusion_callback(device_id, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
+    pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
 
-    pipeline = get_pipeline(
-        device_id,
+    pipeline = pipeline_type.from_pretrained(
         model_name,
-        kwargs.pop("revision"),
-        kwargs.pop("pipeline_type", StableDiffusionPipeline),
-    )
+        revision=kwargs.pop("revision"),
+        torch_dtype=torch.float16,
+    ).to( # type: ignore
+        f"cuda:{device_id}"
+    ) 
+
     pipeline.scheduler = scheduler_type.from_config(  # type: ignore
         pipeline.scheduler.config  # type: ignore
     )
@@ -34,7 +35,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
 
         kwargs["callback"] = latents_callback
         kwargs["callback_steps"] = 5
-
+        
     p = pipeline(**kwargs)  # type: ignore
 
     # if any image is nsfw, flag the entire result
@@ -48,40 +49,3 @@ def diffusion_callback(device_id, model_name, **kwargs):
 
     output_processor.add_outputs(p.images)  # type: ignore
     return (output_processor.get_results(), pipeline.config)  # type: ignore
-
-
-def get_pipeline(
-    device_id: int,
-    model_name: str,
-    revision: str,
-    pipeline_type,
-):
-    logging.debug(
-        f"Loading {model_name} to device {device_id} - {torch.cuda.get_device_name(device_id)}"
-    )
-
-    # load the pipeline and send it to the gpu
-    pipeline = pipeline_type.from_pretrained(
-        model_name,
-        revision=revision,
-        torch_dtype=torch.float16,
-    ).to(
-        f"cuda:{device_id}"
-    )  # type: ignore
-    pipeline.unet.to(memory_format=torch.channels_last)  # type: ignore
-
-    try:
-        pipeline.enable_attention_slicing()
-    except:
-        print("error enable_attention_slicing")
-
-    if is_xformers_available():
-        try:
-            pipeline.enable_xformers_memory_efficient_attention()
-        except Exception as e:
-            print(
-                "Could not enable memory efficient attention. Make sure xformers is installed"
-                f" correctly and a GPU is available: {e}"
-            )
-
-    return pipeline
