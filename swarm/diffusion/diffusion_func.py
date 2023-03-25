@@ -40,6 +40,10 @@ def diffusion_callback(device_id, model_name, **kwargs):
         kwargs["callback_steps"] = 5
 
     pipeline.enable_attention_slicing()
+    pipeline.enable_vae_slicing()  # type: ignore
+    pipeline.enable_vae_tiling()  # type: ignore
+    pipeline.enable_sequential_cpu_offload()  # type: ignore
+
     p = pipeline(**kwargs)  # type: ignore
 
     # if any image is nsfw, flag the entire result
@@ -70,6 +74,8 @@ def upscale_latents(low_res_latents, device_id, prompt, num_images_per_prompt):
 
     upscaler = upscaler.to(f"cuda:{device_id}")  # type: ignore
     upscaler.enable_attention_slicing()
+    upscaler.enable_sequential_cpu_offload()  # type: ignore
+
     if num_images_per_prompt > 1:
         prompt = [prompt] * num_images_per_prompt
 
