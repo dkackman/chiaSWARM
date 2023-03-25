@@ -13,6 +13,8 @@ import logging
 import requests
 from datetime import datetime
 import json
+from packaging import version
+
 
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
@@ -102,10 +104,14 @@ async def startup():
     if not torch.cuda.is_available():
         raise Exception("CUDA not present. Quitting.")
     
-    torch.set_float32_matmul_precision('high')
+    if version.parse(torch.__version__) < version.parse("2.0.0"):
+        raise Exception(f"Pytorch must be 2.0 or greater (found {torch.__version__}). Run install script. Quitting.")
+
     setup_logging(resolve_path(settings.log_filename), settings.log_level)
     logging.info(f"Version {__version__}")
     logging.debug(f"Torch version {torch.__version__}")
+
+    torch.set_float32_matmul_precision('high')
 
     for i in range(0, torch.cuda.device_count()):
         logging.info(f"Adding cuda device {i} - {torch.cuda.get_device_name(i)}")
