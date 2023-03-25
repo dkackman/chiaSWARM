@@ -39,10 +39,12 @@ def diffusion_callback(device_id, model_name, **kwargs):
         kwargs["callback"] = latents_callback
         kwargs["callback_steps"] = 5
 
-    pipeline.enable_attention_slicing()
-    pipeline.enable_vae_slicing()  # type: ignore
-    pipeline.enable_vae_tiling()  # type: ignore
-    pipeline.enable_sequential_cpu_offload()  # type: ignore
+    # if we're upscaling we need to preserve memory as it can OOM with even 12GB
+    if upscale or kwargs["num_images_per_prompt"] > 1:
+        pipeline.enable_attention_slicing()
+        pipeline.enable_vae_slicing()  # type: ignore
+        pipeline.enable_vae_tiling()  # type: ignore
+        pipeline.enable_sequential_cpu_offload()  # type: ignore
 
     p = pipeline(**kwargs)  # type: ignore
 
