@@ -1,6 +1,7 @@
 import torch
 import logging
 from threading import Lock
+import random
 
 
 class Device:
@@ -27,6 +28,7 @@ class Device:
             if seed is None:
                 seed = torch.seed()
 
+            random.seed(seed)
             torch.manual_seed(seed)
 
             artifacts, pipeline_config = func(self.device_id, model_name, **kwargs)
