@@ -62,6 +62,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
 
 
 def upscale_latents(low_res_latents, device_id, prompt, num_images_per_prompt):
+    print("Upscaling...")
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
         "stabilityai/sd-x2-latent-upscaler",
         torch_dtype=torch.float16,
