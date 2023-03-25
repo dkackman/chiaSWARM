@@ -67,6 +67,9 @@ def format_stable_diffusion_args(args):
 
         args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
+    if "upscale" in parameters and parameters["upscale"]:
+        args["upscale"] = True
+
     args["pipeline_type"] = get_type(
         "diffusers", parameters.pop("pipeline_type", "StableDiffusionPipeline")
     )

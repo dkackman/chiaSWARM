@@ -2,6 +2,7 @@ import torch
 from diffusers import (
     StableDiffusionPipeline,
     DPMSolverMultistepScheduler,
+    StableDiffusionLatentUpscalePipeline,
 )
 from .output_processor import OutputProcessor
 
@@ -9,14 +10,16 @@ from .output_processor import OutputProcessor
 def diffusion_callback(device_id, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
+    upscale = kwargs.pop("upscale", False)
+    if upscale:  # if upscaling stay in latent space
+        kwargs["output_type"] = "latent"
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision"),
         torch_dtype=torch.float16,
-    ).to( # type: ignore
-        f"cuda:{device_id}"
-    ) 
+    )
+    pipeline = pipeline.to(f"cuda:{device_id}")  # type: ignore
 
     pipeline.scheduler = scheduler_type.from_config(  # type: ignore
         pipeline.scheduler.config  # type: ignore
@@ -35,7 +38,8 @@ def diffusion_callback(device_id, model_name, **kwargs):
 
         kwargs["callback"] = latents_callback
         kwargs["callback_steps"] = 5
-        
+
+    pipeline.enable_attention_slicing()
     p = pipeline(**kwargs)  # type: ignore
 
     # if any image is nsfw, flag the entire result
@@ -47,5 +51,31 @@ def diffusion_callback(device_id, model_name, **kwargs):
         for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):  # type: ignore
             pipeline.config["nsfw"] = True
 
-    output_processor.add_outputs(p.images)  # type: ignore
+    images = p.images  # type: ignore
+    if upscale:
+        images = upscale_latents(
+            images, device_id, kwargs["prompt"], kwargs["num_images_per_prompt"]
+        )
+
+    output_processor.add_outputs(images)
     return (output_processor.get_results(), pipeline.config)  # type: ignore
+
+
+def upscale_latents(low_res_latents, device_id, prompt, num_images_per_prompt):
+    upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
+        "stabilityai/sd-x2-latent-upscaler",
+        torch_dtype=torch.float16,
+    )
+
+    upscaler = upscaler.to(f"cuda:{device_id}")  # type: ignore
+    upscaler.enable_attention_slicing()
+    if num_images_per_prompt > 1:
+        prompt = [prompt] * num_images_per_prompt
+
+    image = upscaler(  # type: ignore
+        prompt=prompt, image=low_res_latents, num_inference_steps=20, guidance_scale=0
+    ).images[  # type: ignore
+        0
+    ]  # type: ignore
+
+    return [image]
