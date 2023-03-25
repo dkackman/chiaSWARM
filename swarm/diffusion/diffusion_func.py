@@ -39,8 +39,9 @@ def diffusion_callback(device_id, model_name, **kwargs):
         kwargs["callback"] = latents_callback
         kwargs["callback_steps"] = 5
 
-    # if we're upscaling we need to preserve memory as it can OOM with even 12GB
-    if upscale or kwargs["num_images_per_prompt"] > 1:
+    mem_info = torch.cuda.mem_get_info(device_id)
+    # if we're upscaling or mid-range on mem, preserve memory vs performance
+    if upscale or kwargs["num_images_per_prompt"] > 1 or mem_info[1] < 12000000000:
         pipeline.enable_attention_slicing()
         pipeline.enable_vae_slicing()  # type: ignore
         pipeline.enable_vae_tiling()  # type: ignore
