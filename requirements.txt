@@ -24,7 +24,7 @@ opencv-python==4.7.0.72
 packaging==23.0
 pathspec==0.11.1
 Pillow==9.4.0
-platformdirs==3.1.1
+platformdirs==3.2.0
 portalocker==2.7.0
 proglog==0.1.10
 psutil==5.9.4
