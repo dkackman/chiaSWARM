@@ -48,10 +48,15 @@ def diffusion_callback(device_id, model_name, **kwargs):
         or kwargs["num_images_per_prompt"] > 1
         or mem_info[1] < 12000000000
     ):
-        pipeline.enable_attention_slicing()
-        pipeline.enable_vae_slicing()  # type: ignore
-        pipeline.enable_vae_tiling()  # type: ignore
-        pipeline.enable_sequential_cpu_offload()  # type: ignore
+        # not all pipelines share these methods, so check first
+        if has_method(pipeline, "enable_attention_slicing"):
+            pipeline.enable_attention_slicing()
+        if has_method(pipeline, "enable_vae_slicing"):
+            pipeline.enable_vae_slicing()  # type: ignore
+        if has_method(pipeline, "enable_vae_tiling"):
+            pipeline.enable_vae_tiling()  # type: ignore
+        if has_method(pipeline, "enable_sequential_cpu_offload"):
+            pipeline.enable_sequential_cpu_offload()  # type: ignore
 
     p = pipeline(**kwargs)  # type: ignore
 
@@ -105,3 +110,7 @@ def upscale_latents(
     ]  # type: ignore
 
     return [image]
+
+
+def has_method(o, name):
+    return callable(getattr(o, name, None))
