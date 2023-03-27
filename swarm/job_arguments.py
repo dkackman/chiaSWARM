@@ -61,6 +61,10 @@ def format_stable_diffusion_args(args):
         if "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
+    # make sure this gets set because the memory conservation code needs it now
+    if not "num_images_per_prompt" in args:
+        args["num_images_per_prompt"] = 1
+
     if "mask_image_uri" in args:
         args.pop("height", None)
         args.pop("width", None)
