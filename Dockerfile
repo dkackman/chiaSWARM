@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
+FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 
 RUN apt-get update
 
@@ -17,7 +17,7 @@ RUN python -m pip install --upgrade pip
 RUN python -m pip install wheel setuptools
 
 # RUN pip install torch torchvision torchaudio
-RUN pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers triton moviepy opencv-python
+RUN pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors moviepy opencv-python
 
 WORKDIR /sdaas
 COPY ./ /sdaas
