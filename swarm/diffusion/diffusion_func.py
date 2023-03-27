@@ -61,14 +61,20 @@ def diffusion_callback(device_id, model_name, **kwargs):
     images = p.images  # type: ignore
     if upscale:
         images = upscale_latents(
-            images, device_id, kwargs["prompt"], kwargs["num_images_per_prompt"]
+            images,
+            device_id,
+            kwargs["prompt"],
+            kwargs["num_images_per_prompt"],
+            kwargs["generator"],
         )
 
     output_processor.add_outputs(images)
     return (output_processor.get_results(), pipeline.config)  # type: ignore
 
 
-def upscale_latents(low_res_latents, device_id, prompt, num_images_per_prompt):
+def upscale_latents(
+    low_res_latents, device_id, prompt, num_images_per_prompt, generator
+):
     print("Upscaling...")
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
         "stabilityai/sd-x2-latent-upscaler",
@@ -83,7 +89,11 @@ def upscale_latents(low_res_latents, device_id, prompt, num_images_per_prompt):
         prompt = [prompt] * num_images_per_prompt
 
     image = upscaler(  # type: ignore
-        prompt=prompt, image=low_res_latents, num_inference_steps=20, guidance_scale=0
+        prompt=prompt,
+        image=low_res_latents,
+        num_inference_steps=20,
+        guidance_scale=0,
+        generator=generator,
     ).images[  # type: ignore
         0
     ]  # type: ignore
