@@ -25,18 +25,12 @@ def format_args(job):
 
 
 def format_vid2vid_args(args):
-    if "prompt" in args:
-        args["prompt"] = clean_prompt(args["prompt"])
-
     return model_video_callback, args
 
 
 def format_img2txt_args(args):
     if "start_image_uri" in args:
         args["image"] = get_image(args.pop("start_image_uri"), None)
-
-    if "prompt" in args:
-        args["prompt"] = clean_prompt(args["prompt"])
 
     return caption_callback, args
 
@@ -94,21 +88,7 @@ def format_stable_diffusion_args(args):
         args.pop("height", None)
         args.pop("width", None)
 
-    if "prompt" in args:
-        args["prompt"] = clean_prompt(args["prompt"])
-
-    if "negative_prompt" in args:
-        args["negative_prompt"] = clean_prompt(args["negative_prompt"])
-
     return diffusion_callback, args
-
-
-def clean_prompt(str):
-    encoded = unquote(str).encode("utf8", "ignore")
-    decoded = encoded.decode("utf8", "ignore")
-    cleaned = decoded.replace('"', "").replace("'", "").strip()
-
-    return cleaned
 
 
 def download_image(url):

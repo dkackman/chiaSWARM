@@ -51,6 +51,8 @@ def diffusion_callback(device_id, model_name, **kwargs):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_attention_slicing"):
             pipeline.enable_attention_slicing()
+        if has_method(pipeline, "enable_xformers_memory_efficient_attention"):
+            pipeline.enable_xformers_memory_efficient_attention()
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
         if has_method(pipeline, "enable_vae_tiling"):
@@ -95,6 +97,8 @@ def upscale_latents(
     upscaler = upscaler.to(f"cuda:{device_id}")  # type: ignore
     upscaler.enable_attention_slicing()
     upscaler.enable_sequential_cpu_offload()  # type: ignore
+    if has_method(upscaler, "enable_xformers_memory_efficient_attention"):
+        upscaler.enable_xformers_memory_efficient_attention()
 
     if num_images_per_prompt > 1:
         prompt = [prompt] * num_images_per_prompt
