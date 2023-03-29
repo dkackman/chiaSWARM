@@ -2,6 +2,7 @@ import torch
 import logging
 from threading import Lock
 import random
+import numpy as np
 
 
 class Device:
@@ -28,8 +29,9 @@ class Device:
             if seed is None:
                 seed = torch.seed()
 
-            random.seed(seed)
-            kwargs["generator"] = torch.manual_seed(seed)
+            kwargs["generator"] = torch.Generator(
+                device=f"cuda:{self.device_id}"
+            ).manual_seed(seed)
             artifacts, pipeline_config = func(self.device_id, model_name, **kwargs)
             pipeline_config["seed"] = seed
             return artifacts, pipeline_config
