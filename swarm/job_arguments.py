@@ -55,10 +55,6 @@ def format_stable_diffusion_args(args):
         if "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
-    # make sure this gets set because the memory conservation code needs it now
-    if not "num_images_per_prompt" in args:
-        args["num_images_per_prompt"] = 1
-
     if "mask_image_uri" in args:
         args.pop("height", None)
         args.pop("width", None)
@@ -83,10 +79,17 @@ def format_stable_diffusion_args(args):
     if (
         args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler"
         or args["model_name"] == "stabilityai/stable-diffusion-2-depth"
+        or args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
         or args["model_name"] == "timbrooks/instruct-pix2pix"
     ):
         args.pop("height", None)
         args.pop("width", None)
+
+    if (
+        args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
+        and "num_images_per_prompt" in args
+    ):
+        args.pop("num_images_per_prompt", None)
 
     return diffusion_callback, args
 
@@ -100,7 +103,7 @@ def download_image(url):
 
 
 def get_image(uri, size):
-    head = requests.head(uri, allow_redirects=True)
+    head = requests.head(uri, allow_redirects=True)  # type: ignore
     content_length = head.headers.pop("Content-Length", 0)
     content_type = head.headers.pop("Content-Type", "")
 

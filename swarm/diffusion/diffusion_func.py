@@ -10,6 +10,7 @@ from .output_processor import OutputProcessor
 def diffusion_callback(device_id, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
+    num_images_per_prompt = kwargs.pop("num_images_per_prompt", 1)
     upscale = kwargs.pop("upscale", False)
     if upscale:  # if upscaling stay in latent space
         kwargs["output_type"] = "latent"
@@ -45,7 +46,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
         (
             upscale and mem_info[1] < 16000000000
         )  # for 3090's etc just letem go full bore
-        or kwargs["num_images_per_prompt"] > 1
+        or num_images_per_prompt > 1
         or mem_info[1] < 12000000000
     ):
         # not all pipelines share these methods, so check first
@@ -77,7 +78,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
             images,
             device_id,
             kwargs["prompt"],
-            kwargs["num_images_per_prompt"],
+            num_images_per_prompt,
             kwargs["generator"],
         )
 
