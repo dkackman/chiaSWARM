@@ -29,10 +29,9 @@ async def run_worker():
     while True:
         await asyncio.sleep(wait_seconds)
         device = remove_device_from_pool()  # this will block if all gpus are busy
-        wait_seconds = 11
 
         try:
-            await ask_for_work(device)
+            wait_seconds = await ask_for_work(device)
 
         except Exception as e:
             print(e)
@@ -64,8 +63,13 @@ async def ask_for_work(device):
 
     if response.ok:
         response_dict = response.json()
+        did_work = False
         for job in response_dict["jobs"]:
             await spawn_task(job, device)
+            did_work = True
+
+        # if we did work, ask for more right away, otherwise wait 11 seconds
+        return 0 if did_work else 11
 
     elif response.status_code == 400:
         # this is when workers are not returning results within expectations
@@ -77,6 +81,8 @@ async def ask_for_work(device):
     else:
         print(f"{hive_uri} returned {response.status_code}")
         response.raise_for_status()
+
+    return 11
 
 
 async def spawn_task(job, device):
