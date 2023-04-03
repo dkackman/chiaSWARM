@@ -17,7 +17,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
-        revision=kwargs.pop("revision"),
+        revision=kwargs.pop("revision", "main"),
         torch_dtype=torch.float16,
     )
     pipeline = pipeline.to(f"cuda:{device_id}")  # type: ignore
