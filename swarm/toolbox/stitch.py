@@ -5,6 +5,7 @@ import io
 from ..diffusion.output_processor import make_result, make_thumbnail, image_to_buffer
 
 def stitch_callback(device_id, model_name, **kwargs):
+    print("Stitching...")
     pipeline_config = {}
 
     jobs = kwargs["jobs"]
