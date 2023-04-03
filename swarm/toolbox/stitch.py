@@ -1,6 +1,6 @@
 import math
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import io
 from ..diffusion.output_processor import make_result, make_thumbnail, image_to_buffer
 
@@ -10,7 +10,7 @@ def stitch_callback(device_id, model_name, **kwargs):
     jobs = kwargs["jobs"]
     image_urls = [job["resultUri"] for job in jobs]
     images = download_images(image_urls)
-    resized_images = resize_images(images)
+    resized_images = resize_images(images, jobs)
     stitched_image = stitch_images(resized_images)
 
     buffer = image_to_buffer(stitched_image, "image/jpeg", "web_low")
@@ -28,10 +28,14 @@ def download_images(image_urls):
         images.append(image)
     return images
 
-def resize_images(images, size=(128, 128)):
+def resize_images(images, jobs, size=(128, 128)):
     resized_images = []
-    for image in images:
+    for index, image in enumerate(images):
         resized_image = image.resize(size)
+        draw = ImageDraw.Draw(resized_image)
+        font = ImageFont.truetype("arial.ttf", 16)
+        job_index = str(index + 1)
+        draw.text((10, 10), job_index, font=font, fill=(255, 255, 255))
         resized_images.append(resized_image)
     return resized_images
 
