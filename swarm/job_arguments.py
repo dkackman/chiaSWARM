@@ -3,7 +3,7 @@ import requests
 from PIL import Image, ImageOps
 from .diffusion.diffusion_func import diffusion_callback
 from .captioning.caption_image import caption_callback
-
+from .toolbox.stitch import stitch_callback
 from .video.vid2vid import model_video_callback
 from .type_helpers import get_type
 
@@ -15,17 +15,16 @@ def format_args(job):
     args = job.copy()
 
     workflow = args.pop("workflow", None)
+    if workflow == "stitch":
+        return stitch_callback, args
+    
     if workflow == "img2txt":
         return format_img2txt_args(args)
 
     if workflow == "vid2vid":
-        return format_vid2vid_args(args)
+        return model_video_callback, args
 
     return format_stable_diffusion_args(args)
-
-
-def format_vid2vid_args(args):
-    return model_video_callback, args
 
 
 def format_img2txt_args(args):
@@ -46,6 +45,9 @@ def format_stable_diffusion_args(args):
             )
 
     parameters = args.pop("parameters", {})
+    if "prompt" not in args:
+        args["prompt"] = ""
+
     if "start_image_uri" in args:
         args.pop("height", None)
         args.pop("width", None)
