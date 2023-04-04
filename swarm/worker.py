@@ -10,7 +10,6 @@ from .settings import (
 import torch
 import asyncio
 import logging
-import requests
 from datetime import datetime
 import json
 from packaging import version
@@ -41,83 +40,111 @@ async def run_worker():
             add_device_to_pool(device)
 
 
+async def handle_status_200(response, device, session):
+    try:
+        response_dict = await response.json()
+    except json.JSONDecodeError:
+        print(f"Error: Unable to decode server response: {await response.text()}")
+        return 11
+
+    if "jobs" not in response_dict:
+        print("Error: 'jobs' field is missing in the server response")
+        return 11
+
+    if not isinstance(response_dict["jobs"], list):
+        print("Error: 'jobs' field is not a list in the server response")
+        return 11
+
+    did_work = False
+    for job in response_dict["jobs"]:
+        await spawn_task(job, device, session)
+        did_work = True
+
+    # if we did work, ask for more right away, otherwise wait 11 seconds
+    return 0 if did_work else 11
+
+
+async def handle_status_400(response):
+    response_dict = await response.json()
+    message = response_dict.pop("message", "bad worker")
+    print(f"{hive_uri} says {message}")
+    response.raise_for_status()
+
+
 async def ask_for_work(device):
     print(
         f"{datetime.now()}: Device {device.device_id} asking for work from the hive at {hive_uri}..."
     )
     mem_info = torch.cuda.mem_get_info(device.device_id)
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-                f"{hive_uri}/work",
-                timeout=aiohttp.ClientTimeout(total=10),
-                params={
-                    "worker_version": __version__,
-                    "worker_name": f"{settings.worker_name}:{device.device_id}",
-                    "vram": mem_info[1],
-                },
-                headers={
-                    "Content-type": "application/json",
-                    "Authorization": f"Bearer {settings.sdaas_token}",
-                    "user-agent": f"chiaSWARM.worker/{__version__}",
-                },
-        ) as response:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                    f"{hive_uri}/work",
+                    timeout=aiohttp.ClientTimeout(total=10),
+                    params={
+                        "worker_version": __version__,
+                        "worker_name": f"{settings.worker_name}:{device.device_id}",
+                        "vram": mem_info[1],
+                    },
+                    headers={
+                        "Content-type": "application/json",
+                        "Authorization": f"Bearer {settings.sdaas_token}",
+                        "user-agent": f"chiaSWARM.worker/{__version__}",
+                    },
+            ) as response:
 
-            if response.status == 200:
-                try:
-                    response_dict = await response.json()
-                except json.JSONDecodeError:
-                    print(f"Error: Unable to decode server response: {await response.text()}")
-                    return 11
+                if response.status == 200:
+                    return await handle_status_200(response, device, session)
 
-                if "jobs" not in response_dict:
-                    print("Error: 'jobs' field is missing in the server response")
-                    return 11
+                elif response.status == 400:
+                    await handle_status_400(response)
 
-                if not isinstance(response_dict["jobs"], list):
-                    print("Error: 'jobs' field is not a list in the server response")
-                    return 11
+                else:
+                    print(f"{hive_uri} returned {response.status}")
+                    response.raise_for_status()
 
-                did_work = False
-                for job in response_dict["jobs"]:
-                    await spawn_task(job, device, session)
-                    did_work = True
+                return 11
 
-                # if we did work, ask for more right away, otherwise wait 11 seconds
-                return 0 if did_work else 11
+    except aiohttp.ClientConnectorError as e:
+        print(f"Error: Could not connect to the server: {e}")
+        return 121
 
-            elif response.status == 400:
-                # this is when workers are not returning results within expectations
-                response_dict = await response.json()
-                message = response_dict.pop("message", "bad worker")
-                print(f"{hive_uri} says {message}")
-                response.raise_for_status()
+    except aiohttp.ClientError as e:
+        print(f"Error: An unexpected error occurred while making the request: {e}")
+        return 121
 
-            else:
-                print(f"{hive_uri} returned {response.status}")
-                response.raise_for_status()
+    except asyncio.TimeoutError:
+        print("Error: Request timed out")
+        return 121
 
-            return 11
+    except Exception as e:
+        print(f"Error: An unknown error occurred: {e}")
+        return 121
 
 
 async def spawn_task(job, device, session):
     print(f"Device {device.device_id} got work")
 
-    # main worker function
-    result = await do_work(job, device)
+    try:
+        # main worker function
+        result = await do_work(job, device)
 
-    async with session.post(
-            f"{hive_uri}/results",
-            data=json.dumps(result),
-            headers={
-                "Content-type": "application/json",
-                "Authorization": f"Bearer {settings.sdaas_token}",
-                "user-agent": f"chiaSWARM.worker/{__version__}",
-            },
-    ) as resultResponse:
-        if resultResponse.status == 500:
-            print(f"The hive returned an error: {await resultResponse.text()}")
-        else:
-            print(f"Device {device.device_id} {await resultResponse.json()}")
+        async with session.post(
+                f"{hive_uri}/results",
+                data=json.dumps(result),
+                headers={
+                    "Content-type": "application/json",
+                    "Authorization": f"Bearer {settings.sdaas_token}",
+                    "user-agent": f"chiaSWARM.worker/{__version__}",
+                },
+        ) as resultResponse:
+            if resultResponse.status == 500:
+                print(f"The hive returned an error: {await resultResponse.text()}")
+            else:
+                print(f"Device {device.device_id} {await resultResponse.json()}")
+
+    except Exception as e:
+        print(f"Error: An exception occurred while processing the job or submitting the results: {e}")
 
 
 async def startup():
