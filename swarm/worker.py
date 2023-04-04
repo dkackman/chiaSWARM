@@ -62,7 +62,20 @@ async def ask_for_work(device):
     )
 
     if response.ok:
-        response_dict = response.json()
+        try:
+            response_dict = response.json()
+        except json.JSONDecodeError:
+            print(f"Error: Unable to decode server response: {response.text}")
+            return 11
+
+        if "jobs" not in response_dict:
+            print("Error: 'jobs' field is missing in the server response")
+            return 11
+
+        if not isinstance(response_dict["jobs"], list):
+            print("Error: 'jobs' field is not a list in the server response")
+            return 11
+
         did_work = False
         for job in response_dict["jobs"]:
             await spawn_task(job, device)
