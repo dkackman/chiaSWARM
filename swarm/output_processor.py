@@ -63,6 +63,7 @@ class OutputProcessor:
         return results
 
 
+
 def make_result(buffer, thumb, content_type):
     thumbnail_buffer = make_thumbnail(thumb)
     return {
