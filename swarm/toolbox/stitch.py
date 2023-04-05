@@ -66,15 +66,16 @@ def generate_image_map(resized_images, jobs):
     for index, _ in enumerate(resized_images):
         coords = f"{x_offset},{y_offset},{x_offset + thumb_size},{y_offset + thumb_size}"
         href = jobs[index]["resultUri"]
-        fileName = jobs[index]["fileName"]
-        area_data = {
+        fileName = jobs[index].pop("fileName", href)
+        alt = jobs[index].pop("model_name", f"Image {index + 1}")
+
+        map_data.append({
             "shape": "rect",
             "coords": coords,
             "href": href,
-            "alt": f"Image {index + 1}",
+            "alt": alt,
             "filename": fileName
-        }
-        map_data.append(area_data)
+        })
 
         x_offset += thumb_size
         if x_offset >= thumb_size * math.ceil(math.sqrt(len(resized_images))):
