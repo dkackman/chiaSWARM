@@ -66,11 +66,13 @@ def generate_image_map(resized_images, jobs):
     for index, _ in enumerate(resized_images):
         coords = f"{x_offset},{y_offset},{x_offset + thumb_size},{y_offset + thumb_size}"
         href = jobs[index]["resultUri"]
+        fileName = jobs[index]["fileName"]
         area_data = {
             "shape": "rect",
             "coords": coords,
             "href": href,
-            "alt": f"Image {index + 1}"
+            "alt": f"Image {index + 1}",
+            "filename": fileName
         }
         map_data.append(area_data)
 

@@ -93,6 +93,12 @@ def format_stable_diffusion_args(args):
     ):
         args.pop("num_images_per_prompt", None)
 
+    if (
+        args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip-small" or
+        args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip"
+    ):
+        args.pop("strength", None)
+
     return diffusion_callback, args
 
 
