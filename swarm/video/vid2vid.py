@@ -4,7 +4,7 @@ from diffusers import DiffusionPipeline, EulerAncestralDiscreteScheduler
 import torch
 from PIL import Image
 from moviepy.editor import *
-from ..diffusion.output_processor import make_result
+from ..output_processor import make_result
 from io import BytesIO
 import tempfile
 import pathlib

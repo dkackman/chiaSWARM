@@ -1,4 +1,4 @@
-from .diffusion.output_processor import make_result, image_to_buffer, make_text_result
+from .output_processor import make_result, image_to_buffer, make_text_result
 from PIL import Image, ImageDraw
 from .job_arguments import format_args
 from . import __version__

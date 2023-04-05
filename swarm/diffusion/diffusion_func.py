@@ -4,7 +4,7 @@ from diffusers import (
     DPMSolverMultistepScheduler,
     StableDiffusionLatentUpscalePipeline,
 )
-from .output_processor import OutputProcessor
+from ..output_processor import OutputProcessor
 
 
 def diffusion_callback(device_id, model_name, **kwargs):

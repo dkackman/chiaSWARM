@@ -1,4 +1,4 @@
-from .video_maker import make_video
+from .diffusion.video_maker import make_video
 import hashlib
 import io
 from PIL import Image

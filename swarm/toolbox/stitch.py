@@ -3,7 +3,7 @@ import requests
 from PIL import Image, ImageDraw
 import io
 import json
-from ..diffusion.output_processor import make_result, make_thumbnail, image_to_buffer
+from ..output_processor import make_result, make_thumbnail, image_to_buffer
 
 thumb_size = 144
 def stitch_callback(device_id, model_name, **kwargs):
