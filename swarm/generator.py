@@ -12,7 +12,7 @@ async def do_work(job, device):
 
     except Exception as e:
         # any error here is fatal (i.e. not something a worker could recover from)
-        # the job should not be resubmitted
+        # the job should not be resubmitted as input args are wrong somehow
         content_type = job.get("content_type", "image/jpeg")
         print(e)
         if content_type.startswith("image/"):
