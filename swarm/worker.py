@@ -46,7 +46,9 @@ async def ask_for_work(device):
         f"{datetime.now()}: Device {device.device_id} asking for work from the hive at {hive_uri}..."
     )
     mem_info = torch.cuda.mem_get_info(device.device_id)
-    async with aiohttp.ClientSession() as session:
+
+    timeout = aiohttp.ClientTimeout(total=10)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{hive_uri}/work",
             timeout=10,
@@ -91,8 +93,9 @@ async def spawn_task(job, device):
 
     # main worker function
     result = await do_work(job, device)
-
-    async with aiohttp.ClientSession() as session:
+    
+    timeout = aiohttp.ClientTimeout(total=60)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.post(
             f"{hive_uri}/results",
             data=json.dumps(result),
