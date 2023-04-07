@@ -31,6 +31,7 @@ async def run_worker():
     # Create a task for each device to process work
     device_tasks = []
     for i in range(torch.cuda.device_count()):
+        print(f"Starting device {i}")
         device = remove_device_from_pool()
         device_tasks.append(asyncio.create_task(device_worker(device)))
 
@@ -39,8 +40,8 @@ async def run_worker():
 
     # Main loop to request work
     while True:
-        await asyncio.sleep(11)
         await ask_for_work()
+        await asyncio.sleep(11)
 
 
 async def ask_for_work():
