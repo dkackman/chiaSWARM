@@ -40,8 +40,8 @@ async def run_worker():
 
     # Main loop to request work
     while True:
-        await ask_for_work()
-        await asyncio.sleep(11)
+        sleep_seconds = await ask_for_work()
+        await asyncio.sleep(sleep_seconds)
 
 
 async def ask_for_work():
@@ -49,57 +49,69 @@ async def ask_for_work():
         f"{datetime.now()}: Asking for work from the hive at {hive_uri}..."
     )
 
-    timeout = aiohttp.ClientTimeout(total=10)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{hive_uri}/work",
-            timeout=10,
-            params={
-                "worker_version": __version__,
-                "worker_name": settings.worker_name,
-            },
-            headers={
-                "Content-type": "application/json",
-                "Authorization": f"Bearer {settings.sdaas_token}",
-                "user-agent": f"chiaSWARM.worker/{__version__}",
-            },
-        ) as response:
+    try:
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(
+                f"{hive_uri}/work",
+                timeout=10,
+                params={
+                    "worker_version": __version__,
+                    "worker_name": settings.worker_name,
+                },
+                headers={
+                    "Content-type": "application/json",
+                    "Authorization": f"Bearer {settings.sdaas_token}",
+                    "user-agent": f"chiaSWARM.worker/{__version__}",
+                },
+            ) as response:
 
-            if response.status == 200:
-                response_dict = await response.json()
-                for job in response_dict["jobs"]:
-                    id = job["id"]
-                    print(f"Got job {id}")
+                if response.status == 200:
+                    response_dict = await response.json()
+                    got_work = False
+                    for job in response_dict["jobs"]:
+                        id = job["id"]
+                        print(f"Got job {id}")
+                        got_work = True
+                        await work_queue.put(job)
 
-                    await work_queue.put(job)
+                        return 0 if got_work else 11
 
-            elif response.status == 400:
-                # this is when workers are not returning results within expectations
-                response_dict = await response.json()
-                message = response_dict.pop("message", "bad worker")
-                print(f"{hive_uri} says {message}")
-                response.raise_for_status()
+                elif response.status == 400:
+                    # this is when workers are not returning results within expectations
+                    response_dict = await response.json()
+                    message = response_dict.pop("message", "bad worker")
+                    print(f"{hive_uri} says {message}")
+                    response.raise_for_status()
 
-            else:
-                print(f"{hive_uri} returned {response.status}")
-                response.raise_for_status()
+                else:
+                    print(f"{hive_uri} returned {response.status}")
+                    response.raise_for_status()
 
+    except Exception as e:
+        print(e)
+        return 121
+                  
+    return  11
 
 async def device_worker(device: Device):
     while True:
-        job = await work_queue.get()
-        result = await do_work(job, device)
-        await result_queue.put(result)
-        work_queue.task_done()
-        add_device_to_pool(device)
-
+        try:
+            job = await work_queue.get()
+            result = await do_work(job, device)
+            await result_queue.put(result)
+            work_queue.task_done()
+        except Exception as e:
+            print(e)
 
 async def result_worker():
     while True:
-        result = await result_queue.get()
-        await submit_result(result)
-        result_queue.task_done()
-
+        try:
+            result = await result_queue.get()
+            await submit_result(result)
+            result_queue.task_done()
+        except Exception as e:
+            print(e)
 
 async def submit_result(result):
     print(f"Result complete")
