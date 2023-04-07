@@ -2,7 +2,6 @@ import math
 import requests
 from PIL import Image, ImageDraw
 import io
-import json
 from ..output_processor import make_result, make_thumbnail, image_to_buffer
 
 thumb_size = 144
@@ -35,15 +34,33 @@ def download_images(image_urls):
         images.append(image)
     return images
 
+from PIL import Image, ImageDraw
+
 def resize_images(images, size=(thumb_size, thumb_size)):
     resized_images = []
     for index, image in enumerate(images):
-        resized_image = image.resize(size)
+        width, height = image.size
+        aspect_ratio = float(width) / float(height)
+
+        # Calculate new dimensions while preserving aspect ratio
+        if width > height:
+            new_width = min(size[0], width)
+            new_height = int(new_width / aspect_ratio)
+        else:
+            new_height = min(size[1], height)
+            new_width = int(new_height * aspect_ratio)
+
+        # Ensure the new dimensions do not exceed the thumbnail size
+        new_width = min(new_width, size[0])
+        new_height = min(new_height, size[1])
+
+        resized_image = image.resize((new_width, new_height), Image.ANTIALIAS)
         draw = ImageDraw.Draw(resized_image)
         job_index = str(index + 1)
         draw.text((10, 10), job_index, fill=(255, 255, 255))
         resized_images.append(resized_image)
     return resized_images
+
 
 def stitch_images(resized_images):
     images_per_row = math.ceil(math.sqrt(len(resized_images)))
