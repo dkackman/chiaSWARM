@@ -16,6 +16,9 @@ import json
 from packaging import version
 
 
+work_queue = asyncio.Queue(maxsize=torch.cuda.device_count())
+result_queue = asyncio.Queue()
+
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
 
@@ -25,27 +28,25 @@ async def run_worker():
 
     logging.info("worker")
 
-    wait_seconds = 0
+    # Create a task for each device to process work
+    device_tasks = []
+    for i in range(torch.cuda.device_count()):
+        device = remove_device_from_pool()
+        device_tasks.append(asyncio.create_task(device_worker(device)))
+
+    # Create a task for submitting results
+    result_task = asyncio.create_task(result_worker())
+
+    # Main loop to request work
     while True:
-        await asyncio.sleep(wait_seconds)
-        device = remove_device_from_pool()  # this will block if all gpus are busy
-
-        try:
-            wait_seconds = await ask_for_work(device)
-
-        except Exception as e:
-            print(e)
-            wait_seconds = 121
-
-        finally:
-            add_device_to_pool(device)
+        await asyncio.sleep(11)
+        await ask_for_work()
 
 
-async def ask_for_work(device):
+async def ask_for_work():
     print(
-        f"{datetime.now()}: Device {device.device_id} asking for work from the hive at {hive_uri}..."
+        f"{datetime.now()}: Asking for work from the hive at {hive_uri}..."
     )
-    mem_info = torch.cuda.mem_get_info(device.device_id)
 
     timeout = aiohttp.ClientTimeout(total=10)
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -54,8 +55,7 @@ async def ask_for_work(device):
             timeout=10,
             params={
                 "worker_version": __version__,
-                "worker_name": f"{settings.worker_name}:{device.device_id}",
-                "vram": mem_info[1],
+                "worker_name": settings.worker_name,
             },
             headers={
                 "Content-type": "application/json",
@@ -66,13 +66,11 @@ async def ask_for_work(device):
 
             if response.status == 200:
                 response_dict = await response.json()
-                did_work = False
                 for job in response_dict["jobs"]:
-                    await spawn_task(job, device)
-                    did_work = True
+                    id = job["id"]
+                    print(f"Got job {id}")
 
-                # if we did work, ask for more right away, otherwise wait 11 seconds
-                return 0 if did_work else 11
+                    await work_queue.put(job)
 
             elif response.status == 400:
                 # this is when workers are not returning results within expectations
@@ -85,15 +83,26 @@ async def ask_for_work(device):
                 print(f"{hive_uri} returned {response.status}")
                 response.raise_for_status()
 
-            return 11
+
+async def device_worker(device: Device):
+    while True:
+        job = await work_queue.get()
+        result = await do_work(job, device)
+        await result_queue.put(result)
+        work_queue.task_done()
+        add_device_to_pool(device)
 
 
-async def spawn_task(job, device):
-    print(f"Device {device.device_id} got work")
+async def result_worker():
+    while True:
+        result = await result_queue.get()
+        await submit_result(result)
+        result_queue.task_done()
 
-    # main worker function
-    result = await do_work(job, device)
-    
+
+async def submit_result(result):
+    print(f"Result complete")
+
     timeout = aiohttp.ClientTimeout(total=60)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.post(
@@ -110,7 +119,7 @@ async def spawn_task(job, device):
                 print(f"The hive returned an error: {resultResponse.reason}")
             else:
                 response_dict = await resultResponse.json()
-                print(f"Device {device.device_id} {response_dict}")
+                print(f"Restult {response_dict}")
 
 
 async def startup():

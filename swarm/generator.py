@@ -2,10 +2,18 @@ from .output_processor import make_result, image_to_buffer, make_text_result
 from PIL import Image, ImageDraw
 from .job_arguments import format_args
 from . import __version__
+import asyncio
 
 
 async def do_work(job, device):
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(None, synchronous_do_work_function, job, device)
+    return result
+
+
+def synchronous_do_work_function(job, device):
     id = job.pop("id")
+    print(f"Processing {id} on device {device.device_id}")
 
     try:
         worker_function, kwargs = format_args(job)
@@ -27,10 +35,11 @@ async def do_work(job, device):
             "fatal_error": True,
             "worker_version": __version__,
             "pipeline_config": pipeline_config,
-        }            
+        }
 
     try:
-        artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
+        artifacts, pipeline_config = device(
+            worker_function, **kwargs)  # type: ignore
 
     except Exception as e:
         content_type = job.get("content_type", "image/jpeg")
