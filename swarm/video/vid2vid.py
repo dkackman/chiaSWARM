@@ -10,7 +10,7 @@ import tempfile
 import pathlib
 
 
-def model_video_callback(device_id, model_name, **kwargs):
+def model_video_callback(device_identifier, model_name, **kwargs):
     pipeline_config = {}
     results = {}
 
@@ -19,7 +19,7 @@ def model_video_callback(device_id, model_name, **kwargs):
     pipeline.enable_attention_slicing()  # type: ignore
     pipeline.enable_xformers_memory_efficient_attention()  # type: ignore
     pipeline.unet.to(memory_format=torch.channels_last)  # type: ignore
-    pipeline = pipeline.to(f"cuda:{device_id}")  # type: ignore
+    pipeline = pipeline.to(device_identifier)  # type: ignore
 
     prompt = kwargs["prompt"]
     negative_prompt = kwargs.pop("negative_prompt", "")

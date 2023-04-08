@@ -7,7 +7,7 @@ from ..output_processor import OutputProcessor
 from .upscale import upscale_latents
 from ..type_helpers import has_method
 
-def diffusion_callback(device_id, model_name, **kwargs):
+def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
     num_images_per_prompt = kwargs.pop("num_images_per_prompt", 1)
@@ -20,7 +20,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
         revision=kwargs.pop("revision", "main"),
         torch_dtype=torch.float16,
     )
-    pipeline = pipeline.to(f"cuda:{device_id}")  # type: ignore
+    pipeline = pipeline.to(device_identifier)  # type: ignore
 
     pipeline.scheduler = scheduler_type.from_config(  # type: ignore
         pipeline.scheduler.config  # type: ignore
@@ -40,7 +40,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
         kwargs["callback"] = latents_callback
         kwargs["callback_steps"] = 5
 
-    mem_info = torch.cuda.mem_get_info(device_id)
+    mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're upscaling or mid-range on mem, preserve memory vs performance
     if (
         (
@@ -76,7 +76,7 @@ def diffusion_callback(device_id, model_name, **kwargs):
     if upscale:
         images = upscale_latents(
             images,
-            device_id,
+            device_identifier,
             kwargs["prompt"],
             num_images_per_prompt,
             kwargs["generator"],

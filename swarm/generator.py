@@ -13,7 +13,7 @@ async def do_work(job, device):
 
 def synchronous_do_work_function(job, device):
     id = job.pop("id")
-    print(f"Processing {id} on device {device.device_id}")
+    print(f"Processing {id} on {device.descriptor()}")
 
     try:
         worker_function, kwargs = format_args(job)

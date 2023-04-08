@@ -4,7 +4,7 @@ from ..type_helpers import has_method
 
 
 def upscale_latents(
-    low_res_latents, device_id, prompt, num_images_per_prompt, generator
+    low_res_latents, device_identifier, prompt, num_images_per_prompt, generator
 ):
     print("Upscaling...")
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
@@ -12,7 +12,7 @@ def upscale_latents(
         torch_dtype=torch.float16,
     )
 
-    upscaler = upscaler.to(f"cuda:{device_id}")  # type: ignore
+    upscaler = upscaler.to(device_identifier)  # type: ignore
     upscaler.enable_attention_slicing()
     upscaler.enable_sequential_cpu_offload()  # type: ignore
     if has_method(upscaler, "enable_xformers_memory_efficient_attention"):

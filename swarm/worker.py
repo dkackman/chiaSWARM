@@ -2,7 +2,7 @@ from .gpu.device import Device
 from .generator import do_work
 from .log_setup import setup_logging
 from . import __version__
-from .gpu.device_pool import add_device_to_pool, remove_device_from_pool
+
 from .settings import (
     load_settings,
     resolve_path,
@@ -16,7 +16,10 @@ import json
 from packaging import version
 
 
+# producer/consumer queue for job retreived
 work_queue = asyncio.Queue(maxsize=torch.cuda.device_count())
+
+# producer consumer queue for results waiting to be uploaded
 result_queue = asyncio.Queue()
 
 settings = load_settings()
@@ -31,15 +34,18 @@ async def run_worker():
     # Create a task for each device to process work
     device_tasks = []
     for i in range(torch.cuda.device_count()):
-        print(f"Starting device {i}")
-        device = remove_device_from_pool()
+        device = Device(i)
         device_tasks.append(asyncio.create_task(device_worker(device)))
+        print(f"Started device {device.descriptor()}")
 
     # Create a task for submitting results
     result_task = asyncio.create_task(result_worker())
 
     # Main loop to request work
     while True:
+        while work_queue.full():
+            await asyncio.sleep(1)
+
         sleep_seconds = await ask_for_work()
         await asyncio.sleep(sleep_seconds)
 
@@ -68,14 +74,12 @@ async def ask_for_work():
 
                 if response.status == 200:
                     response_dict = await response.json()
-                    got_work = False
+
                     for job in response_dict["jobs"]:
                         id = job["id"]
                         print(f"Got job {id}")
-                        got_work = True
-                        await work_queue.put(job)
 
-                        return 0 if got_work else 11
+                        await work_queue.put(job)
 
                 elif response.status == 400:
                     # this is when workers are not returning results within expectations
@@ -89,10 +93,11 @@ async def ask_for_work():
                     response.raise_for_status()
 
     except Exception as e:
+        logging.exception(e)
         print(e)
         return 121
                   
-    return  11
+    return  10
 
 async def device_worker(device: Device):
     while True:
@@ -100,18 +105,24 @@ async def device_worker(device: Device):
             job = await work_queue.get()
             result = await do_work(job, device)
             await result_queue.put(result)
-            work_queue.task_done()
         except Exception as e:
-            print(e)
+            logging.exception(e)
+
+            print(f"device_worker {e}")
+        finally:
+            work_queue.task_done()
 
 async def result_worker():
     while True:
         try:
             result = await result_queue.get()
             await submit_result(result)
-            result_queue.task_done()
         except Exception as e:
-            print(e)
+            logging.exception(e)
+
+            print(f"result_worker {e}")
+        finally:
+            result_queue.task_done()            
 
 async def submit_result(result):
     print(f"Result complete")
@@ -151,11 +162,6 @@ async def startup():
     torch.set_float32_matmul_precision("high")
     torch.backends.cudnn.benchmark = True  # type: ignore
     torch.backends.cuda.matmul.allow_tf32 = True  # type: ignore
-
-    for i in range(0, torch.cuda.device_count()):
-        logging.info(
-            f"Adding cuda device {i} - {torch.cuda.get_device_name(i)}")
-        add_device_to_pool(Device(i))
 
 
 if __name__ == "__main__":
