@@ -2,7 +2,7 @@ from .gpu.device import Device
 from .generator import do_work
 from .log_setup import setup_logging
 from . import __version__
-
+import diffusers
 from .settings import (
     load_settings,
     resolve_path,
@@ -182,6 +182,7 @@ async def startup():
     global available_gpus
     available_gpus = asyncio.Semaphore(gpu_count)
 
+    diffusers.logging.set_verbosity_error()
 
 if __name__ == "__main__":
     asyncio.run(run_worker())
