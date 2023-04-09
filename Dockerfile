@@ -17,7 +17,9 @@ RUN python -m pip install --upgrade pip
 RUN python -m pip install wheel setuptools
 
 # RUN pip install torch torchvision torchaudio
-RUN pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors moviepy opencv-python
+RUN pip install torch torchvision torchaudio
+RUN pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
+RUN pip install aiohttp concurrent-log-handler
 
 WORKDIR /sdaas
 COPY ./ /sdaas

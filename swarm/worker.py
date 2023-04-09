@@ -22,6 +22,8 @@ work_queue = asyncio.Queue(maxsize=torch.cuda.device_count())
 # producer consumer queue for results waiting to be uploaded
 result_queue = asyncio.Queue()
 
+available_gpus = asyncio.Semaphore(torch.cuda.device_count())
+
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
 
@@ -51,10 +53,10 @@ async def run_worker():
 
 
 async def ask_for_work():
+    await available_gpus.acquire()
     print(
         f"{datetime.now()}: Asking for work from the hive at {hive_uri}..."
     )
-
     try:
         timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -96,13 +98,16 @@ async def ask_for_work():
         logging.exception(e)
         print(e)
         return 121
-                  
+    finally:
+        available_gpus.release()
+
     return  10
 
 async def device_worker(device: Device):
     while True:
         try:
             job = await work_queue.get()
+            await available_gpus.acquire()
             result = await do_work(job, device)
             await result_queue.put(result)
         except Exception as e:
@@ -110,6 +115,7 @@ async def device_worker(device: Device):
 
             print(f"device_worker {e}")
         finally:
+            available_gpus.release()
             work_queue.task_done()
 
 async def result_worker():
