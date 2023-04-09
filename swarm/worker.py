@@ -78,12 +78,16 @@ async def ask_for_work():
                 if response.status == 200:
                     response_dict = await response.json()
 
+                    found_work = False
                     for job in response_dict["jobs"]:
                         id = job["id"]
                         print(f"Got job {id}")
-
+                        found_work = True
                         await work_queue.put(job)
 
+                    # since there is work in the hive ask right away for more
+                    return 1 if found_work else 11
+                
                 elif response.status == 400:
                     # this is when workers are not returning results within expectations
                     response_dict = await response.json()
@@ -102,7 +106,7 @@ async def ask_for_work():
     finally:
         available_gpus.release()
 
-    return  10
+    return  11
 
 async def device_worker(device: Device):
     while True:
