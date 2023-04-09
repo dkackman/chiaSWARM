@@ -17,12 +17,13 @@ from packaging import version
 
 
 # producer/consumer queue for job retreived
-work_queue = asyncio.Queue(maxsize=torch.cuda.device_count())
+# assigned in startup
+work_queue:asyncio.Queue
+available_gpus:asyncio.Semaphore
 
 # producer consumer queue for results waiting to be uploaded
 result_queue = asyncio.Queue()
 
-available_gpus = asyncio.Semaphore(torch.cuda.device_count())
 
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
@@ -168,6 +169,14 @@ async def startup():
     torch.set_float32_matmul_precision("high")
     torch.backends.cudnn.benchmark = True  # type: ignore
     torch.backends.cuda.matmul.allow_tf32 = True  # type: ignore
+
+    gpu_count = torch.cuda.device_count()
+    print(f"Found {gpu_count} GPUs")
+    global work_queue
+    work_queue = asyncio.Queue(maxsize=gpu_count)
+
+    global available_gpus
+    available_gpus = asyncio.Semaphore(gpu_count)
 
 
 if __name__ == "__main__":
