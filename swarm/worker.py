@@ -15,10 +15,12 @@ from datetime import datetime
 import json
 from packaging import version
 
+# assigned in startup
 
 # producer/consumer queue for job retreived
-# assigned in startup
 work_queue:asyncio.Queue
+
+# semaphore to limit the number of jobs running at once to the number of gpus
 available_gpus:asyncio.Semaphore
 
 # producer consumer queue for results waiting to be uploaded
@@ -54,7 +56,9 @@ async def run_worker():
 
 
 async def ask_for_work():
+    # this blocks if there are no available gpus
     await available_gpus.acquire()
+
     print(
         f"{datetime.now()}: Asking for work from the hive at {hive_uri}..."
     )
@@ -112,13 +116,15 @@ async def device_worker(device: Device):
     while True:
         try:
             job = await work_queue.get()
+            # we got work so acquire a gpu lock
             await available_gpus.acquire()
             result = await do_work(job, device)
             await result_queue.put(result)
+
         except Exception as e:
             logging.exception(e)
-
             print(f"device_worker {e}")
+
         finally:
             available_gpus.release()
             work_queue.task_done()
@@ -128,10 +134,11 @@ async def result_worker():
         try:
             result = await result_queue.get()
             await submit_result(result)
+
         except Exception as e:
             logging.exception(e)
-
             print(f"result_worker {e}")
+
         finally:
             result_queue.task_done()            
 
@@ -154,7 +161,7 @@ async def submit_result(result):
                 print(f"The hive returned an error: {resultResponse.reason}")
             else:
                 response_dict = await resultResponse.json()
-                print(f"Restult {response_dict}")
+                print(f"Result {response_dict}")
 
 
 async def startup():

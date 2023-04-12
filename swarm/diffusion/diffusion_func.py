@@ -23,7 +23,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     pipeline = pipeline.to(device_identifier)  # type: ignore
 
     pipeline.scheduler = scheduler_type.from_config(  # type: ignore
-        pipeline.scheduler.config  # type: ignore
+        pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
     )
 
     output_processor = OutputProcessor(
