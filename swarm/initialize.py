@@ -53,6 +53,7 @@ async def init():
     for model in known_models:
         model_name = model["model_name"]
         revision = model["revision"]
+        variant = model.get("variant", None)   
         print(f"Initializing {model_name}/{revision}")
         try:
             loader = DiffusionPipeline
@@ -64,6 +65,7 @@ async def init():
             loader.from_pretrained(
                 model_name,
                 revision=revision,
+                variant=variant,
                 torch_dtype=torch.float16,
             )
         except Exception as e:
