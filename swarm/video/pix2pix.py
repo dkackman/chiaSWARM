@@ -42,13 +42,14 @@ def model_video_callback(device_identifier, model_name, **kwargs):
         video_file_path = download_video(temp_dir, kwargs.pop("video_uri"))
         break_vid = get_frames(temp_dir, video_file_path)
         stride = 1
+        max_frames = 100
         frames_list = break_vid[0]
         fps = break_vid[1]
         n_frame = int(len(frames_list) / stride)
         result_frames = []
 
         nsfw_content_detected = False
-        for frame in frames_list[0::stride]:
+        for frame in frames_list[0:max_frames:stride]:
             print(f"{frame} of {n_frame}")
 
             pix2pix_img = img2img(
