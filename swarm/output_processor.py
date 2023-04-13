@@ -4,7 +4,7 @@ import io
 from PIL import Image
 import base64
 import json
-
+from io import BytesIO
 
 class OutputProcessor:
     def __init__(self, output_list, main_content_type):
@@ -65,11 +65,13 @@ class OutputProcessor:
 
 
 def make_result(buffer, thumb, content_type):
-    thumbnail_buffer = make_thumbnail(thumb)
+    if not isinstance(thumb, BytesIO):
+        thumb = make_thumbnail(thumb)
+        
     return {
         "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
         "content_type": content_type,
-        "thumbnail": base64.b64encode(thumbnail_buffer.getvalue()).decode("UTF-8"),
+        "thumbnail": base64.b64encode(thumb.getvalue()).decode("UTF-8"),
         "sha256_hash": hashlib.sha256(buffer.getvalue()).hexdigest(),
     }
 

@@ -8,17 +8,27 @@ from ..output_processor import make_result
 from io import BytesIO
 import tempfile
 import pathlib
-
+from ..type_helpers import has_method
 
 def model_video_callback(device_identifier, model_name, **kwargs):
     pipeline_config = {}
     results = {}
 
     pipeline = DiffusionPipeline.from_pretrained(model_name, torch_dtype=torch.float16)
-    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config)  # type: ignore
-    pipeline.enable_attention_slicing()  # type: ignore
-    pipeline.enable_xformers_memory_efficient_attention()  # type: ignore
-    pipeline.unet.to(memory_format=torch.channels_last)  # type: ignore
+    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config, use_karras_sigmas=True)  # type: ignore
+    mem_info = torch.cuda.mem_get_info(device_identifier)
+    # if we're upscaling or mid-range on mem, preserve memory vs performance
+    if mem_info[1] < 12000000000:
+        # not all pipelines share these methods, so check first
+        if has_method(pipeline, "enable_attention_slicing"):
+            pipeline.enable_attention_slicing() # type: ignore
+        if has_method(pipeline, "enable_xformers_memory_efficient_attention"):
+            pipeline.enable_xformers_memory_efficient_attention() # type: ignore
+        if has_method(pipeline, "enable_vae_slicing"):
+            pipeline.enable_vae_slicing()  # type: ignore
+        if has_method(pipeline, "enable_vae_tiling"):
+            pipeline.enable_vae_tiling()  # type: ignore
+
     pipeline = pipeline.to(device_identifier)  # type: ignore
 
     prompt = kwargs["prompt"]
