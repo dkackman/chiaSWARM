@@ -65,8 +65,7 @@ class OutputProcessor:
 
 
 def make_result(buffer, thumb, content_type):
-    if not isinstance(thumb, BytesIO):
-        thumb = make_thumbnail(thumb)
+    thumb = make_thumbnail(thumb)
         
     return {
         "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
@@ -86,6 +85,9 @@ def make_text_result(string):
 
 
 def make_thumbnail(buffer):
+    if not isinstance(buffer, BytesIO):
+        buffer = BytesIO(buffer)
+
     image = Image.open(buffer).convert("RGB")  # type: ignore
     image.thumbnail((100, 100), Image.Resampling.LANCZOS)
     return image_to_buffer(image, "image/jpeg", "web_low")
