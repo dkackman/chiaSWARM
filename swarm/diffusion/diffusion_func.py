@@ -13,6 +13,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
     num_images_per_prompt = kwargs.pop("num_images_per_prompt", 1)
     upscale = kwargs.pop("upscale", False)
+    textual_inversion = kwargs.pop("textual_inversion", None)
+
     if upscale:  # if upscaling stay in latent space
         kwargs["output_type"] = "latent"
 
@@ -22,6 +24,14 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         torch_dtype=torch.float16,
     )
     pipeline = pipeline.to(device_identifier)  # type: ignore
+
+    if textual_inversion is not None:
+        try:
+            pipeline.load_textual_inversion(textual_inversion)
+        except Exception:
+            raise ValueError(
+                f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}"
+            )
 
     pipeline.scheduler = scheduler_type.from_config(  # type: ignore
         pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
