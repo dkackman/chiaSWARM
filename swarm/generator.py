@@ -38,8 +38,7 @@ def synchronous_do_work_function(job, device):
         }
 
     try:
-        artifacts, pipeline_config = device(
-            worker_function, **kwargs)  # type: ignore
+        artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
 
     except Exception as e:
         content_type = job.get("content_type", "image/jpeg")

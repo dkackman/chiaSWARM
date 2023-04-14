@@ -7,6 +7,7 @@ from ..output_processor import OutputProcessor
 from .upscale import upscale_latents
 from ..type_helpers import has_method
 
+
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
@@ -84,5 +85,3 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     output_processor.add_outputs(images)
     return (output_processor.get_results(), pipeline.config)  # type: ignore
-
-

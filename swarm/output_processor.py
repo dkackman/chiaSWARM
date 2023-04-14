@@ -6,6 +6,7 @@ import base64
 import json
 from io import BytesIO
 
+
 class OutputProcessor:
     def __init__(self, output_list, main_content_type):
         self.intermediate_images = []
@@ -63,10 +64,9 @@ class OutputProcessor:
         return results
 
 
-
 def make_result(buffer, thumb, content_type):
     thumb = make_thumbnail(thumb)
-        
+
     return {
         "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
         "content_type": content_type,

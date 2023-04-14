@@ -16,13 +16,13 @@ class Device:
 
     def descriptor(self):
         return f"{self.idenitifier()}:{self.name()}"
-    
+
     def idenitifier(self):
         return f"cuda:{self.device_id}"
-        
+
     def name(self):
         return torch.cuda.get_device_name(self.device_id)
-    
+
     def __call__(self, func, **kwargs):
         if not self.mutex.acquire(False):
             logging.error(f"Device {self.device_id} is busy but got invoked.")
@@ -39,8 +39,7 @@ class Device:
             kwargs["generator"] = torch.Generator(
                 device=self.idenitifier()
             ).manual_seed(seed)
-            artifacts, pipeline_config = func(
-                self.idenitifier(), model_name, **kwargs)
+            artifacts, pipeline_config = func(self.idenitifier(), model_name, **kwargs)
             pipeline_config["seed"] = seed
             return artifacts, pipeline_config
 
@@ -48,6 +47,4 @@ class Device:
             self.mutex.release()
 
     def log_device(self):
-        logging.debug(
-            f"Using device# {self.descriptor()}"
-        )
+        logging.debug(f"Using device# {self.descriptor()}")

@@ -13,13 +13,14 @@ import cv2
 from typing import List
 import numpy as np
 
+
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     kwargs["num_frames"] = kwargs.pop(" ", 25)
     content_type = kwargs.pop("content_type", "video/mp4")
     outputs = kwargs.pop("outputs", ["primary"])
-    
+
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision", "main"),
@@ -35,9 +36,8 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're doing a long video or mid-range on mem, preserve memory vs performance
     if (
-        (
-            kwargs["num_frames"] > 30 and mem_info[1] < 16000000000
-        )  # for 3090's etc just let em go full bore
+        kwargs["num_frames"] > 30
+        and mem_info[1] < 16000000000  # for 3090's etc just let em go full bore
     ):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_attention_slicing"):
@@ -54,26 +54,32 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     p = pipeline(**kwargs)  # type: ignore
 
-    video_frames = p.frames # type: ignore
+    video_frames = p.frames  # type: ignore
 
     media_info = content_type == "video/mp4" and ("mp4", "h264") or ("webm", "VP90")
-    
+
     # convent to video
     with tempfile.TemporaryDirectory() as tmpdirname:
-        final_filepath = export_to_video(video_frames, pathlib.Path(tmpdirname).joinpath(f'video.{media_info[0]}').__str__(), media_info[1])
+        final_filepath = export_to_video(
+            video_frames,
+            pathlib.Path(tmpdirname).joinpath(f"video.{media_info[0]}").__str__(),
+            media_info[1],
+        )
         with open(final_filepath, "rb") as video_file:
             video_buffer = BytesIO(video_file.read())
-        
+
         thumbnail = get_frame(final_filepath, 0)
 
     results = {}
 
-    results["primary"] = make_result(video_buffer, thumbnail, content_type)            
+    results["primary"] = make_result(video_buffer, thumbnail, content_type)
 
     return (results, pipeline.config)  # type: ignore
 
 
-def export_to_video(video_frames: List[np.ndarray], output_video_path: str, codec) -> str:
+def export_to_video(
+    video_frames: List[np.ndarray], output_video_path: str, codec
+) -> str:
     fourcc = cv2.VideoWriter_fourcc(*codec)
     h, w, c = video_frames[0].shape
     video_writer = cv2.VideoWriter(output_video_path, fourcc, fps=8, frameSize=(w, h))

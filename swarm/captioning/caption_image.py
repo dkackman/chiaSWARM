@@ -14,7 +14,7 @@ def caption_callback(device_identifier, model_name, **kwargs):
         processor = processor_type.from_pretrained(model_name)  # type: ignore
         model = model_type.from_pretrained(  # type: ignore
             model_name, torch_dtype=torch.float16
-        ).to(device_identifier)  
+        ).to(device_identifier)
 
         image = kwargs["image"]
 
@@ -25,7 +25,7 @@ def caption_callback(device_identifier, model_name, **kwargs):
             # unconditional image captioning
             inputs = processor(image, return_tensors="pt")
 
-        inputs = inputs.to(device_identifier, torch.float16)  
+        inputs = inputs.to(device_identifier, torch.float16)
         out = model.generate(**inputs)
         caption = processor.decode(out[0], skip_special_tokens=True)
         results["primary"] = make_text_result(caption)

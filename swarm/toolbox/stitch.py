@@ -5,6 +5,8 @@ import io
 from ..output_processor import make_result, make_thumbnail, image_to_buffer
 
 thumb_size = 144
+
+
 def stitch_callback(device_id, model_name, **kwargs):
     print("Stitching...")
     pipeline_config = {
@@ -34,7 +36,9 @@ def download_images(image_urls):
         images.append(image)
     return images
 
+
 from PIL import Image, ImageDraw
+
 
 def resize_images(images, size=(thumb_size, thumb_size)):
     resized_images = []
@@ -65,7 +69,7 @@ def resize_images(images, size=(thumb_size, thumb_size)):
 def stitch_images(resized_images):
     images_per_row = math.ceil(math.sqrt(len(resized_images)))
     stitched_image_size = thumb_size * images_per_row
-    stitched_image = Image.new('RGB', (stitched_image_size, stitched_image_size))
+    stitched_image = Image.new("RGB", (stitched_image_size, stitched_image_size))
 
     x_offset, y_offset = 0, 0
     for img in resized_images:
@@ -77,22 +81,27 @@ def stitch_images(resized_images):
 
     return stitched_image
 
+
 def generate_image_map(resized_images, jobs):
     map_data = []
     x_offset, y_offset = 0, 0
     for index, _ in enumerate(resized_images):
-        coords = f"{x_offset},{y_offset},{x_offset + thumb_size},{y_offset + thumb_size}"
+        coords = (
+            f"{x_offset},{y_offset},{x_offset + thumb_size},{y_offset + thumb_size}"
+        )
         href = jobs[index]["resultUri"]
         fileName = jobs[index].pop("fileName", href)
         alt = jobs[index].pop("model_name", f"Image {index + 1}")
 
-        map_data.append({
-            "shape": "rect",
-            "coords": coords,
-            "href": href,
-            "alt": alt,
-            "filename": fileName
-        })
+        map_data.append(
+            {
+                "shape": "rect",
+                "coords": coords,
+                "href": href,
+                "alt": alt,
+                "filename": fileName,
+            }
+        )
 
         x_offset += thumb_size
         if x_offset >= thumb_size * math.ceil(math.sqrt(len(resized_images))):

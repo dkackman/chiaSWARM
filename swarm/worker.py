@@ -18,10 +18,10 @@ from packaging import version
 # assigned in startup
 
 # producer/consumer queue for job retreived
-work_queue:asyncio.Queue
+work_queue: asyncio.Queue
 
 # semaphore to limit the number of jobs running at once to the number of gpus
-available_gpus:asyncio.Semaphore
+available_gpus: asyncio.Semaphore
 
 # producer consumer queue for results waiting to be uploaded
 result_queue = asyncio.Queue()
@@ -59,9 +59,7 @@ async def ask_for_work():
     # this blocks if there are no available gpus
     await available_gpus.acquire()
 
-    print(
-        f"{datetime.now()}: Asking for work from the hive at {hive_uri}..."
-    )
+    print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
     try:
         timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -78,7 +76,6 @@ async def ask_for_work():
                     "user-agent": f"chiaSWARM.worker/{__version__}",
                 },
             ) as response:
-
                 if response.status == 200:
                     response_dict = await response.json()
 
@@ -91,7 +88,7 @@ async def ask_for_work():
 
                     # since there is work in the hive ask right away for more
                     return 1 if found_work else 11
-                
+
                 elif response.status == 400:
                     # this is when workers are not returning results within expectations
                     response_dict = await response.json()
@@ -110,7 +107,8 @@ async def ask_for_work():
     finally:
         available_gpus.release()
 
-    return  11
+    return 11
+
 
 async def device_worker(device: Device):
     while True:
@@ -129,6 +127,7 @@ async def device_worker(device: Device):
             available_gpus.release()
             work_queue.task_done()
 
+
 async def result_worker():
     while True:
         try:
@@ -140,7 +139,8 @@ async def result_worker():
             print(f"result_worker {e}")
 
         finally:
-            result_queue.task_done()            
+            result_queue.task_done()
+
 
 async def submit_result(result):
     print(f"Result complete")
@@ -156,7 +156,6 @@ async def submit_result(result):
                 "user-agent": f"chiaSWARM.worker/{__version__}",
             },
         ) as resultResponse:
-
             if resultResponse.status == 500:
                 print(f"The hive returned an error: {resultResponse.reason}")
             else:
@@ -190,6 +189,7 @@ async def startup():
     available_gpus = asyncio.Semaphore(gpu_count)
 
     diffusers.logging.set_verbosity_error()
+
 
 if __name__ == "__main__":
     asyncio.run(run_worker())

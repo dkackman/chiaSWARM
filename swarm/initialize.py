@@ -53,7 +53,7 @@ async def init():
     for model in known_models:
         model_name = model["model_name"]
         revision = model["revision"]
-        variant = model.get("variant", None)   
+        variant = model.get("variant", None)
         print(f"Initializing {model_name}/{revision}")
         try:
             loader = DiffusionPipeline

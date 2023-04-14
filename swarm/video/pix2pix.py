@@ -10,6 +10,7 @@ import tempfile
 import pathlib
 from ..type_helpers import has_method
 
+
 def model_video_callback(device_identifier, model_name, **kwargs):
     pipeline_config = {}
     results = {}
@@ -21,9 +22,9 @@ def model_video_callback(device_identifier, model_name, **kwargs):
     if mem_info[1] < 12000000000:
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_attention_slicing"):
-            pipeline.enable_attention_slicing() # type: ignore
+            pipeline.enable_attention_slicing()  # type: ignore
         if has_method(pipeline, "enable_xformers_memory_efficient_attention"):
-            pipeline.enable_xformers_memory_efficient_attention() # type: ignore
+            pipeline.enable_xformers_memory_efficient_attention()  # type: ignore
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
         if has_method(pipeline, "enable_vae_tiling"):

@@ -17,7 +17,7 @@ def format_args(job):
     workflow = args.pop("workflow", None)
     if workflow == "stitch":
         return stitch_callback, args
-    
+
     if workflow == "img2txt":
         return format_img2txt_args(args)
 
@@ -29,6 +29,7 @@ def format_args(job):
 
     return format_stable_diffusion_args(args)
 
+
 def format_txt2vid_args(args):
     parameters = args.pop("parameters", {})
     if "prompt" not in args:
@@ -36,7 +37,7 @@ def format_txt2vid_args(args):
 
     if "num_inference_steps" not in args:
         args["num_inference_steps"] = 25
-        
+
     args.pop("num_images_per_prompt", None)
 
     args["pipeline_type"] = get_type(
@@ -116,8 +117,8 @@ def format_stable_diffusion_args(args):
         args.pop("num_images_per_prompt", None)
 
     if (
-        args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip-small" or
-        args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip"
+        args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip-small"
+        or args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip"
     ):
         args.pop("strength", None)
 

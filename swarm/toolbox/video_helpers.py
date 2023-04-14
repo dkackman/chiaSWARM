@@ -3,7 +3,7 @@ from io import BytesIO
 from PIL import Image
 
 
-def get_frame(mp4_file_path, frane_index = 0):
+def get_frame(mp4_file_path, frane_index=0):
     # Load the video clip
     try:
         clip = VideoFileClip(mp4_file_path)
