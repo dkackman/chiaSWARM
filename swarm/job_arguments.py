@@ -95,11 +95,8 @@ def format_stable_diffusion_args(args):
     if "upscale" in parameters and parameters["upscale"]:
         args["upscale"] = True
 
-    if parameters.get("pipeline_type", "StableDiffusionPipeline") == "UnCLIPPipeline":
-        # unclip pipeline does not support steps
-        args.pop("num_inference_steps", None)
-    elif "num_inference_steps" not in args:
-        # default num_inference_steps if not set - some pipeline shave high defualt values
+    if "num_inference_steps" not in args:
+        # default num_inference_steps if not set - some pipelines have high default values
         args["num_inference_steps"] = 30
 
     args["pipeline_type"] = get_type(
@@ -116,9 +113,17 @@ def format_stable_diffusion_args(args):
         or args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
         or args["model_name"] == "timbrooks/instruct-pix2pix"
         or args["model_name"] == "kakaobrain/karlo-v1-alpha"
+        or args["model_name"] == "kakaobrain/karlo-v1-alpha-image-variations"
     ):
         args.pop("height", None)
         args.pop("width", None)
+
+    if args["model_name"] == "kakaobrain/karlo-v1-alpha":
+        args.pop("num_inference_steps", None)
+
+    if args["model_name"] == "kakaobrain/karlo-v1-alpha-image-variations":
+        args.pop("prompt", None)
+        args.pop("num_inference_steps", None)
 
     if (
         args["model_name"] == "stabilityai/sd-x2-latent-upscaler"

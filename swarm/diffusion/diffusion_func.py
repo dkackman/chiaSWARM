@@ -90,7 +90,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         images = upscale_image(
             images,
             device_identifier,
-            kwargs["prompt"],
+            kwargs.get("prompt", ""),
             num_images_per_prompt,
             kwargs["generator"],
         )
