@@ -120,10 +120,12 @@ def format_stable_diffusion_args(args):
 
     if args["model_name"] == "kakaobrain/karlo-v1-alpha":
         args.pop("num_inference_steps", None)
+        args.pop("guidance_scale", None)
 
     if args["model_name"] == "kakaobrain/karlo-v1-alpha-image-variations":
         args.pop("prompt", None)
         args.pop("num_inference_steps", None)
+        args.pop("guidance_scale", None)
 
     if (
         args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
