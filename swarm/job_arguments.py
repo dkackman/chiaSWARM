@@ -59,10 +59,7 @@ def format_img2txt_args(args):
 
 def format_stable_diffusion_args(args):
     # this is where all of the input arguments are rationalized and model specific
-    #
-    # TODO - drive all of this generically in the models.json file
-    # so that this code is not needed
-    #
+
     size = None
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])
@@ -75,7 +72,9 @@ def format_stable_diffusion_args(args):
     if "prompt" not in args:
         args["prompt"] = ""
 
+    # these gets passed through to the diffusion callback
     args["supports_xformers"] = parameters.get("supports_xformers", True)
+    args["upscale"] = parameters.get("upscale", False)
 
     if "start_image_uri" in args:
         args.pop("height", None)
@@ -92,52 +91,19 @@ def format_stable_diffusion_args(args):
 
         args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
 
-    if "upscale" in parameters and parameters["upscale"]:
-        args["upscale"] = True
-
     if "num_inference_steps" not in args:
         # default num_inference_steps if not set - some pipelines have high default values
         args["num_inference_steps"] = 30
 
     args["pipeline_type"] = get_type(
-        "diffusers", parameters.pop("pipeline_type", "StableDiffusionPipeline")
+        "diffusers", parameters.pop("pipeline_type", "DiffusionPipeline")
     )
     args["scheduler_type"] = get_type(
         "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
     )
 
-    # some pipelines don't like it when they get size arguments
-    if (
-        args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler"
-        or args["model_name"] == "stabilityai/stable-diffusion-2-depth"
-        or args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
-        or args["model_name"] == "timbrooks/instruct-pix2pix"
-        or args["model_name"] == "kakaobrain/karlo-v1-alpha"
-        or args["model_name"] == "kakaobrain/karlo-v1-alpha-image-variations"
-    ):
-        args.pop("height", None)
-        args.pop("width", None)
-
-    if args["model_name"] == "kakaobrain/karlo-v1-alpha":
-        args.pop("num_inference_steps", None)
-        args.pop("guidance_scale", None)
-
-    if args["model_name"] == "kakaobrain/karlo-v1-alpha-image-variations":
-        args.pop("prompt", None)
-        args.pop("num_inference_steps", None)
-        args.pop("guidance_scale", None)
-
-    if (
-        args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
-        and "num_images_per_prompt" in args
-    ):
-        args.pop("num_images_per_prompt", None)
-
-    if (
-        args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip-small"
-        or args["model_name"] == "stabilityai/stable-diffusion-2-1-unclip"
-    ):
-        args.pop("strength", None)
+    for arg in parameters.get("unsupported_pipeline_arguments", []):
+        args.pop(arg, None)
 
     return diffusion_callback, args
 
@@ -145,9 +111,7 @@ def format_stable_diffusion_args(args):
 def download_image(url):
     image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)
     image = ImageOps.exif_transpose(image)
-    image = image.convert("RGB")
-
-    return image
+    return image.convert("RGB")
 
 
 def get_image(uri, size):

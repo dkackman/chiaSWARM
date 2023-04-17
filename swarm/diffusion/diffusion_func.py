@@ -1,6 +1,6 @@
 import torch
 from diffusers import (
-    StableDiffusionPipeline,
+    DiffusionPipeline,
     DPMSolverMultistepScheduler,
 )
 from ..output_processor import OutputProcessor
@@ -10,7 +10,7 @@ from ..type_helpers import has_method
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
-    pipeline_type = kwargs.pop("pipeline_type", StableDiffusionPipeline)
+    pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     num_images_per_prompt = kwargs.get("num_images_per_prompt", 1)
     upscale = kwargs.pop("upscale", False)
     textual_inversion = kwargs.pop("textual_inversion", None)
