@@ -16,7 +16,6 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
 RUN python -m pip install --upgrade pip
 RUN python -m pip install wheel setuptools
 
-# RUN pip install torch torchvision torchaudio
 RUN pip install torch torchvision torchaudio
 RUN pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
 RUN pip install aiohttp concurrent-log-handler

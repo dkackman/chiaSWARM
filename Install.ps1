@@ -63,6 +63,7 @@ python -m venv venv
 .\venv\scripts\activate 
 #.\venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
 
+pip install wheel setuptools
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
 pip install aiohttp concurrent-log-handler
