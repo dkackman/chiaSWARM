@@ -59,6 +59,10 @@ def format_img2txt_args(args):
 
 def format_stable_diffusion_args(args):
     # this is where all of the input arguments are rationalized and model specific
+    #
+    # TODO - drive all of this generically in the models.json file
+    # so that this code is not needed
+    #
     size = None
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])
@@ -70,6 +74,8 @@ def format_stable_diffusion_args(args):
     parameters = args.pop("parameters", {})
     if "prompt" not in args:
         args["prompt"] = ""
+
+    args["supports_xformers"] = parameters.get("supports_xformers", True)
 
     if "start_image_uri" in args:
         args.pop("height", None)
@@ -89,6 +95,13 @@ def format_stable_diffusion_args(args):
     if "upscale" in parameters and parameters["upscale"]:
         args["upscale"] = True
 
+    if parameters.get("pipeline_type", "StableDiffusionPipeline") == "UnCLIPPipeline":
+        # unclip pipeline does not support steps
+        args.pop("num_inference_steps", None)
+    elif "num_inference_steps" not in args:
+        # default num_inference_steps if not set - some pipeline shave high defualt values
+        args["num_inference_steps"] = 30
+
     args["pipeline_type"] = get_type(
         "diffusers", parameters.pop("pipeline_type", "StableDiffusionPipeline")
     )
@@ -96,16 +109,13 @@ def format_stable_diffusion_args(args):
         "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
     )
 
-    # default num_inference_steps if not set
-    if "num_inference_steps" not in args:
-        args["num_inference_steps"] = 30
-
     # some pipelines don't like it when they get size arguments
     if (
         args["model_name"] == "stabilityai/stable-diffusion-x4-upscaler"
         or args["model_name"] == "stabilityai/stable-diffusion-2-depth"
         or args["model_name"] == "stabilityai/sd-x2-latent-upscaler"
         or args["model_name"] == "timbrooks/instruct-pix2pix"
+        or args["model_name"] == "kakaobrain/karlo-v1-alpha"
     ):
         args.pop("height", None)
         args.pop("width", None)

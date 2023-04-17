@@ -4,7 +4,7 @@ from diffusers import (
     DPMSolverMultistepScheduler,
 )
 from ..output_processor import OutputProcessor
-from .upscale import upscale_latents
+from .upscale import upscale_image
 from ..type_helpers import has_method
 
 
@@ -14,9 +14,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     num_images_per_prompt = kwargs.pop("num_images_per_prompt", 1)
     upscale = kwargs.pop("upscale", False)
     textual_inversion = kwargs.pop("textual_inversion", None)
-
-    if upscale:  # if upscaling stay in latent space
-        kwargs["output_type"] = "latent"
+    supports_xformers = kwargs.pop("supports_xformers", True)
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
@@ -33,9 +31,10 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}"
             )
 
-    pipeline.scheduler = scheduler_type.from_config(  # type: ignore
-        pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
-    )
+    if has_method(pipeline, "scheduler"):
+        pipeline.scheduler = scheduler_type.from_config(  # type: ignore
+            pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
+        )
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
@@ -63,7 +62,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_attention_slicing"):
             pipeline.enable_attention_slicing()
-        if has_method(pipeline, "enable_xformers_memory_efficient_attention"):
+        if supports_xformers and has_method(
+            pipeline, "enable_xformers_memory_efficient_attention"
+        ):
             pipeline.enable_xformers_memory_efficient_attention()
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
@@ -85,7 +86,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     images = p.images  # type: ignore
     if upscale:
-        images = upscale_latents(
+        images = upscale_image(
             images,
             device_identifier,
             kwargs["prompt"],

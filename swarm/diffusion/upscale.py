@@ -3,9 +3,7 @@ from diffusers import StableDiffusionLatentUpscalePipeline
 from ..type_helpers import has_method
 
 
-def upscale_latents(
-    low_res_latents, device_identifier, prompt, num_images_per_prompt, generator
-):
+def upscale_image(image, device_identifier, prompt, num_images_per_prompt, generator):
     print("Upscaling...")
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
         "stabilityai/sd-x2-latent-upscaler",
@@ -23,7 +21,7 @@ def upscale_latents(
 
     image = upscaler(  # type: ignore
         prompt=prompt,
-        image=low_res_latents,
+        image=image,
         num_inference_steps=20,
         guidance_scale=0,
         generator=generator,
