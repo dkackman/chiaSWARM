@@ -79,8 +79,14 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     # if any image is nsfw, flag the entire result
     if (
         hasattr(p, "nsfw_content_detected")
-        and p.nsfw_content_detected is not None  # type: ignore
-        and len(p.nsfw_content_detected) >= 1  # type: ignore
+        and p.nsfw_content_detected is not None
+        and (
+            (isinstance(p.nsfw_content_detected, bool) and p.nsfw_content_detected)
+            or (
+                isinstance(p.nsfw_content_detected, list)
+                and len(p.nsfw_content_detected) >= 1
+            )
+        )
     ):
         for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):  # type: ignore
             pipeline.config["nsfw"] = True
