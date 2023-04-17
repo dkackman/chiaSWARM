@@ -31,6 +31,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}"
             )
 
+    # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):
         pipeline.scheduler = scheduler_type.from_config(  # type: ignore
             pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
