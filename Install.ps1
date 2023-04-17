@@ -60,11 +60,12 @@ if (Test-Path -Path ".\venv" -PathType Container) {
 
 python -m venv venv
 
-venv\scripts\python -m pip install --upgrade pip setuptools wheel
+.\venv\scripts\activate 
+#.\venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
 
-venv\scripts\pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
-venv\scripts\pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
-venv\scripts\pip install aiohttp concurrent-log-handler
+pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
+pip install aiohttp concurrent-log-handler
 
 
 Write-Output ""
