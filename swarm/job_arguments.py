@@ -5,6 +5,7 @@ from .video.tx2vid import txt2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
 from .toolbox.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
+from .audio.audioldm import txt2audio_diffusion_callback
 from .type_helpers import get_type
 
 
@@ -15,6 +16,9 @@ def format_args(job):
     args = job.copy()
 
     workflow = args.pop("workflow", None)
+    if workflow == "txt2audio":
+        return format_txt2audio_args(args)
+
     if workflow == "stitch":
         return stitch_callback, args
 
@@ -28,6 +32,27 @@ def format_args(job):
         return format_txt2vid_args(args)
 
     return format_stable_diffusion_args(args)
+
+
+def format_txt2audio_args(args):
+    parameters = args.pop("parameters", {})
+    if "prompt" not in args:
+        args["prompt"] = ""
+
+    if "num_inference_steps" not in args:
+        args["num_inference_steps"] = 25
+
+    args["pipeline_type"] = get_type(
+        "diffusers", parameters.pop("pipeline_type", "AudioLDMPipeline")
+    )
+    args["scheduler_type"] = get_type(
+        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
+    )
+
+    for arg in parameters.get("unsupported_pipeline_arguments", []):
+        args.pop(arg, None)
+
+    return txt2audio_diffusion_callback, args
 
 
 def format_txt2vid_args(args):

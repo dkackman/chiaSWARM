@@ -1,7 +1,7 @@
 from .diffusion.video_maker import make_video
 import hashlib
 import io
-from PIL import Image
+from PIL import Image, ImageDraw
 import base64
 import json
 from io import BytesIO
@@ -65,7 +65,11 @@ class OutputProcessor:
 
 
 def make_result(buffer, thumb, content_type):
-    thumb = make_thumbnail(thumb)
+    if thumb is None:
+        thumb = image_from_text(content_type, (100, 100), 1)
+        thumb = image_to_buffer(thumb, "image/jpeg", "web_low")
+    else:
+        thumb = make_thumbnail(thumb)
 
     return {
         "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
@@ -77,9 +81,12 @@ def make_result(buffer, thumb, content_type):
 
 def make_text_result(string):
     caption = {"caption": string}
+    thumb = image_from_text("text/plain", (100, 100), 1)
+    thumb = image_to_buffer(thumb, "image/jpeg", "web_low")
     return {
         "blob": base64.b64encode(bytes(json.dumps(caption), "utf-8")).decode("UTF-8"),
         "content_type": "application/json",
+        "thumbnail": base64.b64encode(thumb.getvalue()).decode("UTF-8"),
         "sha256_hash": hashlib.sha256(string.encode()).hexdigest(),
     }
 
@@ -91,6 +98,14 @@ def make_thumbnail(buffer):
     image = Image.open(buffer).convert("RGB")  # type: ignore
     image.thumbnail((100, 100), Image.Resampling.LANCZOS)
     return image_to_buffer(image, "image/jpeg", "web_low")
+
+
+def image_from_text(text, size=(512, 512), color=0):
+    image = Image.new(mode="RGB", size=size, color=color)
+    draw = ImageDraw.Draw(image)
+
+    draw.multiline_text((5, 5), text)
+    return image
 
 
 def post_process(image_list) -> Image.Image:

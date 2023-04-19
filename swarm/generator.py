@@ -1,5 +1,9 @@
-from .output_processor import make_result, image_to_buffer, make_text_result
-from PIL import Image, ImageDraw
+from .output_processor import (
+    make_result,
+    image_to_buffer,
+    make_text_result,
+    image_from_text,
+)
 from .job_arguments import format_args
 from . import __version__
 import asyncio
@@ -74,14 +78,6 @@ def synchronous_do_work_function(job, device):
         "worker_version": __version__,
         "pipeline_config": pipeline_config,
     }
-
-
-def image_from_text(text):
-    image = Image.new(mode="RGB", size=(512, 512))
-    draw = ImageDraw.Draw(image)
-
-    draw.multiline_text((5, 5), text)
-    return image
 
 
 def exception_image(e, content_type):

@@ -2,7 +2,7 @@ from .generator import do_work
 from .worker import startup
 import asyncio
 from . import __version__
-from .gpu.device_pool import remove_device_from_pool
+from .gpu.device import Device
 
 test_job = {
     "id": "__test__",
@@ -10,6 +10,15 @@ test_job = {
     "prompt": "spoons",
     "num_inference_steps": 10,
     "outputs": ["primary", "inference_image_strip"],
+}
+
+text_2_audio_job = {
+    "id": "__test__",
+    "model_name": "cvssp/audioldm",
+    "workflow": "txt2audio",
+    "prompt": "Techno music with a strong, upbeat tempo and high melodic riffs",
+    "num_inference_steps": 10,
+    "outputs": ["primary"],
 }
 
 vid2vid_job = {
@@ -27,7 +36,7 @@ vid2vid_job = {
 async def run_test(job):
     await startup()
     try:
-        result = await do_work(job, remove_device_from_pool())
+        result = await do_work(job, Device(0))
 
         if "error" in result["pipeline_config"]:
             print(result["pipeline_config"]["error"])
@@ -39,4 +48,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(test_job))
+    asyncio.run(run_test(text_2_audio_job))

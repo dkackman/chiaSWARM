@@ -120,23 +120,23 @@ if [ "$(uname)" = "Linux" ]; then
     # distutils must be installed as well to avoid a complaint about ensurepip while
     # creating the venv.  This may be related to a mis-check while using or
     # misconfiguration of the secondary Python version 3.7.  The primary is Python 3.6.
-    sudo apt-get install -y python3.7-venv python3.7-distutils
+    sudo apt-get install -y python3.7-venv python3.7-distutils ffmpeg
   elif [ "$UBUNTU_20" = "1" ]; then
     echo "Installing on Ubuntu 20.*."
     sudo apt-get update
-    sudo apt-get install -y python3.8-venv
+    sudo apt-get install -y python3.8-venv ffmpeg
   elif [ "$UBUNTU_21" = "1" ]; then
     echo "Installing on Ubuntu 21.*."
     sudo apt-get update
-    sudo apt-get install -y python3.9-venv
+    sudo apt-get install -y python3.9-venv ffmpeg
   elif [ "$UBUNTU_22" = "1" ]; then
     echo "Installing on Ubuntu 22.* or newer."
     sudo apt-get update
-    sudo apt-get install -y python3.10-venv
+    sudo apt-get install -y python3.10-venv ffmpeg
   elif [ "$DEBIAN" = "true" ]; then
     echo "Installing on Debian."
     sudo apt-get update
-    sudo apt-get install -y python3-venv
+    sudo apt-get install -y python3-venv ffmpeg
   elif type yum >/dev/null 2>&1 && [ ! -f "/etc/redhat-release" ] && [ ! -f "/etc/centos-release" ] && [ ! -f "/etc/fedora-release" ]; then
     # AMZN 2
     echo "Installing on Amazon Linux 2."
@@ -216,7 +216,7 @@ python -m pip install wheel setuptools
 
 pip install torch torchvision torchaudio
 pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
-pip install aiohttp concurrent-log-handler
+pip install aiohttp concurrent-log-handler pydub
 echo ""
 echo "chiaSWARM worker installation is now complete."
 echo ""

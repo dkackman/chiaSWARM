@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y tzdata
 RUN dpkg-reconfigure --frontend noninteractive tzdata
 
-RUN apt-get install -y libgl1 libglib2.0-0 gcc git python3.10
+RUN apt-get install -y libgl1 libglib2.0-0 gcc git python3.10 ffmpeg
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_ROOT_USER_ACTION=ignore
@@ -18,7 +18,7 @@ RUN python -m pip install wheel setuptools
 
 RUN pip install torch torchvision torchaudio
 RUN pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
-RUN pip install aiohttp concurrent-log-handler
+RUN pip install aiohttp concurrent-log-handler pydub
 
 WORKDIR /sdaas
 COPY ./ /sdaas
