@@ -14,14 +14,16 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     num_images_per_prompt = kwargs.get("num_images_per_prompt", 1)
     upscale = kwargs.pop("upscale", False)
     textual_inversion = kwargs.pop("textual_inversion", None)
-    supports_xformers = kwargs.pop("supports_xformers", True)
+    lora = kwargs.pop("lora", None)
+    enable_xformers = kwargs.pop("supports_xformers", True)
+    enable_attention_slicing = kwargs.pop("supports_attention_slicing", True)
+    cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision", "main"),
         torch_dtype=torch.float16,
     )
-    pipeline = pipeline.to(device_identifier)  # type: ignore
 
     if textual_inversion is not None:
         try:
@@ -30,6 +32,19 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             raise ValueError(
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}"
             )
+
+    pipeline = pipeline.to(device_identifier)  # type: ignore
+
+    if lora is not None and pipeline.unet is not None:
+        try:
+            pipeline.unet.load_attn_procs(lora)
+            kwargs["cross_attention_kwargs"] = {"scale": cross_attention_scale}
+
+            # the attention slciers don't like the scaled cross attention
+            enable_xformers = False
+            enable_attention_slicing = False
+        except Exception:
+            raise ValueError(f"Could not load lora \n{lora}")
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):
@@ -61,9 +76,11 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         or mem_info[1] < 12000000000
     ):
         # not all pipelines share these methods, so check first
-        if has_method(pipeline, "enable_attention_slicing"):
+        if enable_attention_slicing and has_method(
+            pipeline, "enable_attention_slicing"
+        ):
             pipeline.enable_attention_slicing()
-        if supports_xformers and has_method(
+        if enable_xformers and has_method(
             pipeline, "enable_xformers_memory_efficient_attention"
         ):
             pipeline.enable_xformers_memory_efficient_attention()
