@@ -28,9 +28,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     if textual_inversion is not None:
         try:
             pipeline.load_textual_inversion(textual_inversion)
-        except Exception:
+        except Exception as e:
             raise ValueError(
-                f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}"
+                f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}\n{lora}\n\n{e}"
             )
 
     pipeline = pipeline.to(device_identifier)  # type: ignore
@@ -40,11 +40,11 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             pipeline.unet.load_attn_procs(lora)
             kwargs["cross_attention_kwargs"] = {"scale": cross_attention_scale}
 
-            # the attention slciers don't like the scaled cross attention
+            # the attention slicers don't like the scaled cross attention
             enable_xformers = False
             enable_attention_slicing = False
-        except Exception:
-            raise ValueError(f"Could not load lora \n{lora}")
+        except Exception as e:
+            raise ValueError(f"Could not load lora \n{lora}\n\n{e}")
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):

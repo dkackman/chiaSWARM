@@ -12,7 +12,7 @@ test_job = {
     "outputs": ["primary", "inference_image_strip"],
 }
 
-text_2_audio_job = {
+txt2audio_job = {
     "id": "__test__",
     "model_name": "cvssp/audioldm",
     "workflow": "txt2audio",
@@ -48,4 +48,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(text_2_audio_job))
+    asyncio.run(run_test(txt2audio_job))
