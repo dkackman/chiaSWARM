@@ -30,7 +30,7 @@ packaging==23.1
 Pillow==9.5.0
 portalocker==2.7.0
 proglog==0.1.10
-psutil==5.9.4
+psutil==5.9.5
 pyre-extensions==0.0.23
 pywin32==306
 PyYAML==6.0
