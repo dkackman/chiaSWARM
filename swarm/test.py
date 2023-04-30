@@ -32,6 +32,16 @@ vid2vid_job = {
     "outputs": ["primary"],
 }
 
+bark_job = {
+    "id": "__test__",
+    "model_name": "suno/bark",
+    "prompt": "make it sunny",
+    "negative_prompt": "ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, blurry, bad anatomy, bad proportions, cloned face, disfigured, out of frame, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, long neck",
+    "num_inference_steps": 10,
+    "workflow": "txt2audio",
+    "outputs": ["primary"],
+}
+
 
 async def run_test(job):
     await startup()
@@ -48,4 +58,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(txt2audio_job))
+    asyncio.run(run_test(bark_job))

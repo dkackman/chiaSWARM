@@ -6,6 +6,8 @@ from .captioning.caption_image import caption_callback
 from .toolbox.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
+from .audio.bark import bark_diffusion_callback
+
 from .type_helpers import get_type
 
 
@@ -17,6 +19,9 @@ def format_args(job):
 
     workflow = args.pop("workflow", None)
     if workflow == "txt2audio":
+        if args["model_name"] == "suno/bark":
+            return bark_diffusion_callback, args
+
         return format_txt2audio_args(args)
 
     if workflow == "stitch":
