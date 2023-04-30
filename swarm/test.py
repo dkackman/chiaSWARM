@@ -35,7 +35,7 @@ vid2vid_job = {
 bark_job = {
     "id": "__test__",
     "model_name": "suno/bark",
-    "prompt": "Hello, my name is Pepe'. And, uh — and I like pepe' coin. [laughs]\n\nBut I would like it bettter if it had more marmots.",
+    "prompt": "Hola, mi nombre es Pepe'. Y, eh, y me gusta pepe' coin. [laughs] Pero me gustaría que apostara si tuviera más marmotas",
     "workflow": "txt2audio",
     "outputs": ["primary"],
 }
