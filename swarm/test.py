@@ -35,9 +35,7 @@ vid2vid_job = {
 bark_job = {
     "id": "__test__",
     "model_name": "suno/bark",
-    "prompt": "make it sunny",
-    "negative_prompt": "ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, blurry, bad anatomy, bad proportions, cloned face, disfigured, out of frame, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, long neck",
-    "num_inference_steps": 10,
+    "prompt": "Hello, my name is Pepe'. And, uh — and I like pepe' coin. [laughs]\n\nBut I would like it bettter if it had more marmots.",
     "workflow": "txt2audio",
     "outputs": ["primary"],
 }
