@@ -9,7 +9,7 @@ from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type
-
+from .controlnet.canny import image_to_canny
 
 max_size = 1024
 
@@ -38,7 +38,7 @@ def format_args(job):
 
     if args["model_name"].startswith("DeepFloyd/"):
         return diffusion_if_callback, args
-    
+
     return format_stable_diffusion_args(args)
 
 
@@ -113,7 +113,9 @@ def format_stable_diffusion_args(args):
         args.pop("height", None)
         args.pop("width", None)
 
-        args["image"] = get_image(args.pop("start_image_uri"), size)
+        args["image"] = get_image(
+            args.pop("start_image_uri"), size, parameters.get("controlnet", None)
+        )
         # if there is an input image and pipeline type is not specified then default it to img2img
         if "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
@@ -147,7 +149,7 @@ def download_image(url):
     return image.convert("RGB")
 
 
-def get_image(uri, size):
+def get_image(uri, size, controlnet=None):
     head = requests.head(uri, allow_redirects=True)  # type: ignore
     content_length = head.headers.pop("Content-Length", 0)
     content_type = head.headers.pop("Content-Type", "")
@@ -171,5 +173,8 @@ def get_image(uri, size):
 
     elif image.height > max_size or image.width > max_size:
         image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+
+    if controlnet != None:
+        image = image_to_canny(image, controlnet)
 
     return image
