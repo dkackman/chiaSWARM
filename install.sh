@@ -216,7 +216,7 @@ python -m pip install wheel setuptools
 pip install git+https://github.com/suno-ai/bark.git@main
 
 pip install torch torchvision torchaudio
-pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers
+pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers sentencepiece
 pip install aiohttp concurrent-log-handler pydub
 echo ""
 echo "chiaSWARM worker installation is now complete."

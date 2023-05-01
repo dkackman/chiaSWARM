@@ -7,7 +7,7 @@ from .toolbox.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
-
+from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type
 
 
@@ -36,6 +36,9 @@ def format_args(job):
     if workflow == "txt2vid":
         return format_txt2vid_args(args)
 
+    if args["model_name"].startswith("DeepFloyd/"):
+        return diffusion_if_callback, args
+    
     return format_stable_diffusion_args(args)
 
 
