@@ -6,12 +6,18 @@ from controlnet_aux import (
     NormalBaeDetector,
     LineartDetector,
     OpenposeDetector,
+    HEDdetector,
+    PidiNetDetector,
+    ContentShuffleDetector,
 )
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 import torch
 
 
-def pre_process_image(image, controlnet):
+def preprocess_image(image, controlnet):
+    if controlnet.get("preprocess", False) == False:
+        return image
+
     if controlnet.get("type") == "canny":
         return image_to_canny(image, controlnet)
 
@@ -32,6 +38,21 @@ def pre_process_image(image, controlnet):
 
     if controlnet.get("type") == "openpose":
         return OpenposeDetector.from_pretrained("lllyasviel/ControlNet")(image)
+
+    if controlnet.get("type") == "pix2pix":
+        return image
+
+    if controlnet.get("type") == "scribble":
+        return HEDdetector.from_pretrained("lllyasviel/Annotators")(
+            image, scribble=True
+        )
+
+    if controlnet.get("type") == "softedge":
+        return PidiNetDetector.from_pretrained("lllyasviel/Annotators")(image)
+
+    if controlnet.get("type") == "shuffle":
+        processor = ContentShuffleDetector()
+        return processor(image)
 
     raise Exception("Unknown controlnet type")
 
