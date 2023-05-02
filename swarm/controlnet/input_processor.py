@@ -1,7 +1,12 @@
 import cv2
 import numpy as np
 from PIL import Image
-from controlnet_aux import MLSDdetector, NormalBaeDetector, LineartDetector
+from controlnet_aux import (
+    MLSDdetector,
+    NormalBaeDetector,
+    LineartDetector,
+    OpenposeDetector,
+)
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 import torch
 
@@ -24,6 +29,9 @@ def pre_process_image(image, controlnet):
 
     if controlnet.get("type") == "lineart":
         return LineartDetector.from_pretrained("lllyasviel/Annotators")(image)
+
+    if controlnet.get("type") == "openpose":
+        return OpenposeDetector.from_pretrained("lllyasviel/ControlNet")(image)
 
     raise Exception("Unknown controlnet type")
 
