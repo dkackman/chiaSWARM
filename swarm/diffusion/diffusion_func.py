@@ -21,7 +21,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     if "controlnet_model_name" in kwargs:
         controlnet = ControlNetModel.from_pretrained(
-            kwargs.pop("controlnet_model_name"), torch_dtype=torch.float16
+            kwargs.pop("controlnet_model_name"),
+            revision=kwargs.pop("controlnet_revision", "main"),
+            torch_dtype=torch.float16,
         )
 
     pipeline = pipeline_type.from_pretrained(
