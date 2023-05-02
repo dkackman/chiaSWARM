@@ -1,60 +1,85 @@
-from .settings import (
-    Settings,
-    settings_exist,
-    save_settings,
-    get_settings_full_path,
-    load_settings,
-    load_settings,
-    resolve_path,
-    settings_exist,
-    save_file,
-)
-from .type_helpers import get_type
+import argparse
 import asyncio
 import logging
-from .log_setup import setup_logging
-from diffusers import DiffusionPipeline
-import torch
-from . import __version__
-import sys
 import requests
+import sys
+import torch
+from diffusers import DiffusionPipeline
+from . import __version__
+from .log_setup import setup_logging
+from .settings import (
+    Settings,
+    get_settings_full_path,
+    load_settings,
+    resolve_path,
+    save_file,
+    save_settings,
+    settings_exist,
+)
+from .type_helpers import get_type
+import argparse
+import logging
+import sys
+import torch
+from .settings import Settings, load_settings, save_settings, get_settings_full_path
+from .diffusion import get_models_from_hive, DiffusionPipeline, get_type
 
 
 async def init():
-    logging.info("init_app")
+    print("init_app")
 
-    overwrite = False
-    if settings_exist() and "--reset" in sys.argv:
-        overwrite = True
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="overwrite existing settings")
+    parser.add_argument(
+        "--silent",
+        action="store_true",
+        help="do not prompt for input")
+    args = parser.parse_args()
 
-    if (not "--silent" in sys.argv) and (not settings_exist() or overwrite):
-        settings = Settings()
+    settings_exist = load_settings() is not None
+    overwrite = args.reset and settings_exist
 
-        sdaas_uri = input("chiaSWARM uri (https://chiaswarm.ai): ").strip()
-        sdaas_uri = "https://chiaswarm.ai" if len(sdaas_uri) == 0 else sdaas_uri
+    if not args.silent and (not settings_exist or overwrite):
+        try:
+            settings = Settings()
 
-        sdaas_token = input("chiaSWARM token: ").strip()
+            sdaas_uri = input(
+                "chiaSWARM uri (https://chiaswarm.ai): ").strip() or "https://chiaswarm.ai"
+            sdaas_token = input("chiaSWARM token: ").strip()
 
-        # settings.huggingface_token = token
-        settings.sdaas_token = sdaas_token
-        settings.sdaas_uri = sdaas_uri
+            settings.sdaas_token = sdaas_token
+            settings.sdaas_uri = sdaas_uri
 
-        save_settings(settings)
-        print(f"Configuration saved to {get_settings_full_path()}")
+            save_settings(settings)
+            print(f"Configuration saved to {get_settings_full_path()}")
+        except Exception as e:
+            print(f"Failed to save configuration: {e}")
+            raise
 
     settings = load_settings()
     setup_logging(resolve_path(settings.log_filename), settings.log_level)
-    logging.debug(f"Version {__version__}")
-    logging.debug(f"Torch version {torch.__version__}")
-    print("Preloading pipelines. This may take awhile...")
+    print(f"Version {__version__}")
+    print(f"Torch version {torch.__version__}")
+    print("App initialization complete")
+
+    await download_diffusers(settings)
+
+    print("To be the swarm type 'python -m swarm.worker'")
+
+
+async def download_diffusers(settings):
+    print("Downloading diffusers")
     known_models = get_models_from_hive(f"{settings.sdaas_uri.rstrip('/')}/")
 
-    # this makes sure that all of the diffusers are downloaded and cached
     for model in known_models:
         model_name = model["model_name"]
         revision = model["revision"]
-        variant = model.get("variant", None)
+        variant = model.get("variant")
         print(f"Initializing {model_name}/{revision}")
+
         try:
             loader = DiffusionPipeline
             parameters = model.pop("parameters", {})
@@ -69,11 +94,10 @@ async def init():
                 torch_dtype=torch.float16,
             )
         except Exception as e:
-            print(f"Failed to initialize {model_name}/{revision}")
-            logging.error(e)
+            print(f"Failed to initialize {model_name}/{revision}: {e}")
+            raise
 
-    print("done")
-    print("To be the swarm type 'python -m swarm.worker'")
+    print("Diffuser download complete")
 
 
 def get_models_from_hive(hive_uri):
@@ -94,9 +118,5 @@ def get_models_from_hive(hive_uri):
 
         return data["language_models"] + data["models"]
     except Exception as e:
-        print(e)
-        logging.error(e)
+        print(f"Failed to fetch known model list from {hive_uri}: {e}")
         return []
-
-
-asyncio.run(init())

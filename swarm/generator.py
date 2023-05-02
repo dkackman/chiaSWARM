@@ -11,8 +11,9 @@ import asyncio
 
 async def do_work(job, device):
     loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(None, synchronous_do_work_function, job, device)
-    return result
+    return await loop.run_in_executor(
+        None, synchronous_do_work_function, job, device
+    )
 
 
 def synchronous_do_work_function(job, device):
@@ -81,22 +82,16 @@ def synchronous_do_work_function(job, device):
 
 
 def exception_image(e, content_type):
-    message = "error generating image"
-    if len(e.args) > 0:
-        message = e.args[0]
-
+    message = e.args[0] if len(e.args) > 0 else "error generating image"
     image = image_from_text(message)
     pipe_config = {"error": message}
 
-    buffer = image_to_buffer(image, content_type)
-    return {"primary": make_result(buffer, buffer, content_type)}, pipe_config
+    _buffer = image_to_buffer(image, content_type)
+    return {"primary": make_result(_buffer, _buffer, content_type)}, pipe_config
 
 
 def exception_message(e):
-    message = "error generating image"
-    if len(e.args) > 0:
-        message = e.args[0]
-
+    message = e.args[0] if len(e.args) > 0 else "error generating image"
     pipe_config = {"error": message}
 
     return {"primary": make_text_result(str(e))}, pipe_config

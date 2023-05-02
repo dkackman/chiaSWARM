@@ -143,7 +143,7 @@ async def result_worker():
 
 
 async def submit_result(result):
-    print(f"Result complete")
+    print("Result complete")
 
     timeout = aiohttp.ClientTimeout(total=60)
     async with aiohttp.ClientSession(timeout=timeout) as session:
