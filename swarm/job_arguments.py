@@ -125,6 +125,11 @@ def format_stable_diffusion_args(args):
         elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
+        if args["model_name"] == "timbrooks/instruct-pix2pix":
+            # pix2pix models use image_guidance_scale instead of strength
+            # image_guidance_scale has a range of 1-5 instead 0-1
+            args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
+
     if "mask_image_uri" in args:
         args.pop("height", None)
         args.pop("width", None)
