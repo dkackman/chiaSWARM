@@ -9,7 +9,7 @@ from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type
-from .controlnet.canny import image_to_canny
+from .controlnet.input_processor import pre_process_image
 
 max_size = 1024
 
@@ -180,6 +180,6 @@ def get_image(uri, size, controlnet=None):
         image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
     if controlnet != None:
-        image = image_to_canny(image, controlnet)
+        image = pre_process_image(image, controlnet)
 
     return image
