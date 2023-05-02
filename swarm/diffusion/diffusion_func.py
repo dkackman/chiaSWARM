@@ -2,6 +2,7 @@ import torch
 from diffusers import (
     DiffusionPipeline,
     DPMSolverMultistepScheduler,
+    ControlNetModel,
 )
 from ..output_processor import OutputProcessor
 from .upscale import upscale_image
@@ -16,14 +17,19 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     textual_inversion = kwargs.pop("textual_inversion", None)
     lora = kwargs.pop("lora", None)
     enable_xformers = kwargs.pop("supports_xformers", True)
-    enable_attention_slicing = kwargs.pop("supports_attention_slicing", True)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
+
+    if "controlnet_model_name" in kwargs:
+        controlnet = ControlNetModel.from_pretrained(
+            kwargs.pop("controlnet_model_name"), torch_dtype=torch.float16
+        )
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision", "main"),
         torch_dtype=torch.float16,
-    )
+        controlnet=controlnet if "controlnet" in locals() else None,
+    ).to(device_identifier)
 
     if textual_inversion is not None:
         try:
@@ -76,10 +82,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         or mem_info[1] < 12000000000
     ):
         # not all pipelines share these methods, so check first
-        if enable_attention_slicing and has_method(
-            pipeline, "enable_attention_slicing"
-        ):
-            pipeline.enable_attention_slicing()
         if enable_xformers and has_method(
             pipeline, "enable_xformers_memory_efficient_attention"
         ):

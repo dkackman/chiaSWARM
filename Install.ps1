@@ -66,7 +66,7 @@ python -m venv venv
 pip install wheel setuptools
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers sentencepiece
-pip install aiohttp concurrent-log-handler pydub
+pip install aiohttp concurrent-log-handler pydub controlnet_aux
 pip install git+https://github.com/suno-ai/bark.git@main
 
 Write-Output "Audio conversion to mp3 require ffmpeg"

@@ -46,7 +46,7 @@ def synchronous_do_work_function(job, device):
 
     # generation will throw this error if some is not-recoverable/fatal
     # (e.g. a textual-inversion not compatible with the base model)
-    except ValueError as e:
+    except (ValueError, RuntimeError) as e:
         content_type = job.get("content_type", "image/jpeg")
         print(e)
         if content_type.startswith("image/"):

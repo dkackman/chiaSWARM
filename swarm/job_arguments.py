@@ -117,7 +117,12 @@ def format_stable_diffusion_args(args):
             args.pop("start_image_uri"), size, parameters.get("controlnet", None)
         )
         # if there is an input image and pipeline type is not specified then default it to img2img
-        if "pipeline_type" not in parameters:
+        if "controlnet" in parameters:
+            parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
+            args["controlnet_model_name"] = parameters["controlnet"][
+                "controlnet_model_name"
+            ]
+        elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
     if "mask_image_uri" in args:
