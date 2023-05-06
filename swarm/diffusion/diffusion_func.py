@@ -24,7 +24,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             kwargs.pop("controlnet_model_name"),
             revision=kwargs.pop("controlnet_revision", "main"),
             torch_dtype=torch.float16,
-        )
+        ).to(device_identifier)
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
