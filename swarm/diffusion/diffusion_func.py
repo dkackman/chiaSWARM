@@ -19,12 +19,22 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     enable_xformers = kwargs.pop("supports_xformers", True)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
 
+    output_processor = OutputProcessor(
+        kwargs.pop("outputs", ["primary"]),
+        kwargs.pop("content_type", "image/jpeg"),
+    )
+
     if "controlnet_model_name" in kwargs:
         controlnet = ControlNetModel.from_pretrained(
             kwargs.pop("controlnet_model_name"),
             revision=kwargs.pop("controlnet_revision", "main"),
             torch_dtype=torch.float16,
         ).to(device_identifier)
+
+        if kwargs.pop("save_preprocessed_input", False):
+            output_processor.add_other_outputs(
+                "preprocessed_input", [kwargs.get("image")]
+            )
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
@@ -50,7 +60,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
             # the attention slicers don't like the scaled cross attention
             enable_xformers = False
-            enable_attention_slicing = False
         except Exception as e:
             raise ValueError(f"Could not load lora \n{lora}\n\n{e}")
 
@@ -59,20 +68,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         pipeline.scheduler = scheduler_type.from_config(  # type: ignore
             pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
         )
-
-    output_processor = OutputProcessor(
-        kwargs.pop("outputs", ["primary"]),
-        kwargs.pop("content_type", "image/jpeg"),
-    )
-
-    if output_processor.need_intermediates():
-        print("Capturing latents")
-
-        def latents_callback(i, t, latents):
-            output_processor.add_latents(pipeline, latents)  # type: ignore
-
-        kwargs["callback"] = latents_callback
-        kwargs["callback_steps"] = 5
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're upscaling or mid-range on mem, preserve memory vs performance

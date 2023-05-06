@@ -1,4 +1,3 @@
-from .diffusion.video_maker import make_video
 import hashlib
 import io
 from PIL import Image, ImageDraw
@@ -9,26 +8,16 @@ from io import BytesIO
 
 class OutputProcessor:
     def __init__(self, output_list, main_content_type):
-        self.intermediate_images = []
         self.outputs = []
+        self.other_outputs = {}
         self.output_list = output_list
         self.main_content_type = main_content_type
 
-    def need_intermediates(self):
-        return (
-            "inference_video" in self.output_list
-            or "inference_image_strip" in self.output_list
-        )
-
-    def add_latents(self, pipeline, latents):
-        latents = 1 / 0.18215 * latents
-        image = pipeline.vae.decode(latents).sample[0]
-        image = (image / 2 + 0.5).clamp(0, 1)
-        image = image.cpu().permute(1, 2, 0).numpy()
-        self.intermediate_images.extend(pipeline.numpy_to_pil(image))
-
     def add_outputs(self, images):
         self.outputs.extend(images)
+
+    def add_other_outputs(self, name, images):
+        self.other_outputs[name] = images
 
     def get_results(self):
         results = {}
@@ -41,24 +30,13 @@ class OutputProcessor:
                 primary_result_buffer, primary_result_buffer, self.main_content_type
             )
 
-        if "inference_image_strip" in self.output_list:
-            image_strip = image_grid(
-                self.intermediate_images + [self.outputs[0]],
-                1,
-                len(self.intermediate_images) + 1,
-            )
-            image_strip_buffer = image_to_buffer(image_strip, "image/jpeg", "web_low")
-            results["inference_image_strip"] = make_result(
-                image_strip_buffer, image_strip_buffer, "image/jpeg"
-            )
-
-        if "inference_video" in self.output_list:
-            thumbnail, video_buffer = make_video(
-                self.intermediate_images + [self.outputs[0].convert("RGB")], 5
-            )
-            thumbnail_buffer = image_to_buffer(thumbnail, "image/jpeg", "web_low")
-            results["inference_video"] = make_result(
-                video_buffer, thumbnail_buffer, "video/webm"
+        for key, images in self.other_outputs.items():
+            result = post_process(images)
+            result_buffer = image_to_buffer(result, self.main_content_type)
+            results[key] = make_result(
+                result_buffer,
+                result_buffer,
+                self.main_content_type,
             )
 
         return results

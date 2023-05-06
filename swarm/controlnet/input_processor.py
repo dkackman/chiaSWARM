@@ -54,7 +54,22 @@ def preprocess_image(image, controlnet):
         processor = ContentShuffleDetector()
         return processor(image)
 
+    if controlnet.get("type") == "tile":
+        return image_to_tile(image)
+
     raise Exception("Unknown controlnet type")
+
+
+def image_to_tile(image, resolution=1024):
+    input_image = image.convert("RGB")
+    W, H = input_image.size
+    k = float(resolution) / min(H, W)
+    H *= k
+    W *= k
+    H = int(round(H / 64.0)) * 64
+    W = int(round(W / 64.0)) * 64
+    img = input_image.resize((W, H), resample=Image.LANCZOS)
+    return img
 
 
 def image_to_canny(image, controlnet):

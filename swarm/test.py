@@ -32,6 +32,16 @@ vid2vid_job = {
     "outputs": ["primary"],
 }
 
+txt2vidJob = {
+    "id": "__test__",
+    "model_name": "timbrooks/instruct-pix2pix",
+    "prompt": "dogs dancing",
+    "negative_prompt": "ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, blurry, bad anatomy, bad proportions, cloned face, disfigured, out of frame, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, mutated hands, fused fingers, long neck",
+    "num_inference_steps": 10,
+    "workflow": "txt2vid",
+    "outputs": ["primary"],
+}
+
 bark_job = {
     "id": "__test__",
     "model_name": "suno/bark",
@@ -48,6 +58,7 @@ if_job = {
     "outputs": ["primary"],
 }
 
+
 async def run_test(job):
     await startup()
     try:
@@ -63,4 +74,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(if_job))
+    asyncio.run(run_test(txt2vidJob))

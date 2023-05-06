@@ -113,15 +113,18 @@ def format_stable_diffusion_args(args):
         args.pop("height", None)
         args.pop("width", None)
 
+        controlnet = parameters.get("controlnet", None)
         args["image"] = get_image(
-            args.pop("start_image_uri"), size, parameters.get("controlnet", None)
+            args.pop("start_image_uri"),
+            size,
         )
-        # if there is an input image and pipeline type is not specified then default it to img2img
-        if "controlnet" in parameters:
+
+        if controlnet is not None:
             parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
-            args["controlnet_model_name"] = parameters["controlnet"].get(
+            args["controlnet_model_name"] = controlnet.get(
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
+            args["save_preprocessed_input"] = controlnet.get("preprocess", False)
         elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
