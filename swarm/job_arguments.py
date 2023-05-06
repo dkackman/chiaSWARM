@@ -114,10 +114,7 @@ def format_stable_diffusion_args(args):
         args.pop("width", None)
 
         controlnet = parameters.get("controlnet", None)
-        args["image"] = get_image(
-            args.pop("start_image_uri"),
-            size,
-        )
+        args["image"] = get_image(args.pop("start_image_uri"), size, controlnet)
 
         if controlnet is not None:
             parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
