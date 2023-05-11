@@ -61,7 +61,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             # the attention slicers don't like the scaled cross attention
             enable_xformers = False
         except Exception as e:
-            raise ValueError(f"Could not load lora \n{lora}\n\n{e}")
+            raise ValueError(
+                f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
+            )
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):
