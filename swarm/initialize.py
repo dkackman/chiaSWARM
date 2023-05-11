@@ -13,7 +13,7 @@ from .type_helpers import get_type
 import asyncio
 import logging
 from .log_setup import setup_logging
-from diffusers import DiffusionPipeline
+from diffusers import DiffusionPipeline, ControlNetModel
 import torch
 from . import __version__
 import sys
@@ -58,7 +58,10 @@ async def init():
         try:
             loader = DiffusionPipeline
             parameters = model.pop("parameters", {})
-            if "model_type" in parameters:
+
+            if "controlnet_type" in model:
+                loader = ControlNetModel
+            elif "model_type" in parameters:
                 loader = get_type("transformers", parameters["model_type"])
 
             # this will cause diffusers to fetch the latest model data
