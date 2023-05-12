@@ -1,7 +1,7 @@
 from bark import SAMPLE_RATE, generate_audio, preload_models
 import pathlib
 import tempfile
-from io import BytesIO 
+from io import BytesIO
 from ..output_processor import make_result
 from pydub import AudioSegment
 import scipy
@@ -24,7 +24,9 @@ def bark_diffusion_callback(device_identifier, model_name, **kwargs):
         audio = audio_array
 
         temp_wav_file = pathlib.Path(tmpdirname).joinpath(f"music.wav").__str__()
-        scipy.io.wavfile.write(temp_wav_file, rate=SAMPLE_RATE, data=audio.astype(np.float32))
+        scipy.io.wavfile.write(
+            temp_wav_file, rate=SAMPLE_RATE, data=audio.astype(np.float32)
+        )
         audio_data = AudioSegment.from_file(temp_wav_file, format="wav")
 
         temp_mp3_file = pathlib.Path(tmpdirname).joinpath(f"music.mp3").__str__()

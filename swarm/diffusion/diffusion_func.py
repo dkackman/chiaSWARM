@@ -1,9 +1,11 @@
 import torch
+import logging
 from diffusers import (
     DiffusionPipeline,
     DPMSolverMultistepScheduler,
     ControlNetModel,
 )
+from diffusers.utils.import_utils import is_xformers_available
 from ..output_processor import OutputProcessor
 from .upscale import upscale_image
 from ..type_helpers import has_method
@@ -81,10 +83,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         or mem_info[1] < 12000000000
     ):
         # not all pipelines share these methods, so check first
-        if enable_xformers and has_method(
-            pipeline, "enable_xformers_memory_efficient_attention"
-        ):
+        if enable_xformers and is_xformers_available():
             pipeline.enable_xformers_memory_efficient_attention()
+
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
         if has_method(pipeline, "enable_vae_tiling"):
@@ -106,10 +107,10 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             )
         )
     ):
-        for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):  # type: ignore
+        for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):
             pipeline.config["nsfw"] = True
 
-    images = p.images  # type: ignore
+    images = p.images
     if upscale:
         images = upscale_image(
             images,
@@ -120,4 +121,4 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         )
 
     output_processor.add_outputs(images)
-    return (output_processor.get_results(), pipeline.config)  # type: ignore
+    return (output_processor.get_results(), pipeline.config)

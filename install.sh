@@ -93,7 +93,7 @@ PYTHON_MINOR_VER=
 find_python() {
   set +e
   unset BEST_VERSION
-  for V in 310 3.10 39 3.9 38 3.8 37 3.7 3; do
+  for V in 311 3.11 310 3.10 39 3.9 38 3.8 37 3.7 3; do
     if command -v python$V >/dev/null; then
       if [ "$BEST_VERSION" = "" ]; then
         BEST_VERSION=$V
@@ -215,7 +215,8 @@ python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 
 pip install torch torchvision torchaudio
-pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers sentencepiece
+pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
+# pip install xformers
 pip install aiohttp concurrent-log-handler pydub controlnet_aux
 pip install git+https://github.com/suno-ai/bark.git@main
 
