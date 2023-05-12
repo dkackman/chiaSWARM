@@ -70,7 +70,7 @@ pip install diffusers[torch] transformers accelerate scipy ftfy safetensors movi
 pip install aiohttp concurrent-log-handler pydub controlnet_aux
 pip install git+https://github.com/suno-ai/bark.git
 
-Write-Output "Audio conversion to mp3 require ffmpeg"
+Write-Output "Audio conversion to mp3 requires ffmpeg"
 Write-Output "Install ffmpeg from an elevated command prompt with the following command:"
 Write-Output "choco install ffmpeg"
 
