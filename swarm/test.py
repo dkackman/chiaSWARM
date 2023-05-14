@@ -52,7 +52,7 @@ bark_job = {
 
 if_job = {
     "id": "__test__",
-    "model_name": "DeepFloyd/IF-I-L-v1.0",
+    "model_name": "DeepFloyd/IF-II-L-v1.0",
     "prompt": 'a photo of a green frog wearing blue sunglasses standing in front of the eiffel tower holding a sign that says "i shill chia"',
     "workflow": "txt2img",
     "outputs": ["primary"],
