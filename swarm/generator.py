@@ -32,7 +32,7 @@ def synchronous_do_work_function(job, device):
             artifacts, pipeline_config = exception_message(e)
 
         return {
-            "id": id,
+            "id": job_id,
             "artifacts": artifacts,
             "nsfw": pipeline_config.get("nsfw", False),  # type ignore
             "fatal_error": True,
@@ -71,7 +71,7 @@ def synchronous_do_work_function(job, device):
             artifacts, pipeline_config = exception_message(e)
 
     return {
-        "id": id,
+        "id": job_id,
         "artifacts": artifacts,
         "nsfw": pipeline_config.get("nsfw", False),  # type ignore
         "worker_version": __version__,
