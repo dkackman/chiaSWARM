@@ -11,9 +11,7 @@ import asyncio
 
 async def do_work(job, device):
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(
-        None, synchronous_do_work_function, job, device
-    )
+    return await loop.run_in_executor(None, synchronous_do_work_function, job, device)
 
 
 def synchronous_do_work_function(job, device):
@@ -47,7 +45,7 @@ def synchronous_do_work_function(job, device):
 
     # generation will throw this error if some is not-recoverable/fatal
     # (e.g. a textual-inversion not compatible with the base model)
-    except (ValueError) as e:
+    except ValueError as e:
         content_type = job.get("content_type", "image/jpeg")
         print(e)
         if content_type.startswith("image/"):

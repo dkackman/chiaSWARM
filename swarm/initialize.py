@@ -14,7 +14,6 @@ from .settings import (
     save_settings,
 )
 from .type_helpers import get_type
-from .diffusion import get_models_from_hive, DiffusionPipeline, get_type
 
 
 async def init():

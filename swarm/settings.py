@@ -28,11 +28,9 @@ def load_settings():
         settings_dict = {}
 
     settings.log_level = settings_dict.get("log_level", "WARN")
-    settings.log_filename = settings_dict.get(
-        "log_filename", "log/generator.log")
+    settings.log_filename = settings_dict.get("log_filename", "log/generator.log")
     settings.sdaas_token = settings_dict.get("sdaas_token", "")
-    settings.sdaas_uri = settings_dict.get(
-        "sdaas_uri", "http://localhost:9511")
+    settings.sdaas_uri = settings_dict.get("sdaas_uri", "http://localhost:9511")
     settings.worker_name = settings_dict.get("worker_name", "worker")
 
     settings.sdaas_token = os.getenv("SDAAS_TOKEN", settings.sdaas_token)
