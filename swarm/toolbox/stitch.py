@@ -19,10 +19,9 @@ def stitch_callback(device_id, model_name, **kwargs):
     resized_images = resize_images(images)
     stitched_image = stitch_images(resized_images)
 
-    buffer = image_to_buffer(stitched_image, "image/jpeg", "web_high")
-    thumbnail = make_thumbnail(buffer)
-    results = {}
-    results["primary"] = make_result(buffer, thumbnail, "image/jpeg")
+    _buffer = image_to_buffer(stitched_image, "image/jpeg", "web_high")
+    thumbnail = make_thumbnail(_buffer)
+    results = {"primary": make_result(_buffer, thumbnail, "image/jpeg")}
     image_map = generate_image_map(resized_images, jobs)
     pipeline_config["image_map"] = image_map
     return results, pipeline_config
@@ -90,7 +89,7 @@ def generate_image_map(resized_images, jobs):
             f"{x_offset},{y_offset},{x_offset + thumb_size},{y_offset + thumb_size}"
         )
         href = jobs[index]["resultUri"]
-        fileName = jobs[index].pop("fileName", href)
+        file_name = jobs[index].pop("fileName", href)
         alt = jobs[index].pop("model_name", f"Image {index + 1}")
 
         map_data.append(
@@ -99,7 +98,7 @@ def generate_image_map(resized_images, jobs):
                 "coords": coords,
                 "href": href,
                 "alt": alt,
-                "filename": fileName,
+                "filename": file_name,
             }
         )
 

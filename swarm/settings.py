@@ -59,9 +59,7 @@ def resolve_path(path):
 
 
 def get_settings_dir():
-    dir_path = os.environ.get("SDAAS_ROOT")
-    if not dir_path:
-        dir_path = "~/.sdaas/"
+    dir_path = os.environ.get("SDAAS_ROOT") or "~/.sdaas/"
 
     return Path(dir_path).expanduser()
 

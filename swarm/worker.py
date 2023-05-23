@@ -81,8 +81,8 @@ async def ask_for_work():
 
                     found_work = False
                     for job in response_dict["jobs"]:
-                        id = job["id"]
-                        print(f"Got job {id}")
+                        job_id = job["id"]
+                        print(f"Got job {job_id}")
                         found_work = True
                         await work_queue.put(job)
 

@@ -5,10 +5,7 @@ import io
 
 
 def make_video(images, duration_seconds):
-    frames = []
-    for img in images:
-        frames.append(np.array(img))
-
+    frames = [np.array(img) for img in images]
     fps = len(frames) / duration_seconds
     clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(frames, fps=fps)
     with tempfile.NamedTemporaryFile(suffix=".webm") as tmp:

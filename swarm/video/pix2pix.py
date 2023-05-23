@@ -46,7 +46,7 @@ def model_video_callback(device_identifier, model_name, **kwargs):
         max_frames = 100
         frames_list = break_vid[0]
         fps = break_vid[1]
-        n_frame = int(len(frames_list) / stride)
+        n_frame = len(frames_list) // stride
         result_frames = []
 
         nsfw_content_detected = False
