@@ -15,8 +15,8 @@ async def do_work(job, device):
 
 
 def synchronous_do_work_function(job, device):
-    id = job.pop("id")
-    print(f"Processing {id} on {device.descriptor()}")
+    job_id = job.pop("id")
+    print(f"Processing {job_id} on {device.descriptor()}")
 
     try:
         worker_function, kwargs = format_args(job)
@@ -54,7 +54,7 @@ def synchronous_do_work_function(job, device):
             artifacts, pipeline_config = exception_message(e)
 
         return {
-            "id": id,
+            "id": job_id,
             "artifacts": artifacts,
             "fatal_error": True,
             "nsfw": pipeline_config.get("nsfw", False),  # type ignore

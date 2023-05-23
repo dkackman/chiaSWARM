@@ -13,12 +13,12 @@ def get_frame(mp4_file_path, frane_index=0):
 
         # Convert the frame to a JPEG image in memory
         frame_image = Image.fromarray(frame)
-        buffer = BytesIO()
-        frame_image.save(buffer, format="JPEG")
+        _buffer = BytesIO()
+        frame_image.save(_buffer, format="JPEG")
         # Close the buffer and the clip
         clip.close()
         # Get the bytes of the JPEG image from the buffer
-        return buffer
+        return _buffer
 
     except Exception as e:
         print(e)

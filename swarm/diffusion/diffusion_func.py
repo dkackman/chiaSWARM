@@ -51,7 +51,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         except Exception as e:
             raise ValueError(
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}\n{lora}\n\n{e}"
-            )
+            ) from e
 
     pipeline = pipeline.to(device_identifier)  # type: ignore
 
@@ -65,7 +65,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         except Exception as e:
             raise ValueError(
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
-            )
+            ) from e
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):

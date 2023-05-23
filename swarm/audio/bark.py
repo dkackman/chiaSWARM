@@ -10,7 +10,7 @@ import numpy as np
 
 def bark_diffusion_callback(device_identifier, model_name, **kwargs):
     content_type = kwargs.pop("content_type", "audio/mpeg")
-    outputs = kwargs.pop("outputs", ["primary"])
+    kwargs.pop("outputs", ["primary"])
 
     # download and load all models
     preload_models(
@@ -23,18 +23,16 @@ def bark_diffusion_callback(device_identifier, model_name, **kwargs):
     with tempfile.TemporaryDirectory() as tmpdirname:
         audio = audio_array
 
-        temp_wav_file = pathlib.Path(tmpdirname).joinpath(f"music.wav").__str__()
+        temp_wav_file = pathlib.Path(tmpdirname).joinpath("music.wav").__str__()
         scipy.io.wavfile.write(
             temp_wav_file, rate=SAMPLE_RATE, data=audio.astype(np.float32)
         )
         audio_data = AudioSegment.from_file(temp_wav_file, format="wav")
 
-        temp_mp3_file = pathlib.Path(tmpdirname).joinpath(f"music.mp3").__str__()
+        temp_mp3_file = pathlib.Path(tmpdirname).joinpath("music.mp3").__str__()
         audio_data.export(temp_mp3_file, format="mp3")
         with open(temp_mp3_file, "rb") as audio_file:
-            buffer = BytesIO(audio_file.read())
+            _buffer = BytesIO(audio_file.read())
 
-    results = {}
-    results["primary"] = make_result(buffer, None, content_type)
-
+    results = {"primary": make_result(_buffer, None, content_type)}
     return (results, {})  # type: ignore
