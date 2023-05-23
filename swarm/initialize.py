@@ -60,7 +60,7 @@ async def init():
 
 
 async def download_diffusers(settings):
-    print("Downloading diffusers")
+    print("Downloading models...")
     known_models = get_models_from_hive(f"{settings.sdaas_uri.rstrip('/')}/")
 
     for model in known_models:
@@ -70,10 +70,11 @@ async def download_diffusers(settings):
         print(f"Initializing {model_name}/{revision}")
 
         try:
-            loader = DiffusionPipeline
             parameters = model.pop("parameters", {})
 
             if parameters.get("can_preload", True):
+                loader = DiffusionPipeline
+
                 if "controlnet_type" in model:
                     loader = ControlNetModel
                 elif "model_type" in parameters:
@@ -90,7 +91,7 @@ async def download_diffusers(settings):
             print(f"Failed to initialize {model_name}/{revision}: {e}")
             raise
 
-    print("Diffuser download complete")
+    print("Model download complete")
 
 
 def get_models_from_hive(hive_uri):
