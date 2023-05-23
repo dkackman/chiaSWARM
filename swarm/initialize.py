@@ -73,18 +73,19 @@ async def download_diffusers(settings):
             loader = DiffusionPipeline
             parameters = model.pop("parameters", {})
 
-            if "controlnet_type" in model:
-                loader = ControlNetModel
-            elif "model_type" in parameters:
-                loader = get_type("transformers", parameters["model_type"])
+            if parameters.get("can_preload", True):
+                if "controlnet_type" in model:
+                    loader = ControlNetModel
+                elif "model_type" in parameters:
+                    loader = get_type("transformers", parameters["model_type"])
 
-            # this will cause diffusers to fetch the latest model data
-            loader.from_pretrained(
-                model_name,
-                revision=revision,
-                variant=variant,
-                torch_dtype=torch.float16,
-            )
+                # this will cause diffusers to fetch the latest model data
+                loader.from_pretrained(
+                    model_name,
+                    revision=revision,
+                    variant=variant,
+                    torch_dtype=torch.float16,
+                )
         except Exception as e:
             print(f"Failed to initialize {model_name}/{revision}: {e}")
             raise
