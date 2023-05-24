@@ -111,6 +111,17 @@ find_python() {
   set -e
 }
 
+if [ "$INSTALL_PYTHON_VERSION" = "" ]; then
+  echo "Searching available python executables..."
+  find_python
+else
+  echo "Python $INSTALL_PYTHON_VERSION is requested"
+  INSTALL_PYTHON_PATH=python${INSTALL_PYTHON_VERSION}
+  PY3_VER=$($INSTALL_PYTHON_PATH --version | cut -d ' ' -f2)
+  PYTHON_MAJOR_VER=$(echo "$PY3_VER" | cut -d'.' -f1)
+  PYTHON_MINOR_VER=$(echo "$PY3_VER" | cut -d'.' -f2)
+fi
+
 if [ "$(uname)" = "Linux" ]; then
   #LINUX=1
   if [ "$UBUNTU_PRE_20" = "1" ]; then
@@ -132,7 +143,7 @@ if [ "$(uname)" = "Linux" ]; then
   elif [ "$UBUNTU_22" = "1" ]; then
     echo "Installing on Ubuntu 22.* or newer."
     sudo apt-get update
-    if [ "$PYTHON_MINOR_VER" -eq "11"]; then
+    if [ "$PYTHON_MINOR_VER" -eq "11" ]; then
       sudo apt-get install -y python3.11-venv ffmpeg
     else
       sudo apt-get install -y python3.10-venv ffmpeg
@@ -170,18 +181,6 @@ elif [ "$(uname)" = "Darwin" ]; then
     echo "Installation currently requires brew on macOS - https://brew.sh/"
     exit 1
   fi
-fi
-
-
-if [ "$INSTALL_PYTHON_VERSION" = "" ]; then
-  echo "Searching available python executables..."
-  find_python
-else
-  echo "Python $INSTALL_PYTHON_VERSION is requested"
-  INSTALL_PYTHON_PATH=python${INSTALL_PYTHON_VERSION}
-  PY3_VER=$($INSTALL_PYTHON_PATH --version | cut -d ' ' -f2)
-  PYTHON_MAJOR_VER=$(echo "$PY3_VER" | cut -d'.' -f1)
-  PYTHON_MINOR_VER=$(echo "$PY3_VER" | cut -d'.' -f2)
 fi
 
 if ! command -v "$INSTALL_PYTHON_PATH" >/dev/null; then
