@@ -58,6 +58,17 @@ if_job = {
     "outputs": ["primary"],
 }
 
+kandinsky_job = {
+    "id": "__test__",
+    "model_name": "kandinsky-community/kandinsky-2-1",
+    "prompt": 'a photo of a green frog wearing blue sunglasses standing in front of the eiffel tower holding a sign that says "i shill chia"',
+    "negative_prompt": "low quality, bad quality",
+    "workflow": "txt2img",
+    "num_inference_steps": 100,
+    "guidance_scale": 4.0,
+    "outputs": ["primary"],
+}
+
 
 async def run_test(job):
     await startup()
@@ -74,4 +85,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(if_job))
+    asyncio.run(run_test(kandinsky_job))

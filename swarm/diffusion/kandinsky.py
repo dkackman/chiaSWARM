@@ -1,0 +1,49 @@
+from diffusers import KandinskyPipeline, KandinskyPriorPipeline
+import torch
+from ..output_processor import OutputProcessor
+
+
+def kandinsky_callback(device_identifier, model_name, **kwargs):
+    output_processor = OutputProcessor(
+        kwargs.pop("outputs", ["primary"]),
+        kwargs.pop("content_type", "image/jpeg"),
+    )
+
+    pipe_prior = KandinskyPriorPipeline.from_pretrained(
+        "kandinsky-community/kandinsky-2-1-prior", torch_dtype=torch.float16
+    )
+    pipe_prior.to(device_identifier)
+
+    prompt = kwargs.pop("prompt", "")
+    negative_prompt = kwargs.pop("negative_prompt", "")
+
+    generator = kwargs["generator"]
+    image_emb = pipe_prior(
+        prompt,
+        guidance_scale=1.0,
+        num_inference_steps=25,
+        generator=generator,
+        negative_prompt=negative_prompt,
+    ).images
+
+    zero_image_emb = pipe_prior(
+        negative_prompt,
+        guidance_scale=1.0,
+        num_inference_steps=25,
+        generator=generator,
+        negative_prompt=negative_prompt,
+    ).images
+
+    pipe = KandinskyPipeline.from_pretrained(model_name, torch_dtype=torch.float16)
+    pipe.to(device_identifier)
+
+    images = pipe(
+        prompt,
+        image_embeds=image_emb,
+        negative_image_embeds=zero_image_emb,
+        **kwargs,
+    ).images
+    images[0].save("./cheeseburger_monster.png")
+
+    output_processor.add_outputs(images)
+    return (output_processor.get_results(), {})

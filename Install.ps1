@@ -76,7 +76,10 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python -m pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
+python -m pip install git+https://github.com/huggingface/diffusers.git@main
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+python -m pip install transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 python -m pip install xformers

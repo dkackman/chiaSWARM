@@ -8,6 +8,7 @@ from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
+from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
 from .controlnet.input_processor import preprocess_image
 
@@ -38,6 +39,9 @@ def format_args(job):
 
     if args["model_name"].startswith("DeepFloyd/"):
         return diffusion_if_callback, args
+
+    if args["model_name"].startswith("kandinsky-"):
+        return kandinsky_callback, args
 
     return format_stable_diffusion_args(args)
 
@@ -97,7 +101,7 @@ def format_stable_diffusion_args(args):
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])
         if size[0] > max_size or size[1] > max_size:
-            raise Exception (
+            raise Exception(
                 f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
             )
 

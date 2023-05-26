@@ -1,5 +1,4 @@
 import torch
-import logging
 from diffusers import (
     DiffusionPipeline,
     DPMSolverMultistepScheduler,
