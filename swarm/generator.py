@@ -24,43 +24,15 @@ def synchronous_do_work_function(job, device):
     except Exception as e:
         # any error here is fatal (i.e. not something a worker could recover from)
         # the job should not be resubmitted as input args are wrong somehow
-        content_type = job.get("content_type", "image/jpeg")
-        print(e)
-        if content_type.startswith("image/"):
-            artifacts, pipeline_config = exception_image(e, content_type)
-        else:
-            artifacts, pipeline_config = exception_message(e)
-
-        return {
-            "id": job_id,
-            "artifacts": artifacts,
-            "nsfw": pipeline_config.get("nsfw", False),  # type ignore
-            "fatal_error": True,
-            "worker_version": __version__,
-            "pipeline_config": pipeline_config,
-        }
+        return fatal_exception_response(e, job_id, job)
 
     try:
         artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
 
     # generation will throw this error if some is not-recoverable/fatal
     # (e.g. a textual-inversion not compatible with the base model)
-    except ValueError as e:
-        content_type = job.get("content_type", "image/jpeg")
-        print(e)
-        if content_type.startswith("image/"):
-            artifacts, pipeline_config = exception_image(e, content_type)
-        else:
-            artifacts, pipeline_config = exception_message(e)
-
-        return {
-            "id": job_id,
-            "artifacts": artifacts,
-            "fatal_error": True,
-            "nsfw": pipeline_config.get("nsfw", False),  # type ignore
-            "worker_version": __version__,
-            "pipeline_config": pipeline_config,
-        }
+    except (ValueError, TypeError) as e:
+        return fatal_exception_response(e, job_id, job)
 
     except Exception as e:
         content_type = job.get("content_type", "image/jpeg")
@@ -75,6 +47,24 @@ def synchronous_do_work_function(job, device):
         "artifacts": artifacts,
         "nsfw": pipeline_config.get("nsfw", False),  # type ignore
         "worker_version": __version__,
+        "pipeline_config": pipeline_config,
+    }
+
+
+def fatal_exception_response(e, job_id, job):
+    content_type = job.get("content_type", "image/jpeg")
+    print(e)
+    if content_type.startswith("image/"):
+        artifacts, pipeline_config = exception_image(e, content_type)
+    else:
+        artifacts, pipeline_config = exception_message(e)
+
+    return {
+        "id": job_id,
+        "artifacts": artifacts,
+        "nsfw": pipeline_config.get("nsfw", False),  # type ignore
+        "worker_version": __version__,
+        "fatal_error": True,
         "pipeline_config": pipeline_config,
     }
 
