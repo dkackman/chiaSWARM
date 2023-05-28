@@ -41,7 +41,7 @@ def format_args(job):
         return diffusion_if_callback, args
 
     if args["model_name"].startswith("kandinsky-"):
-        return kandinsky_callback, args
+        return format_kandinsky_args(args)
 
     return format_stable_diffusion_args(args)
 
@@ -93,6 +93,31 @@ def format_img2txt_args(args):
 
     return caption_callback, args
 
+def format_kandinsky_args(args):
+    size = None
+    if "height" in args and "width" in args:
+        size = (args["height"], args["width"])
+        if size[0] > max_size or size[1] > max_size:
+            raise Exception(
+                f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
+            )
+        
+    if "num_inference_steps" not in args:
+        args["num_inference_steps"] = 100
+
+    if "start_image_uri" in args:
+        args.pop("height", None)
+        args.pop("width", None)
+
+        args["image"] = get_image(args.pop("start_image_uri"), size)
+        args["pipeline_type"] = get_type("diffusers", "KandinskyImg2ImgPipeline")
+
+    # if there is start_image_uri2 we are interpolating 
+    if "start_image_uri2" in args:
+        args["image2"] = get_image(args.pop("start_image_uri2"), size)
+        args["pipeline_type"] = get_type("diffusers", "KandinskyPipeline")
+
+    return kandinsky_callback, args
 
 def format_stable_diffusion_args(args):
     # this is where all of the input arguments are rationalized and model specific
