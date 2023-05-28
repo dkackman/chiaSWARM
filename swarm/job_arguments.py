@@ -122,6 +122,7 @@ def format_stable_diffusion_args(args):
 
         if controlnet is not None:
             parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
+            args.pop("strength", None)
             args["controlnet_model_name"] = controlnet.get(
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
