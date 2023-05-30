@@ -97,7 +97,7 @@ def format_stable_diffusion_args(args):
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])
         if size[0] > max_size or size[1] > max_size:
-            raise Exception (
+            raise Exception(
                 f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
             )
 
@@ -122,6 +122,9 @@ def format_stable_diffusion_args(args):
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
             args["save_preprocessed_input"] = controlnet.get("preprocess", False)
+
+            # StableDiffusionControlNetPipeline does not accept strength
+            args.pop("strength", None)
         elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
