@@ -24,17 +24,17 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
     if "image" in kwargs and "image2" in kwargs:
         images_texts = [prompt, kwargs.pop("image"), kwargs.pop("image2")]
         weights = [0.2, 0.3, 0.5]
-        image_emb, zero_image_emb = pipe_prior.interpolate(images_texts, weights)
+        image_embeds, negative_image_embeds = pipe_prior.interpolate(images_texts, weights)
         prompt = ""
     else:
-        image_emb = pipe_prior(
+        image_embeds = pipe_prior(
             prompt,
-            guidance_scale=1.0,
+            guidance_scale=7.5,
             num_inference_steps=25,
             generator=generator,
             negative_prompt=negative_prompt,
         ).images
-        zero_image_emb = pipe_prior(
+        negative_image_embeds = pipe_prior(
             negative_prompt,
             guidance_scale=1.0,
             num_inference_steps=25,
@@ -47,8 +47,8 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
 
     images = pipe(
         prompt,
-        image_embeds=image_emb,
-        negative_image_embeds=zero_image_emb,
+        image_embeds=image_embeds,
+        negative_image_embeds=negative_image_embeds,
         **kwargs,
     ).images
     images[0].save("./cheeseburger_monster.png")

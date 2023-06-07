@@ -1,8 +1,8 @@
 import torch
 from diffusers import (
     DiffusionPipeline,
-    DPMSolverMultistepScheduler,
 )
+from diffusers.utils import pt_to_pil
 from ..output_processor import OutputProcessor
 from .upscale import upscale_image
 from ..type_helpers import has_method
@@ -14,7 +14,7 @@ import torch
 def diffusion_if_callback(device_identifier, model_name, **kwargs):
     # stage 1
     stage_1 = DiffusionPipeline.from_pretrained(
-        model_name, variant="fp16", torch_dtype=torch.float16
+        "DeepFloyd/IF-I-XL-v1.0", variant="fp16", torch_dtype=torch.float16
     ).to(device_identifier)
     stage_1.enable_model_cpu_offload()
 
@@ -25,7 +25,7 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
         variant="fp16",
         torch_dtype=torch.float16,
     ).to(device_identifier)
-    # stage_2.enable_model_cpu_offload()
+    stage_2.enable_model_cpu_offload()
 
     # stage 3
     safety_modules = {
@@ -38,7 +38,7 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
         **safety_modules,
         torch_dtype=torch.float16
     ).to(device_identifier)
-    # stage_3.enable_model_cpu_offload()
+    stage_3.enable_model_cpu_offload()
 
     prompt = kwargs.get("prompt", "")
     negative_prompt = kwargs.get("prompt", None)
@@ -51,6 +51,7 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
         generator=generator,
         output_type="pt",
     ).images
+    pt_to_pil(image)[0].save("./if_stage_I.png")
 
     image = stage_2(
         image=image,
@@ -59,6 +60,7 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
         generator=generator,
         output_type="pt",
     ).images
+    pt_to_pil(image)[0].save("./if_stage_II.png")
 
     images = stage_3(
         prompt=prompt, image=image, generator=generator, noise_level=100
