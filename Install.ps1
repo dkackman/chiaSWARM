@@ -88,11 +88,6 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python -m pip install git+https://github.com/suno-ai/bark.git@main
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# ControlNet Auxiliary Library for Image Registration
-# Required for a specific feature of chiaSWARM
-python -m pip install controlnet_aux==0.0.3  # pinned mediapipe dpenendency not found
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 Write-Output ""
 Write-Output "Audio conversion to mp3 requires ffmpeg"
 Write-Output "Install ffmpeg from an elevated command prompt with the following command:"
