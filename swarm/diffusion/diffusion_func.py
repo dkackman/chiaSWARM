@@ -9,6 +9,10 @@ from ..output_processor import OutputProcessor
 from .upscale import upscale_image
 from ..type_helpers import has_method
 
+import platform
+
+is_windows = any(platform.win32_ver())
+
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
@@ -42,7 +46,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         revision=kwargs.pop("revision", "main"),
         torch_dtype=torch.float16,
         controlnet=controlnet if "controlnet" in locals() else None,
-    ).to(device_identifier)
+    )
 
     if textual_inversion is not None:
         try:
@@ -53,6 +57,12 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             ) from e
 
     pipeline = pipeline.to(device_identifier)  # type: ignore
+    pipeline.unet.to(memory_format=torch.channels_last)
+    # compile not supported on windows at this time 6/2023
+    if not is_windows:
+        pipeline.unet = torch.compile(
+            pipeline.unet, mode="reduce-overhead", fullgraph=True
+        )
 
     if lora is not None and pipeline.unet is not None:
         try:
@@ -82,7 +92,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         or mem_info[1] < 12000000000
     ):
         # not all pipelines share these methods, so check first
-        if enable_xformers and is_xformers_available():
+        # on linux we will not use xformers and just inbuilt pytorch 2 optimizations
+        if enable_xformers and not is_windows and is_xformers_available():
             pipeline.enable_xformers_memory_efficient_attention()
 
         if has_method(pipeline, "enable_vae_slicing"):

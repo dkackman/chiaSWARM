@@ -1,17 +1,21 @@
-from diffusers import KandinskyPipeline, KandinskyPriorPipeline
+from diffusers import DiffusionPipeline
 import torch
 from ..output_processor import OutputProcessor
 
 
 def kandinsky_callback(device_identifier, model_name, **kwargs):
-    pipeline_type = kwargs.pop("pipeline_type", KandinskyPipeline)
+    pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
+    pipeline_prior_type = kwargs.pop("pipeline_prior_type", DiffusionPipeline)
+    guidance_scale = kwargs.get(
+        "guidance_scale", 1.0
+    )  # both pipelines need this so dont pop it
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
         kwargs.pop("content_type", "image/jpeg"),
     )
 
-    pipe_prior = KandinskyPriorPipeline.from_pretrained(
+    pipe_prior = pipeline_prior_type.from_pretrained(
         "kandinsky-community/kandinsky-2-1-prior", torch_dtype=torch.float16
     )
     pipe_prior.to(device_identifier)
@@ -24,23 +28,14 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
     if "image" in kwargs and "image2" in kwargs:
         images_texts = [prompt, kwargs.pop("image"), kwargs.pop("image2")]
         weights = [0.2, 0.3, 0.5]
-        image_embeds, negative_image_embeds = pipe_prior.interpolate(images_texts, weights)
+        image_embeds, negative_image_embeds = pipe_prior.interpolate(
+            images_texts, weights
+        )
         prompt = ""
     else:
-        image_embeds = pipe_prior(
-            prompt,
-            guidance_scale=7.5,
-            num_inference_steps=25,
-            generator=generator,
-            negative_prompt=negative_prompt,
-        ).images
-        negative_image_embeds = pipe_prior(
-            negative_prompt,
-            guidance_scale=1.0,
-            num_inference_steps=25,
-            generator=generator,
-            negative_prompt=negative_prompt,
-        ).images
+        image_embeds, negative_image_embeds = pipe_prior(
+            prompt, negative_prompt, guidance_scale=guidance_scale, generator=generator
+        ).to_tuple()
 
     pipe = pipeline_type.from_pretrained(model_name, torch_dtype=torch.float16)
     pipe.to(device_identifier)
