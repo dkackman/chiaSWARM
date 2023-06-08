@@ -96,4 +96,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(kandinsky_job))
+    asyncio.run(run_test(if_job))
