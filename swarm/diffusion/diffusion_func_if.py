@@ -1,66 +1,57 @@
 import torch
 from diffusers import (
     DiffusionPipeline,
-    DPMSolverMultistepScheduler,
 )
+from diffusers.utils import pt_to_pil
 from ..output_processor import OutputProcessor
-from .upscale import upscale_image
-from ..type_helpers import has_method
+from ..type_helpers import run_compile
 from diffusers import DiffusionPipeline
 from diffusers.utils import pt_to_pil
 import torch
 
 
 def diffusion_if_callback(device_identifier, model_name, **kwargs):
-    # stage 1
-    stage_1 = DiffusionPipeline.from_pretrained(
-        model_name, variant="fp16", torch_dtype=torch.float16
-    ).to(device_identifier)
-    stage_1.enable_model_cpu_offload()
+    pipe = DiffusionPipeline.from_pretrained("DeepFloyd/IF-I-M-v1.0", variant="fp16", text_encoder=None, torch_dtype=torch.float16)
+    pipe.to(device_identifier)
+    pipe_2 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-II-M-v1.0", variant="fp16", text_encoder=None, torch_dtype=torch.float16)
+    pipe_2.to(device_identifier)
+    pipe_3 = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-x4-upscaler", torch_dtype=torch.float16)
+    pipe_3.to(device_identifier)
 
-    # stage 2
-    stage_2 = DiffusionPipeline.from_pretrained(
-        "DeepFloyd/IF-II-L-v1.0",
-        text_encoder=None,
-        variant="fp16",
-        torch_dtype=torch.float16,
-    ).to(device_identifier)
-    # stage_2.enable_model_cpu_offload()
+    pipe.unet.to(memory_format=torch.channels_last)
+    pipe_2.unet.to(memory_format=torch.channels_last)
+    pipe_3.unet.to(memory_format=torch.channels_last)
 
-    # stage 3
-    safety_modules = {
-        "feature_extractor": stage_1.feature_extractor,
-        "safety_checker": stage_1.safety_checker,
-        "watermarker": stage_1.watermarker,
-    }
-    stage_3 = DiffusionPipeline.from_pretrained(
-        "stabilityai/stable-diffusion-x4-upscaler",
-        **safety_modules,
-        torch_dtype=torch.float16
-    ).to(device_identifier)
-    # stage_3.enable_model_cpu_offload()
+    if run_compile:
+        pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
+        pipe_2.unet = torch.compile(pipe_2.unet, mode="reduce-overhead", fullgraph=True)
+        pipe_3.unet = torch.compile(pipe_3.unet, mode="reduce-overhead", fullgraph=True)
 
     prompt = kwargs.get("prompt", "")
     negative_prompt = kwargs.get("prompt", None)
-    prompt_embeds, negative_embeds = stage_1.encode_prompt(prompt, negative_prompt)
+    prompt_embeds = torch.randn((1, 2, 4096), dtype=torch.float16)
+    negative_embeds = torch.randn((1, 2, 4096), dtype=torch.float16)
+    # prompt_embeds, negative_embeds = pipe.encode_prompt(prompt, negative_prompt)
 
     generator = kwargs.pop("generator")
-    image = stage_1(
+    image = pipe(
         prompt_embeds=prompt_embeds,
         negative_prompt_embeds=negative_embeds,
         generator=generator,
         output_type="pt",
     ).images
+    pt_to_pil(image)[0].save("./if_stage_I.png")
 
-    image = stage_2(
+    image = pipe_2(
         image=image,
         prompt_embeds=prompt_embeds,
         negative_prompt_embeds=negative_embeds,
         generator=generator,
         output_type="pt",
     ).images
+    pt_to_pil(image)[0].save("./if_stage_II.png")
 
-    images = stage_3(
+    images = pipe_3(
         prompt=prompt, image=image, generator=generator, noise_level=100
     ).images
     images[0].save("./if_stage_III.png")
@@ -68,20 +59,20 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
     pipeline_config = {}
     # if any image is nsfw, flag the entire result
     if (
-        hasattr(stage_3, "nsfw_content_detected")
-        and stage_3.nsfw_content_detected is not None
+        hasattr(pipe_3, "nsfw_content_detected")
+        and pipe_3.nsfw_content_detected is not None
         and (
             (
-                isinstance(stage_3.nsfw_content_detected, bool)
-                and stage_3.nsfw_content_detected
+                isinstance(pipe_3.nsfw_content_detected, bool)
+                and pipe_3.nsfw_content_detected
             )
             or (
-                isinstance(stage_3.nsfw_content_detected, list)
-                and len(stage_3.nsfw_content_detected) >= 1
+                isinstance(pipe_3.nsfw_content_detected, list)
+                and len(pipe_3.nsfw_content_detected) >= 1
             )
         )
     ):
-        for _ in filter(lambda nsfw: nsfw, stage_3.nsfw_content_detected):  # type: ignore
+        for _ in filter(lambda nsfw: nsfw, pipe_3.nsfw_content_detected):  # type: ignore
             pipeline_config["nsfw"] = True
 
     output_processor = OutputProcessor(
