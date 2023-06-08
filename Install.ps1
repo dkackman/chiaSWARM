@@ -67,10 +67,10 @@ python -m venv venv
 
 .\venv\scripts\activate 
 
-python -m pip install wheel setuptools
+python.exe -m pip install --upgrade pip
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python.exe -m pip install --upgrade pip
+python -m pip install wheel setuptools
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
