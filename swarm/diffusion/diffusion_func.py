@@ -7,13 +7,7 @@ from diffusers import (
 from diffusers.utils.import_utils import is_xformers_available
 from ..output_processor import OutputProcessor
 from .upscale import upscale_image
-from ..type_helpers import has_method
-
-import platform
-import sys
-
-is_windows = any(platform.win32_ver())
-is_3_11 = sys.version_info >= (3, 11)
+from ..type_helpers import has_method, run_compile
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
@@ -24,9 +18,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     lora = kwargs.pop("lora", None)
     enable_xformers = kwargs.pop("supports_xformers", True)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
-
-    # torch compile not supported on window or 3.11
-    run_compile = not (is_windows or is_3_11)
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
