@@ -220,7 +220,7 @@ python -m pip install wheel setuptools
 pip install torch torchvision torchaudio
 pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
 pip install xformers
-pip install aiohttp concurrent-log-handler pydub controlnet_aux==0.0.3  # pinned mediapipe dpenendency not found
+pip install aiohttp concurrent-log-handler pydub controlnet_aux
 pip install git+https://github.com/suno-ai/bark.git@main
 
 echo ""
