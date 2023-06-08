@@ -61,10 +61,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         pipeline.unet = torch.compile(
             pipeline.unet, mode="reduce-overhead", fullgraph=True
         )
-        if  hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
+        if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
             pipeline.controlnet = torch.compile(pipeline.controlnet, mode="reduce-overhead", fullgraph=True)
-    elif enable_xformers and is_xformers_available():
-        pipeline.enable_xformers_memory_efficient_attention()
 
     if lora is not None and pipeline.unet is not None:
         try:
@@ -77,6 +75,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             raise ValueError(
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
             ) from e
+        
+    if enable_xformers and is_xformers_available():
+        pipeline.enable_xformers_memory_efficient_attention()
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):

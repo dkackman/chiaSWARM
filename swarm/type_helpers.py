@@ -14,4 +14,6 @@ def has_method(o, name):
     return callable(getattr(o, name, None))
 
 # torch compile not supported on all platforms
-run_compile = hasattr(torch.nn.functional, "scaled_dot_product_attention") and not (is_windows or is_3_11)
+
+#leaving disabled for now
+run_compile = False # hasattr(torch.nn.functional, "scaled_dot_product_attention") and not (is_windows or is_3_11)
