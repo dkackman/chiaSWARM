@@ -6,6 +6,8 @@ from ..output_processor import OutputProcessor
 def kandinsky_callback(device_identifier, model_name, **kwargs):
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     pipeline_prior_type = kwargs.pop("pipeline_prior_type", DiffusionPipeline)
+    model_name_prior = kwargs.pop("model_name_prior", "kandinsky-community/kandinsky-2-1-prior")
+    
     guidance_scale = kwargs.get(
         "guidance_scale", 1.0
     )  # both pipelines need this so dont pop it
@@ -16,7 +18,7 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
     )
 
     pipe_prior = pipeline_prior_type.from_pretrained(
-        "kandinsky-community/kandinsky-2-1-prior", torch_dtype=torch.float16
+        model_name_prior, torch_dtype=torch.float16
     )
     pipe_prior.to(device_identifier)
 
@@ -46,7 +48,6 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
         negative_image_embeds=negative_image_embeds,
         **kwargs,
     ).images
-    images[0].save("./cheeseburger_monster.png")
 
     output_processor.add_outputs(images)
     return (output_processor.get_results(), {})

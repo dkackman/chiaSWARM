@@ -117,6 +117,12 @@ def format_kandinsky_args(args):
         args["image2"] = get_image(args.pop("start_image_uri2"), size)
         args["pipeline_type"] = get_type("diffusers", "KandinskyPipeline")
 
+    parameters = args.pop("parameters", {})
+    if "model_name_prior" in parameters:
+        args["model_name_prior"] = parameters["model_name_prior"]
+    
+    args.pop("revision", None)
+    
     return kandinsky_callback, args
 
 def format_stable_diffusion_args(args):
