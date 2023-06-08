@@ -10,9 +10,10 @@ from .upscale import upscale_image
 from ..type_helpers import has_method
 
 import platform
+import sys
 
 is_windows = any(platform.win32_ver())
-
+is_3_11 = sys.version_info >= (3, 11)
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
@@ -23,6 +24,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     lora = kwargs.pop("lora", None)
     enable_xformers = kwargs.pop("supports_xformers", True)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
+
+    # torch compile not supported on window or 3.11
+    run_compile = not (is_windows or is_3_11)
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
@@ -58,11 +62,18 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     pipeline = pipeline.to(device_identifier)  # type: ignore
     pipeline.unet.to(memory_format=torch.channels_last)
+    if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:    
+        pipeline.controlnet.to(memory_format=torch.channels_last)
+
     # compile not supported on windows at this time 6/2023
-    if not is_windows:
+    if run_compile:
         pipeline.unet = torch.compile(
             pipeline.unet, mode="reduce-overhead", fullgraph=True
         )
+        if  hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
+            pipeline.controlnet = torch.compile(pipeline.controlnet, mode="reduce-overhead", fullgraph=True)
+    elif enable_xformers and is_xformers_available():
+        pipeline.enable_xformers_memory_efficient_attention()
 
     if lora is not None and pipeline.unet is not None:
         try:
@@ -92,10 +103,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         or mem_info[1] < 12000000000
     ):
         # not all pipelines share these methods, so check first
-        # on linux we will not use xformers and just inbuilt pytorch 2 optimizations
-        if enable_xformers and not is_windows and is_xformers_available():
-            pipeline.enable_xformers_memory_efficient_attention()
-
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
         if has_method(pipeline, "enable_vae_tiling"):
