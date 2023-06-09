@@ -52,9 +52,31 @@ bark_job = {
 
 if_job = {
     "id": "__test__",
-    "model_name": "DeepFloyd/IF-I-XL-v1.0",
+    "model_name": "DeepFloyd/IF-II-L-v1.0",
     "prompt": 'a photo of a green frog wearing blue sunglasses standing in front of the eiffel tower holding a sign that says "i shill chia"',
     "workflow": "txt2img",
+    "outputs": ["primary"],
+}
+
+kandinsky_job = {
+    "id": "__test__",
+    "model_name": "kandinsky-community/kandinsky-2-1",
+    # "start_image_uri": "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg",
+    "prompt": "A fantasy landscape, Cinematic lighting",
+    "negative_prompt": "low quality, bad quality",
+    "workflow": "txt2img",
+    "num_inference_steps": 50,
+    "guidance_scale": 4.0,
+    "outputs": ["primary"],
+}
+kandinsky_interpolate_job = {
+    "id": "__test__",
+    "model_name": "kandinsky-community/kandinsky-2-1",
+    "start_image_uri": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky/cat.png",
+    "start_image_uri2": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky/starry_night.jpeg",
+    "prompt": "A cat",
+    "workflow": "interpolate",
+    "num_inference_steps": 150,
     "outputs": ["primary"],
 }
 
@@ -74,4 +96,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(txt2vidJob))
+    asyncio.run(run_test(if_job))

@@ -68,8 +68,7 @@ def image_to_tile(image, resolution=1024):
     W *= k
     H = int(round(H / 64.0)) * 64
     W = int(round(W / 64.0)) * 64
-    img = input_image.resize((W, H), resample=Image.LANCZOS)
-    return img
+    return input_image.resize((W, H), resample=Image.LANCZOS)
 
 
 def image_to_canny(image, controlnet):

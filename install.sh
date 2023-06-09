@@ -93,7 +93,7 @@ PYTHON_MINOR_VER=
 find_python() {
   set +e
   unset BEST_VERSION
-  for V in 310 3.10 39 3.9 38 3.8 37 3.7 3; do
+  for V in 311 3.11 310 3.10 39 3.9 38 3.8 37 3.7 3; do
     if command -v python$V >/dev/null; then
       if [ "$BEST_VERSION" = "" ]; then
         BEST_VERSION=$V
@@ -110,6 +110,17 @@ find_python() {
   fi
   set -e
 }
+
+if [ "$INSTALL_PYTHON_VERSION" = "" ]; then
+  echo "Searching available python executables..."
+  find_python
+else
+  echo "Python $INSTALL_PYTHON_VERSION is requested"
+  INSTALL_PYTHON_PATH=python${INSTALL_PYTHON_VERSION}
+  PY3_VER=$($INSTALL_PYTHON_PATH --version | cut -d ' ' -f2)
+  PYTHON_MAJOR_VER=$(echo "$PY3_VER" | cut -d'.' -f1)
+  PYTHON_MINOR_VER=$(echo "$PY3_VER" | cut -d'.' -f2)
+fi
 
 if [ "$(uname)" = "Linux" ]; then
   #LINUX=1
@@ -132,7 +143,11 @@ if [ "$(uname)" = "Linux" ]; then
   elif [ "$UBUNTU_22" = "1" ]; then
     echo "Installing on Ubuntu 22.* or newer."
     sudo apt-get update
-    sudo apt-get install -y python3.10-venv ffmpeg
+    if [ "$PYTHON_MINOR_VER" -eq "11" ]; then
+      sudo apt-get install -y python3.11-venv ffmpeg
+    else
+      sudo apt-get install -y python3.10-venv ffmpeg
+    fi
   elif [ "$DEBIAN" = "true" ]; then
     echo "Installing on Debian."
     sudo apt-get update
@@ -168,25 +183,13 @@ elif [ "$(uname)" = "Darwin" ]; then
   fi
 fi
 
-
-if [ "$INSTALL_PYTHON_VERSION" = "" ]; then
-  echo "Searching available python executables..."
-  find_python
-else
-  echo "Python $INSTALL_PYTHON_VERSION is requested"
-  INSTALL_PYTHON_PATH=python${INSTALL_PYTHON_VERSION}
-  PY3_VER=$($INSTALL_PYTHON_PATH --version | cut -d ' ' -f2)
-  PYTHON_MAJOR_VER=$(echo "$PY3_VER" | cut -d'.' -f1)
-  PYTHON_MINOR_VER=$(echo "$PY3_VER" | cut -d'.' -f2)
-fi
-
 if ! command -v "$INSTALL_PYTHON_PATH" >/dev/null; then
   echo "${INSTALL_PYTHON_PATH} was not found"
   exit 1
 fi
 
-if [ "$PYTHON_MAJOR_VER" -ne "3" ] || [ "$PYTHON_MINOR_VER" -lt "7" ] || [ "$PYTHON_MINOR_VER" -ge "11" ]; then
-  echo "The chiaSWARM requires Python version >= 3.7 and  < 3.11.0" >&2
+if [ "$PYTHON_MAJOR_VER" -ne "3" ] || [ "$PYTHON_MINOR_VER" -lt "7" ] || [ "$PYTHON_MINOR_VER" -ge "12" ]; then
+  echo "The chiaSWARM requires Python version >= 3.7 and  <= 3.11.0" >&2
   echo "Current Python version = $INSTALL_PYTHON_VERSION" >&2
   # If Arch, direct to Arch Wiki
   if type pacman >/dev/null 2>&1 && [ -f "/etc/arch-release" ]; then
@@ -215,7 +218,8 @@ python -m pip install --upgrade pip
 python -m pip install wheel setuptools
 
 pip install torch torchvision torchaudio
-pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python xformers sentencepiece
+pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
+pip install xformers
 pip install aiohttp concurrent-log-handler pydub controlnet_aux
 pip install git+https://github.com/suno-ai/bark.git@main
 

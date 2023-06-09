@@ -19,7 +19,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     kwargs["num_frames"] = kwargs.pop("num_frames", 25)
     content_type = kwargs.pop("content_type", "video/mp4")
-    outputs = kwargs.pop("outputs", ["primary"])
+    kwargs.pop("outputs", ["primary"])
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
@@ -56,7 +56,9 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     video_frames = p.frames  # type: ignore
 
-    media_info = content_type == "video/mp4" and ("mp4", "h264") or ("webm", "VP90")
+    media_info = (
+        ("mp4", "h264") if content_type == "video/mp4" else ("webm", "VP90")
+    )
 
     # convent to video
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -70,9 +72,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
         thumbnail = get_frame(final_filepath, 0)
 
-    results = {}
-    results["primary"] = make_result(video_buffer, thumbnail, content_type)
-
+    results = {"primary": make_result(video_buffer, thumbnail, content_type)}
     return (results, pipeline.config)  # type: ignore
 
 
@@ -80,9 +80,9 @@ def export_to_video(
     video_frames: List[np.ndarray], output_video_path: str, codec
 ) -> str:
     fourcc = cv2.VideoWriter_fourcc(*codec)
-    h, w, c = video_frames[0].shape
+    h, w, _ = video_frames[0].shape
     video_writer = cv2.VideoWriter(output_video_path, fourcc, fps=8, frameSize=(w, h))
-    for i in range(len(video_frames)):
-        img = cv2.cvtColor(video_frames[i], cv2.COLOR_RGB2BGR)
+    for video_frame in video_frames:
+        img = cv2.cvtColor(video_frame, cv2.COLOR_RGB2BGR)
         video_writer.write(img)
     return output_video_path

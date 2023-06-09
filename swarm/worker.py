@@ -81,8 +81,8 @@ async def ask_for_work():
 
                     found_work = False
                     for job in response_dict["jobs"]:
-                        id = job["id"]
-                        print(f"Got job {id}")
+                        job_id = job["id"]
+                        print(f"Got job {job_id}")
                         found_work = True
                         await work_queue.put(job)
 
@@ -143,7 +143,7 @@ async def result_worker():
 
 
 async def submit_result(result):
-    print(f"Result complete")
+    print("Result complete")
 
     timeout = aiohttp.ClientTimeout(total=60)
     async with aiohttp.ClientSession(timeout=timeout) as session:

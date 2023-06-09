@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw
 import base64
 import json
 from io import BytesIO
+import itertools
 
 
 class OutputProcessor:
@@ -42,7 +43,7 @@ class OutputProcessor:
         return results
 
 
-def make_result(buffer, thumb, content_type):
+def make_result(_buffer, thumb, content_type):
     if thumb is None:
         thumb = image_from_text(content_type, (100, 100), 1)
         thumb = image_to_buffer(thumb, "image/jpeg", "web_low")
@@ -50,10 +51,10 @@ def make_result(buffer, thumb, content_type):
         thumb = make_thumbnail(thumb)
 
     return {
-        "blob": base64.b64encode(buffer.getvalue()).decode("UTF-8"),
+        "blob": base64.b64encode(_buffer.getvalue()).decode("UTF-8"),
         "content_type": content_type,
         "thumbnail": base64.b64encode(thumb.getvalue()).decode("UTF-8"),
-        "sha256_hash": hashlib.sha256(buffer.getvalue()).hexdigest(),
+        "sha256_hash": hashlib.sha256(_buffer.getvalue()).hexdigest(),
     }
 
 
@@ -69,11 +70,11 @@ def make_text_result(string):
     }
 
 
-def make_thumbnail(buffer):
-    if not isinstance(buffer, BytesIO):
-        buffer = BytesIO(buffer)
+def make_thumbnail(_buffer):
+    if not isinstance(_buffer, BytesIO):
+        _buffer = BytesIO(_buffer)
 
-    image = Image.open(buffer).convert("RGB")  # type: ignore
+    image = Image.open(_buffer).convert("RGB")  # type: ignore
     image.thumbnail((100, 100), Image.Resampling.LANCZOS)
     return image_to_buffer(image, "image/jpeg", "web_low")
 
@@ -86,7 +87,7 @@ def image_from_text(text, size=(512, 512), color=0):
     return image
 
 
-def post_process(image_list) -> Image.Image:
+def post_process(image_list):
     num_images = len(image_list)
     if num_images == 1:
         image = image_list[0]
@@ -99,7 +100,9 @@ def post_process(image_list) -> Image.Image:
     elif num_images <= 9:
         image = image_grid(image_list, 3, 3)
     else:
-        raise (Exception("too many images"))
+        raise ValueError(
+            f"Too many images ({num_images}) for post-processing. Maximum supported images: 9"
+        )
 
     return image
 
@@ -107,24 +110,27 @@ def post_process(image_list) -> Image.Image:
 def image_grid(image_list, rows, cols) -> Image.Image:
     w, h = image_list[0].size
     grid = Image.new("RGB", size=(cols * w, rows * h))
+    indices = list(itertools.product(range(rows), range(cols)))
 
-    for i, img in enumerate(image_list):
-        grid.paste(img, box=(i % cols * w, i // cols * h))
+    for i, index in enumerate(indices[: len(image_list)]):
+        grid.paste(image_list[i], box=(index[1] * w, index[0] * h))
 
     return grid
 
 
 def image_to_buffer(image, content_type, quality="web_high"):
     if content_type.startswith("image"):
-        buffer = io.BytesIO()
+        _buffer = io.BytesIO()
         if content_type == "image/png":
-            image.save(buffer, format="PNG")
-        else:
+            image.save(_buffer, format="PNG")
+        elif content_type == "image/jpeg":
             image.save(
-                buffer, format="JPEG", quality=quality, optimize=True, progressive=True
+                _buffer, format="JPEG", quality=quality, optimize=True, progressive=True
             )
+        else:
+            raise ValueError(f"Invalid image format: {content_type}")
 
-        buffer.seek(0)
-        return buffer
+        _buffer.seek(0)
+        return _buffer
 
-    raise NotImplementedError(content_type)
+    raise ValueError(f"Unsupported content type: {content_type}")
