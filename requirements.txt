@@ -8,9 +8,9 @@ botocore==1.29.129
 certifi==2022.12.7
 charset-normalizer==3.1.0
 colorama==0.4.6
+decorator==5.1.1
+diffusers==0.17.0
 concurrent-log-handler==0.9.23
-decorator==4.4.2
-diffusers==0.16.1
 einops==0.6.1
 encodec==0.1.1
 filelock==3.12.0
