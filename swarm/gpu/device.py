@@ -41,8 +41,8 @@ class Device:
             ).manual_seed(seed)
             artifacts, pipeline_config = func(self.idenitifier(), model_name, **kwargs)
             pipeline_config["seed"] = seed
-            return artifacts, pipeline_config
 
+            return artifacts, pipeline_config
         finally:
             self.mutex.release()
 
