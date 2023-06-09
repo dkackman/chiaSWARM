@@ -1,4 +1,14 @@
 {
     "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "cSpell.words": [
+        "controlnet",
+        "cuda",
+        "dtype",
+        "fullgraph",
+        "pretrained",
+        "randn",
+        "unet",
+        "xformers"
+    ]
 }

@@ -52,12 +52,11 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}\n{lora}\n\n{e}"
             ) from e
 
-    pipeline = pipeline.to(device_identifier)  # type: ignore
+    pipeline = pipeline.to(device_identifier)
     pipeline.unet.to(memory_format=torch.channels_last)
     if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
         pipeline.controlnet.to(memory_format=torch.channels_last)
 
-    # compile not supported on windows at this time 6/2023
     if run_compile:
         pipeline.unet = torch.compile(
             pipeline.unet, mode="reduce-overhead", fullgraph=True
@@ -84,8 +83,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):
-        pipeline.scheduler = scheduler_type.from_config(  # type: ignore
-            pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
+        pipeline.scheduler = scheduler_type.from_config(
+            pipeline.scheduler.config, use_karras_sigmas=True
         )
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
@@ -99,13 +98,13 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     ):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
-            pipeline.enable_vae_slicing()  # type: ignore
+            pipeline.enable_vae_slicing()
         if has_method(pipeline, "enable_vae_tiling"):
-            pipeline.enable_vae_tiling()  # type: ignore
+            pipeline.enable_vae_tiling()
         if has_method(pipeline, "enable_sequential_cpu_offload"):
-            pipeline.enable_sequential_cpu_offload()  # type: ignore
+            pipeline.enable_sequential_cpu_offload()
 
-    p = pipeline(**kwargs)  # type: ignore
+    p = pipeline(**kwargs)
 
     # if any image is nsfw, flag the entire result
     if (

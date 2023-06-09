@@ -12,7 +12,7 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
 
     guidance_scale = kwargs.get(
         "guidance_scale", 1.0
-    )  # both pipelines need this so dont pop it
+    )  # both pipelines need this so don't pop it
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
