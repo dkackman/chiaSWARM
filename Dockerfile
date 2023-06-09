@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
+FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 
 RUN apt-get update
 
@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y tzdata
 RUN dpkg-reconfigure --frontend noninteractive tzdata
 
-RUN apt-get install -y libgl1 libglib2.0-0 gcc git python3.10
+RUN apt-get install -y libgl1 libglib2.0-0 gcc git python3.10 ffmpeg
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_ROOT_USER_ACTION=ignore
@@ -16,8 +16,11 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
 RUN python -m pip install --upgrade pip
 RUN python -m pip install wheel setuptools
 
-# RUN pip install torch torchvision torchaudio
-RUN pip install diffusers[torch] transformers accelerate scipy ftfy concurrent-log-handler safetensors xformers triton moviepy opencv-python
+RUN pip install torch torchvision torchaudio
+RUN pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
+RUN pip install xformers
+RUN pip install aiohttp concurrent-log-handler pydub controlnet_aux
+RUN pip install git+https://github.com/suno-ai/bark.git@main
 
 WORKDIR /sdaas
 COPY ./ /sdaas

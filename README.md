@@ -19,11 +19,11 @@ _This is NOT Proof of Work on chia._
 
 The first supported workload is various type of stable diffusion image generation and manipulation.
 
-Open an issue to gain acess and give it a try on [the swarm network](https://chiaswarm.ai/)!
+Open an issue to gain access and give it a try on [the swarm network](https://chiaswarm.ai/)!
 
 ## Roadmap
 
-- &check; Networking and core protocal
+- &check; Networking and core protocol
 - &check; Basic stable diffusion workloads (txt2image, img2img, various models)
 - &check; Image upscale, inpainting, and stable diffusion 2.1
 - &check; Docker
@@ -41,5 +41,3 @@ Suggestions, issues and pull requests welcome.
 In order to be a swarm node, you need a [CUDA](https://nvidia.custhelp.com/app/answers/detail/a_id/2132/~/what-is-cuda%3F) capable NVIDIA GPU with at least 8GB of VRAM; 30XX or better recommended.
 
 Follow [the installation instructions](https://github.com/dkackman/chiaSWARM/wiki/Installation) to get started.
-
-

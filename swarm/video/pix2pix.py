@@ -4,22 +4,33 @@ from diffusers import DiffusionPipeline, EulerAncestralDiscreteScheduler
 import torch
 from PIL import Image
 from moviepy.editor import *
-from ..diffusion.output_processor import make_result
+from ..output_processor import make_result
 from io import BytesIO
 import tempfile
 import pathlib
+from ..type_helpers import has_method
 
 
-def model_video_callback(device_id, model_name, **kwargs):
+def model_video_callback(device_identifier, model_name, **kwargs):
     pipeline_config = {}
     results = {}
 
     pipeline = DiffusionPipeline.from_pretrained(model_name, torch_dtype=torch.float16)
-    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config)  # type: ignore
-    pipeline.enable_attention_slicing()  # type: ignore
-    pipeline.enable_xformers_memory_efficient_attention()  # type: ignore
-    pipeline.unet.to(memory_format=torch.channels_last)  # type: ignore
-    pipeline = pipeline.to(f"cuda:{device_id}")  # type: ignore
+    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config, use_karras_sigmas=True)  # type: ignore
+    mem_info = torch.cuda.mem_get_info(device_identifier)
+    # if we're upscaling or mid-range on mem, preserve memory vs performance
+    if mem_info[1] < 12000000000:
+        # not all pipelines share these methods, so check first
+        if has_method(pipeline, "enable_attention_slicing"):
+            pipeline.enable_attention_slicing()  # type: ignore
+        if has_method(pipeline, "enable_xformers_memory_efficient_attention"):
+            pipeline.enable_xformers_memory_efficient_attention()  # type: ignore
+        if has_method(pipeline, "enable_vae_slicing"):
+            pipeline.enable_vae_slicing()  # type: ignore
+        if has_method(pipeline, "enable_vae_tiling"):
+            pipeline.enable_vae_tiling()  # type: ignore
+
+    pipeline = pipeline.to(device_identifier)  # type: ignore
 
     prompt = kwargs["prompt"]
     negative_prompt = kwargs.pop("negative_prompt", "")
@@ -32,13 +43,14 @@ def model_video_callback(device_id, model_name, **kwargs):
         video_file_path = download_video(temp_dir, kwargs.pop("video_uri"))
         break_vid = get_frames(temp_dir, video_file_path)
         stride = 1
+        max_frames = 100
         frames_list = break_vid[0]
         fps = break_vid[1]
-        n_frame = int(len(frames_list) / stride)
+        n_frame = len(frames_list) // stride
         result_frames = []
 
         nsfw_content_detected = False
-        for frame in frames_list[0::stride]:
+        for frame in frames_list[0:max_frames:stride]:
             print(f"{frame} of {n_frame}")
 
             pix2pix_img = img2img(

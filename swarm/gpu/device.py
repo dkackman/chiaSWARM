@@ -1,7 +1,6 @@
 import torch
 import logging
 from threading import Lock
-import random
 
 
 class Device:
@@ -14,6 +13,15 @@ class Device:
 
         self.device_id = device_id
         self.mutex = Lock()
+
+    def descriptor(self):
+        return f"{self.idenitifier()}:{self.name()}"
+
+    def idenitifier(self):
+        return f"cuda:{self.device_id}"
+
+    def name(self):
+        return torch.cuda.get_device_name(self.device_id)
 
     def __call__(self, func, **kwargs):
         if not self.mutex.acquire(False):
@@ -28,10 +36,10 @@ class Device:
             if seed is None:
                 seed = torch.seed()
 
-            random.seed(seed)
-            torch.manual_seed(seed)
-
-            artifacts, pipeline_config = func(self.device_id, model_name, **kwargs)
+            kwargs["generator"] = torch.Generator(
+                device=self.idenitifier()
+            ).manual_seed(seed)
+            artifacts, pipeline_config = func(self.idenitifier(), model_name, **kwargs)
             pipeline_config["seed"] = seed
             return artifacts, pipeline_config
 
@@ -39,6 +47,4 @@ class Device:
             self.mutex.release()
 
     def log_device(self):
-        logging.debug(
-            f"Using device# {self.device_id} - {torch.cuda.get_device_name(self.device_id)}"
-        )
+        logging.debug(f"Using device# {self.descriptor()}")
