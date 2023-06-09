@@ -11,11 +11,23 @@ import torch
 
 
 def diffusion_if_callback(device_identifier, model_name, **kwargs):
-    pipe = DiffusionPipeline.from_pretrained("DeepFloyd/IF-I-M-v1.0", variant="fp16", text_encoder=None, torch_dtype=torch.float16)
+    pipe = DiffusionPipeline.from_pretrained(
+        "DeepFloyd/IF-I-M-v1.0",
+        variant="fp16",
+        text_encoder=None,
+        torch_dtype=torch.float16,
+    )
     pipe.to(device_identifier)
-    pipe_2 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-II-M-v1.0", variant="fp16", text_encoder=None, torch_dtype=torch.float16)
+    pipe_2 = DiffusionPipeline.from_pretrained(
+        "DeepFloyd/IF-II-M-v1.0",
+        variant="fp16",
+        text_encoder=None,
+        torch_dtype=torch.float16,
+    )
     pipe_2.to(device_identifier)
-    pipe_3 = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-x4-upscaler", torch_dtype=torch.float16)
+    pipe_3 = DiffusionPipeline.from_pretrained(
+        "stabilityai/stable-diffusion-x4-upscaler", torch_dtype=torch.float16
+    )
     pipe_3.to(device_identifier)
 
     pipe.unet.to(memory_format=torch.channels_last)

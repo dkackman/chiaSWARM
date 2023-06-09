@@ -56,9 +56,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     video_frames = p.frames  # type: ignore
 
-    media_info = (
-        ("mp4", "h264") if content_type == "video/mp4" else ("webm", "VP90")
-    )
+    media_info = ("mp4", "h264") if content_type == "video/mp4" else ("webm", "VP90")
 
     # convent to video
     with tempfile.TemporaryDirectory() as tmpdirname:

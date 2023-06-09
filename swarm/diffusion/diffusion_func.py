@@ -9,6 +9,7 @@ from ..output_processor import OutputProcessor
 from .upscale import upscale_image
 from ..type_helpers import has_method, run_compile
 
+
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
@@ -53,7 +54,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     pipeline = pipeline.to(device_identifier)  # type: ignore
     pipeline.unet.to(memory_format=torch.channels_last)
-    if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:    
+    if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
         pipeline.controlnet.to(memory_format=torch.channels_last)
 
     # compile not supported on windows at this time 6/2023
@@ -62,7 +63,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             pipeline.unet, mode="reduce-overhead", fullgraph=True
         )
         if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
-            pipeline.controlnet = torch.compile(pipeline.controlnet, mode="reduce-overhead", fullgraph=True)
+            pipeline.controlnet = torch.compile(
+                pipeline.controlnet, mode="reduce-overhead", fullgraph=True
+            )
 
     if lora is not None and pipeline.unet is not None:
         try:
@@ -75,7 +78,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             raise ValueError(
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
             ) from e
-        
+
     if enable_xformers and is_xformers_available():
         pipeline.enable_xformers_memory_efficient_attention()
 
