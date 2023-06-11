@@ -34,7 +34,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
         if kwargs.pop("save_preprocessed_input", False):
             output_processor.add_other_outputs(
-                "preprocessed_input", [kwargs.get("image")]
+                "preprocessed_input", [kwargs.get("control_image")]
             )
 
     pipeline = pipeline_type.from_pretrained(
