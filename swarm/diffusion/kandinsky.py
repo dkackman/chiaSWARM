@@ -6,11 +6,13 @@ from ..output_processor import OutputProcessor
 def kandinsky_callback(device_identifier, model_name, **kwargs):
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     pipeline_prior_type = kwargs.pop("pipeline_prior_type", DiffusionPipeline)
-    model_name_prior = kwargs.pop("model_name_prior", "kandinsky-community/kandinsky-2-1-prior")
-    
+    model_name_prior = kwargs.pop(
+        "model_name_prior", "kandinsky-community/kandinsky-2-1-prior"
+    )
+
     guidance_scale = kwargs.get(
         "guidance_scale", 1.0
-    )  # both pipelines need this so dont pop it
+    )  # both pipelines need this so don't pop it
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),

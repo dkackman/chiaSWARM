@@ -9,6 +9,7 @@ from ..output_processor import OutputProcessor
 from .upscale import upscale_image
 from ..type_helpers import has_method, run_compile
 
+
 def diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
@@ -33,7 +34,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
         if kwargs.pop("save_preprocessed_input", False):
             output_processor.add_other_outputs(
-                "preprocessed_input", [kwargs.get("image")]
+                "preprocessed_input", [kwargs.get("control_image")]
             )
 
     pipeline = pipeline_type.from_pretrained(
@@ -51,18 +52,19 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}\n{lora}\n\n{e}"
             ) from e
 
-    pipeline = pipeline.to(device_identifier)  # type: ignore
+    pipeline = pipeline.to(device_identifier)
     pipeline.unet.to(memory_format=torch.channels_last)
-    if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:    
+    if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
         pipeline.controlnet.to(memory_format=torch.channels_last)
 
-    # compile not supported on windows at this time 6/2023
     if run_compile:
         pipeline.unet = torch.compile(
             pipeline.unet, mode="reduce-overhead", fullgraph=True
         )
         if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
-            pipeline.controlnet = torch.compile(pipeline.controlnet, mode="reduce-overhead", fullgraph=True)
+            pipeline.controlnet = torch.compile(
+                pipeline.controlnet, mode="reduce-overhead", fullgraph=True
+            )
 
     if lora is not None and pipeline.unet is not None:
         try:
@@ -75,14 +77,14 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             raise ValueError(
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
             ) from e
-        
+
     if enable_xformers and is_xformers_available():
         pipeline.enable_xformers_memory_efficient_attention()
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):
-        pipeline.scheduler = scheduler_type.from_config(  # type: ignore
-            pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
+        pipeline.scheduler = scheduler_type.from_config(
+            pipeline.scheduler.config, use_karras_sigmas=True
         )
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
@@ -96,13 +98,13 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     ):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
-            pipeline.enable_vae_slicing()  # type: ignore
+            pipeline.enable_vae_slicing()
         if has_method(pipeline, "enable_vae_tiling"):
-            pipeline.enable_vae_tiling()  # type: ignore
+            pipeline.enable_vae_tiling()
         if has_method(pipeline, "enable_sequential_cpu_offload"):
-            pipeline.enable_sequential_cpu_offload()  # type: ignore
+            pipeline.enable_sequential_cpu_offload()
 
-    p = pipeline(**kwargs)  # type: ignore
+    p = pipeline(**kwargs)
 
     # if any image is nsfw, flag the entire result
     if (

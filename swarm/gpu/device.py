@@ -15,9 +15,9 @@ class Device:
         self.mutex = Lock()
 
     def descriptor(self):
-        return f"{self.idenitifier()}:{self.name()}"
+        return f"{self.identifier()}:{self.name()}"
 
-    def idenitifier(self):
+    def identifier(self):
         return f"cuda:{self.device_id}"
 
     def name(self):
@@ -36,13 +36,13 @@ class Device:
             if seed is None:
                 seed = torch.seed()
 
-            kwargs["generator"] = torch.Generator(
-                device=self.idenitifier()
-            ).manual_seed(seed)
-            artifacts, pipeline_config = func(self.idenitifier(), model_name, **kwargs)
+            kwargs["generator"] = torch.Generator(device=self.identifier()).manual_seed(
+                seed
+            )
+            artifacts, pipeline_config = func(self.identifier(), model_name, **kwargs)
             pipeline_config["seed"] = seed
-            return artifacts, pipeline_config
 
+            return artifacts, pipeline_config
         finally:
             self.mutex.release()
 

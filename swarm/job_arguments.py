@@ -93,6 +93,7 @@ def format_img2txt_args(args):
 
     return caption_callback, args
 
+
 def format_kandinsky_args(args):
     size = None
     if "height" in args and "width" in args:
@@ -101,7 +102,7 @@ def format_kandinsky_args(args):
             raise Exception(
                 f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
             )
-        
+
     if "num_inference_steps" not in args:
         args["num_inference_steps"] = 100
 
@@ -112,7 +113,7 @@ def format_kandinsky_args(args):
         args["image"] = get_image(args.pop("start_image_uri"), size)
         args["pipeline_type"] = get_type("diffusers", "KandinskyImg2ImgPipeline")
 
-    # if there is start_image_uri2 we are interpolating 
+    # if there is start_image_uri2 we are interpolating
     if "start_image_uri2" in args:
         args["image2"] = get_image(args.pop("start_image_uri2"), size)
         args["pipeline_type"] = get_type("diffusers", "KandinskyPipeline")
@@ -120,10 +121,11 @@ def format_kandinsky_args(args):
     parameters = args.pop("parameters", {})
     if "model_name_prior" in parameters:
         args["model_name_prior"] = parameters["model_name_prior"]
-    
+
     args.pop("revision", None)
-    
+
     return kandinsky_callback, args
+
 
 def format_stable_diffusion_args(args):
     # this is where all of the input arguments are rationalized and model specific
@@ -149,10 +151,12 @@ def format_stable_diffusion_args(args):
         args.pop("width", None)
 
         controlnet = parameters.get("controlnet", None)
-        args["image"] = get_image(args.pop("start_image_uri"), size, controlnet)
+        image, control_image = get_image(args.pop("start_image_uri"), size, controlnet)
+        args["image"] = image
 
         if controlnet is not None:
-            parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
+            args["control_image"] = control_image
+            parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
             args.pop("strength", None)
             args["controlnet_model_name"] = controlnet.get(
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
@@ -161,6 +165,7 @@ def format_stable_diffusion_args(args):
 
             # StableDiffusionControlNetPipeline does not accept strength
             args.pop("strength", None)
+
         elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
@@ -199,7 +204,7 @@ def download_image(url):
 
 
 def get_image(uri, size, controlnet=None):
-    head = requests.head(uri, allow_redirects=True)  # type: ignore
+    head = requests.head(uri, allow_redirects=True)
     content_length = head.headers.pop("Content-Length", 0)
     content_type = head.headers.pop("Content-Type", "")
 
@@ -216,14 +221,15 @@ def get_image(uri, size, controlnet=None):
 
     image = download_image(uri)
 
-    # if we have a desired size and the image is alrger than it, scale the image down
+    # if we have a desired size and the image is larger than it, scale the image down
     if size != None and (image.height > size[0] or image.width > size[1]):
         image.thumbnail(size, Image.Resampling.LANCZOS)
 
     elif image.height > max_size or image.width > max_size:
         image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
+    # return the image and the pre-processed image if controlnet is specified
     if controlnet != None:
-        image = preprocess_image(image, controlnet)
+        return image, preprocess_image(image, controlnet)
 
-    return image
+    return image, None
