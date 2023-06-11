@@ -67,19 +67,16 @@ python -m venv venv
 
 .\venv\scripts\activate 
 
-python -m pip install wheel setuptools
+python.exe -m pip install --upgrade pip
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python.exe -m pip install --upgrade pip
+python -m pip install wheel setuptools
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python -m pip install git+https://github.com/huggingface/diffusers.git@main
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-python -m pip install transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
+python -m pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 python -m pip install xformers
@@ -89,11 +86,6 @@ python -m pip install aiohttp concurrent-log-handler pydub controlnet_aux
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 python -m pip install git+https://github.com/suno-ai/bark.git@main
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# ControlNet Auxiliary Library for Image Registration
-# Required for a specific feature of chiaSWARM
-python -m pip install controlnet_aux==0.0.3  # pinned mediapipe dpenendency not found
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Output ""

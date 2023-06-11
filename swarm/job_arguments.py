@@ -163,6 +163,9 @@ def format_stable_diffusion_args(args):
             )
             args["save_preprocessed_input"] = controlnet.get("preprocess", False)
 
+            # StableDiffusionControlNetPipeline does not accept strength
+            args.pop("strength", None)
+
         elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
 
