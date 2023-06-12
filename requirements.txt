@@ -58,7 +58,7 @@ torchaudio==2.0.1+cu118
 torchvision==0.15.1+cu118
 tqdm==4.65.0
 transformers==4.28.1
-typing-inspect==0.8.0
+typing-inspect==0.9.0
 typing_extensions==4.5.0
 urllib3==1.26.15
 wcwidth==0.2.6
