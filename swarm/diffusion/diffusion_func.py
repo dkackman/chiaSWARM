@@ -53,11 +53,15 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             ) from e
 
     pipeline = pipeline.to(device_identifier)
-    pipeline.unet.to(memory_format=torch.channels_last)
+
+    # (UnCLIPPipeline) doesn't have a unet
+    if hasattr(pipeline, "unet") and pipeline.unet is not None:
+        pipeline.unet.to(memory_format=torch.channels_last)
+
     if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
         pipeline.controlnet.to(memory_format=torch.channels_last)
 
-    if run_compile:
+    if run_compile and hasattr(pipeline, "unet") and pipeline.unet is not None:
         pipeline.unet = torch.compile(
             pipeline.unet, mode="reduce-overhead", fullgraph=True
         )
@@ -66,7 +70,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 pipeline.controlnet, mode="reduce-overhead", fullgraph=True
             )
 
-    if lora is not None and pipeline.unet is not None:
+    if lora is not None and hasattr(pipeline, "unet") and pipeline.unet is not None:
         try:
             pipeline.unet.load_attn_procs(lora)
             kwargs["cross_attention_kwargs"] = {"scale": cross_attention_scale}
