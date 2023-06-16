@@ -55,12 +55,15 @@ def preprocess_image(image, controlnet):
         return processor(image)
 
     if controlnet.get("type") == "tile":
-        return image_to_tile(image)
+        return resize_for_condition_image(image)
+
+    if controlnet.get("type") == "qrcode":
+        return resize_for_condition_image(image)
 
     raise Exception("Unknown controlnet type")
 
 
-def image_to_tile(image, resolution=1024):
+def resize_for_condition_image(image, resolution=1024):
     input_image = image.convert("RGB")
     W, H = input_image.size
     k = float(resolution) / min(H, W)

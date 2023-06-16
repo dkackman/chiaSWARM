@@ -11,6 +11,8 @@ from ..type_helpers import has_method, run_compile
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
+    # these arguments won't be passed directly to the pipeline
+    # everything else in kwargs gets passed through
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     num_images_per_prompt = kwargs.get("num_images_per_prompt", 1)

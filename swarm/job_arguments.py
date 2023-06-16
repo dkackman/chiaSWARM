@@ -10,7 +10,7 @@ from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
-from .controlnet.input_processor import preprocess_image
+from .controlnet.input_processor import preprocess_image, resize_for_condition_image
 
 max_size = 1024
 
@@ -162,6 +162,9 @@ def format_stable_diffusion_args(args):
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
             args["save_preprocessed_input"] = controlnet.get("preprocess", False)
+            args["controlnet_conditioning_scale"] = controlnet.get(
+                "controlnet_conditioning_scale", 1.0
+            )
 
             # StableDiffusionControlNetPipeline does not accept strength
             args.pop("strength", None)
@@ -230,6 +233,28 @@ def get_image(uri, size, controlnet=None):
 
     # return the image and the pre-processed image if controlnet is specified
     if controlnet != None:
-        return image, preprocess_image(image, controlnet)
+        # preprocess means generate the control image from the input image
+        if controlnet.get("preprocess", False):
+            return image, preprocess_image(image, controlnet)
+
+        # base the resolution of of size - defaulting to 768
+        W, H = size if size is not None else (768, 768)
+        resolution = max(H, W)
+
+        # user specified control image - go get it
+        if isNotBlank(controlnet.get("control_image_uri", None)):
+            control_image, _ = get_image(controlnet.get("control_image_uri"), size)
+            return resize_for_condition_image(
+                image, resolution
+            ), resize_for_condition_image(control_image, resolution)
+
+        # control image and input image are the same
+        return resize_for_condition_image(
+            image, resolution
+        ), resize_for_condition_image(image, resolution)
 
     return image, None
+
+
+def isNotBlank(myString):
+    return bool(myString and myString.strip())
