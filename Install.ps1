@@ -82,7 +82,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python -m pip install xformers
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python -m pip install aiohttp concurrent-log-handler pydub controlnet_aux
+python -m pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 python -m pip install git+https://github.com/suno-ai/bark.git@main

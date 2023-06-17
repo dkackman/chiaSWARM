@@ -1,4 +1,5 @@
 import requests
+import qrcode
 from PIL import Image, ImageOps
 from .diffusion.diffusion_func import diffusion_callback
 from .video.tx2vid import txt2vid_diffusion_callback
@@ -43,7 +44,7 @@ def format_args(job):
     if args["model_name"].startswith("kandinsky-"):
         return format_kandinsky_args(args)
 
-    return format_stable_diffusion_args(args)
+    return format_stable_diffusion_args(args, workflow)
 
 
 def format_txt2audio_args(args):
@@ -127,7 +128,7 @@ def format_kandinsky_args(args):
     return kandinsky_callback, args
 
 
-def format_stable_diffusion_args(args):
+def format_stable_diffusion_args(args, workflow):
     # this is where all of the input arguments are rationalized and model specific
 
     size = None
@@ -146,36 +147,39 @@ def format_stable_diffusion_args(args):
     args["supports_xformers"] = parameters.get("supports_xformers", True)
     args["upscale"] = parameters.get("upscale", False)
 
-    if "start_image_uri" in args:
-        args.pop("height", None)
-        args.pop("width", None)
+    if workflow == "img2img" or "start_image_uri" in args:
+        start_image = get_image(args.pop("start_image_uri"), size)
 
         controlnet = parameters.get("controlnet", None)
-        image, control_image = get_image(args.pop("start_image_uri"), size, controlnet)
-        args["image"] = image
-
         if controlnet is not None:
+            control_image = get_control_image(start_image, controlnet, size)
+            if start_image is None:
+                start_image = control_image
+
             args["control_image"] = control_image
             parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
-            args.pop("strength", None)
             args["controlnet_model_name"] = controlnet.get(
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
             args["save_preprocessed_input"] = controlnet.get("preprocess", False)
-            args["controlnet_conditioning_scale"] = controlnet.get(
-                "controlnet_conditioning_scale", 1.0
+            args["controlnet_conditioning_scale"] = float(
+                controlnet.get("controlnet_conditioning_scale", 1.0)
             )
-
-            # StableDiffusionControlNetPipeline does not accept strength
-            args.pop("strength", None)
 
         elif "pipeline_type" not in parameters:
             parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
+            args.pop("height", None)
+            args.pop("width", None)
 
         if args["model_name"] == "timbrooks/instruct-pix2pix":
             # pix2pix models use image_guidance_scale instead of strength
             # image_guidance_scale has a range of 1-5 instead 0-1
             args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
+
+        if start_image is None:
+            raise ValueError("Workflow requires an input image. None provided")
+
+        args["image"] = start_image
 
     if "mask_image_uri" in args:
         args.pop("height", None)
@@ -200,13 +204,10 @@ def format_stable_diffusion_args(args):
     return diffusion_callback, args
 
 
-def download_image(url):
-    image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)
-    image = ImageOps.exif_transpose(image)
-    return image.convert("RGB")
+def get_image(uri, size):
+    if not isNotBlank(uri):
+        return None
 
-
-def get_image(uri, size, controlnet=None):
     head = requests.head(uri, allow_redirects=True)
     content_length = head.headers.pop("Content-Length", 0)
     content_type = head.headers.pop("Content-Type", "")
@@ -231,29 +232,46 @@ def get_image(uri, size, controlnet=None):
     elif image.height > max_size or image.width > max_size:
         image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
+    return image
+
+
+def get_control_image(start_image, controlnet, size):
     # return the image and the pre-processed image if controlnet is specified
-    if controlnet != None:
-        # preprocess means generate the control image from the input image
-        if controlnet.get("preprocess", False):
-            return image, preprocess_image(image, controlnet)
+    # preprocess means generate the control image from the input image
+    if controlnet.get("preprocess", False):
+        return preprocess_image(start_image, controlnet)
 
-        # base the resolution of of size - defaulting to 768
-        W, H = size if size is not None else (768, 768)
-        resolution = max(H, W)
+    # base the resolution of of size - defaulting to 768
+    W, H = size if size is not None else (768, 768)
+    resolution = max(H, W)
 
-        # user specified control image - go get it
-        if isNotBlank(controlnet.get("control_image_uri", None)):
-            control_image, _ = get_image(controlnet.get("control_image_uri"), size)
-            return resize_for_condition_image(
-                image, resolution
-            ), resize_for_condition_image(control_image, resolution)
+    # user specified control image - go get it
+    if isNotBlank(controlnet.get("control_image_uri", None)):
+        control_image, _ = get_image(controlnet.get("control_image_uri"), size)
+        return resize_for_condition_image(control_image, resolution)
 
-        # control image and input image are the same
-        return resize_for_condition_image(
-            image, resolution
-        ), resize_for_condition_image(image, resolution)
+    # user passed a qrcode - generate image
+    elif isNotBlank(controlnet.get("qr_code_contents", None)):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(controlnet.get("qr_code_contents"))
+        qr.make(fit=True)
 
-    return image, None
+        qrcode_image = qr.make_image(fill_color="black", back_color="white")
+        return resize_for_condition_image(qrcode_image, resolution)
+
+    # control image and input image are the same
+    return resize_for_condition_image(start_image, resolution)
+
+
+def download_image(url):
+    image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)
+    image = ImageOps.exif_transpose(image)
+    return image.convert("RGB")
 
 
 def isNotBlank(myString):
