@@ -11,7 +11,11 @@ from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
-from .controlnet.input_processor import preprocess_image, resize_for_condition_image
+from .controlnet.input_processor import (
+    preprocess_image,
+    resize_for_condition_image,
+    scale_to_size,
+)
 
 max_size = 1024
 
@@ -155,6 +159,8 @@ def format_stable_diffusion_args(args, workflow):
             control_image = get_control_image(start_image, controlnet, size)
             if start_image is None:
                 start_image = control_image
+            else:
+                start_image = scale_to_size(start_image, size or (768, 768))
 
             args["control_image"] = control_image
             parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"

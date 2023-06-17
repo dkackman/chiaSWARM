@@ -74,6 +74,11 @@ def resize_for_condition_image(image, resolution=1024):
     return input_image.resize((W, H), resample=Image.LANCZOS)
 
 
+def scale_to_size(image, size):
+    input_image = image.convert("RGB")
+    return input_image.resize(size)
+
+
 def image_to_canny(image, controlnet):
     image = np.array(image)
 
