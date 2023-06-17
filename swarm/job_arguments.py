@@ -8,6 +8,7 @@ from .toolbox.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
+from .audio.audiocraft import audiocraft_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
@@ -16,6 +17,13 @@ from .controlnet.input_processor import (
     resize_for_condition_image,
     scale_to_size,
 )
+
+#
+# This is the main function that formats the arguments for the job.
+# It normalizes inputs and sets defaults, allowing a simplified external
+# interface for all of the various models and pipelines.
+# It also retrieves and pre-processes any uri referenced resources
+#
 
 max_size = 1024
 
@@ -27,6 +35,9 @@ def format_args(job):
     if workflow == "txt2audio":
         if args["model_name"] == "suno/bark":
             return bark_diffusion_callback, args
+
+        if args["model_name"].startswith("MusicGen/"):
+            return audiocraft_diffusion_callback, args
 
         return format_txt2audio_args(args)
 

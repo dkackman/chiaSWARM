@@ -79,6 +79,13 @@ kandinsky_interpolate_job = {
     "num_inference_steps": 150,
     "outputs": ["primary"],
 }
+audiocraft_job = {
+    "id": "__test__",
+    "model_name": "MusicGen/small",
+    "prompt": "A sad song",
+    "workflow": "txt2audio",
+    "outputs": ["primary"],
+}
 
 
 async def run_test(job):
@@ -96,4 +103,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(if_job))
+    asyncio.run(run_test(audiocraft_job))
