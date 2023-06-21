@@ -253,7 +253,7 @@ def get_control_image(start_image, controlnet, size):
 
     # user specified control image - go get it
     if isNotBlank(controlnet.get("control_image_uri", None)):
-        control_image, _ = get_image(controlnet.get("control_image_uri"), size)
+        control_image = get_image(controlnet.get("control_image_uri"), size)
         return resize_for_condition_image(control_image, resolution)
 
     # user passed a qrcode - generate image
