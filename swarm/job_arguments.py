@@ -160,7 +160,7 @@ def format_stable_diffusion_args(args, workflow):
             if start_image is None:
                 start_image = control_image
             else:
-                start_image = scale_to_size(start_image, size or (768, 768))
+                start_image = scale_to_size(start_image, size or control_image.size)
 
             args["control_image"] = control_image
             parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
@@ -242,14 +242,14 @@ def get_image(uri, size):
 
 
 def get_control_image(start_image, controlnet, size):
-    # return the image and the pre-processed image if controlnet is specified
-    # preprocess means generate the control image from the input image
-    if controlnet.get("preprocess", False):
-        return preprocess_image(start_image, controlnet)
-
     # base the resolution of of size - defaulting to 768
     W, H = size if size is not None else (768, 768)
     resolution = max(H, W)
+
+    # return the image and the pre-processed image if controlnet is specified
+    # preprocess means generate the control image from the input image
+    if controlnet.get("preprocess", False):
+        return preprocess_image(start_image, controlnet, resolution)
 
     # user specified control image - go get it
     if isNotBlank(controlnet.get("control_image_uri", None)):
@@ -257,9 +257,9 @@ def get_control_image(start_image, controlnet, size):
         return resize_for_condition_image(control_image, resolution)
 
     # user passed a qrcode - generate image
-    elif isNotBlank(controlnet.get("qr_code_contents", None)):
+    if isNotBlank(controlnet.get("qr_code_contents", None)):
         qr = qrcode.QRCode(
-            version=1,
+            version=None,
             error_correction=qrcode.constants.ERROR_CORRECT_H,
             box_size=10,
             border=4,

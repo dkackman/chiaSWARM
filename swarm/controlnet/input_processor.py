@@ -14,7 +14,7 @@ from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegment
 import torch
 
 
-def preprocess_image(image, controlnet):
+def preprocess_image(image, controlnet, resolution):
     if controlnet.get("preprocess", False) == False:
         return image
 
@@ -55,10 +55,10 @@ def preprocess_image(image, controlnet):
         return processor(image)
 
     if controlnet.get("type") == "tile":
-        return resize_for_condition_image(image)
+        return resize_for_condition_image(image, resolution)
 
     if controlnet.get("type") == "qrcode":
-        return resize_for_condition_image(image)
+        return resize_for_condition_image(image, resolution)
 
     raise Exception("Unknown controlnet type")
 
