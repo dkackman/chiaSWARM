@@ -5,6 +5,7 @@ import base64
 import json
 from io import BytesIO
 import itertools
+from . import __version__
 
 
 class OutputProcessor:
@@ -134,3 +135,37 @@ def image_to_buffer(image, content_type, quality="web_high"):
         return _buffer
 
     raise ValueError(f"Unsupported content type: {content_type}")
+
+
+def fatal_exception_response(e, job_id, job):
+    content_type = job.get("content_type", "image/jpeg")
+    print(e)
+    if content_type.startswith("image/"):
+        artifacts, pipeline_config = exception_image(e, content_type)
+    else:
+        artifacts, pipeline_config = exception_message(e)
+
+    return {
+        "id": job_id,
+        "artifacts": artifacts,
+        "nsfw": pipeline_config.get("nsfw", False),  # type ignore
+        "worker_version": __version__,
+        "fatal_error": True,
+        "pipeline_config": pipeline_config,
+    }
+
+
+def exception_image(e, content_type):
+    message = e.args[0] if len(e.args) > 0 else "error generating image"
+    image = image_from_text(message)
+    pipe_config = {"error": message}
+
+    _buffer = image_to_buffer(image, content_type)
+    return {"primary": make_result(_buffer, _buffer, content_type)}, pipe_config
+
+
+def exception_message(e):
+    message = e.args[0] if len(e.args) > 0 else "error generating image"
+    pipe_config = {"error": message}
+
+    return {"primary": make_text_result(str(e))}, pipe_config

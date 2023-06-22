@@ -20,19 +20,19 @@ def bark_diffusion_callback(device_identifier, model_name, **kwargs):
 
     audio_array = generate_audio(prompt)
 
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
         audio = audio_array
 
-        temp_wav_file = pathlib.Path(tmpdirname).joinpath("music.wav").__str__()
+        temp_wav_file = pathlib.Path(tmp_dir_name).joinpath("music.wav").__str__()
         scipy.io.wavfile.write(
             temp_wav_file, rate=SAMPLE_RATE, data=audio.astype(np.float32)
         )
         audio_data = AudioSegment.from_file(temp_wav_file, format="wav")
 
-        temp_mp3_file = pathlib.Path(tmpdirname).joinpath("music.mp3").__str__()
+        temp_mp3_file = pathlib.Path(tmp_dir_name).joinpath("music.mp3").__str__()
         audio_data.export(temp_mp3_file, format="mp3")
         with open(temp_mp3_file, "rb") as audio_file:
             _buffer = BytesIO(audio_file.read())
 
     results = {"primary": make_result(_buffer, None, content_type)}
-    return (results, {})  # type: ignore
+    return (results, {})

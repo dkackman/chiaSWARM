@@ -2,12 +2,16 @@
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "cSpell.words": [
+        "aiohttp",
         "controlnet",
         "cuda",
         "dtype",
+        "exif",
         "fullgraph",
+        "LANCZOS",
         "Multistep",
         "pretrained",
+        "qrcode",
         "randn",
         "unet",
         "xformers"

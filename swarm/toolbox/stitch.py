@@ -1,8 +1,7 @@
 import math
-import requests
 from PIL import Image, ImageDraw
-import io
 from ..output_processor import make_result, make_thumbnail, image_to_buffer
+from ..external_resources import download_images
 
 thumb_size = 144
 
@@ -25,18 +24,6 @@ def stitch_callback(device_id, model_name, **kwargs):
     image_map = generate_image_map(resized_images, jobs)
     pipeline_config["image_map"] = image_map
     return results, pipeline_config
-
-
-def download_images(image_urls):
-    images = []
-    for url in image_urls:
-        response = requests.get(url)
-        image = Image.open(io.BytesIO(response.content))
-        images.append(image)
-    return images
-
-
-from PIL import Image, ImageDraw
 
 
 def resize_images(images, size=(thumb_size, thumb_size)):
@@ -62,6 +49,7 @@ def resize_images(images, size=(thumb_size, thumb_size)):
         job_index = str(index + 1)
         draw.text((10, 10), job_index, fill=(255, 255, 255))
         resized_images.append(resized_image)
+
     return resized_images
 
 

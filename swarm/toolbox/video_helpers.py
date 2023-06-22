@@ -3,13 +3,13 @@ from io import BytesIO
 from PIL import Image
 
 
-def get_frame(mp4_file_path, frane_index=0):
+def get_frame(mp4_file_path, frame_index=0):
     # Load the video clip
     try:
         clip = VideoFileClip(mp4_file_path)
 
         # Get the first frame of the clip as an image
-        frame = clip.get_frame(frane_index)
+        frame = clip.get_frame(frame_index)
 
         # Convert the frame to a JPEG image in memory
         frame_image = Image.fromarray(frame)

@@ -1,6 +1,3 @@
-import requests
-import qrcode
-from PIL import Image, ImageOps
 from .diffusion.diffusion_func import diffusion_callback
 from .video.tx2vid import txt2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
@@ -11,16 +8,11 @@ from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
-from .controlnet.input_processor import (
-    preprocess_image,
-    resize_for_condition_image,
-    scale_to_size,
-)
-
-max_size = 1024
+from .controlnet.input_processor import scale_to_size
+from .external_resources import get_image, get_control_image, max_size
 
 
-def format_args(job):
+async def format_args(job):
     args = job.copy()
 
     workflow = args.pop("workflow", None)
@@ -46,9 +38,9 @@ def format_args(job):
         return diffusion_if_callback, args
 
     if args["model_name"].startswith("kandinsky-"):
-        return format_kandinsky_args(args)
+        return await format_kandinsky_args(args)
 
-    return format_stable_diffusion_args(args, workflow)
+    return await format_stable_diffusion_args(args, workflow)
 
 
 def format_txt2audio_args(args):
@@ -92,14 +84,14 @@ def format_txt2vid_args(args):
     return txt2vid_diffusion_callback, args
 
 
-def format_img2txt_args(args):
+async def format_img2txt_args(args):
     if "start_image_uri" in args:
-        args["image"] = get_image(args.pop("start_image_uri"), None)
+        args["image"] = await get_image(args.pop("start_image_uri"), None)
 
     return caption_callback, args
 
 
-def format_kandinsky_args(args):
+async def format_kandinsky_args(args):
     size = None
     if "height" in args and "width" in args:
         size = (args["height"], args["width"])
@@ -115,12 +107,12 @@ def format_kandinsky_args(args):
         args.pop("height", None)
         args.pop("width", None)
 
-        args["image"] = get_image(args.pop("start_image_uri"), size)
+        args["image"] = await get_image(args.pop("start_image_uri"), size)
         args["pipeline_type"] = get_type("diffusers", "KandinskyImg2ImgPipeline")
 
     # if there is start_image_uri2 we are interpolating
     if "start_image_uri2" in args:
-        args["image2"] = get_image(args.pop("start_image_uri2"), size)
+        args["image2"] = await get_image(args.pop("start_image_uri2"), size)
         args["pipeline_type"] = get_type("diffusers", "KandinskyPipeline")
 
     parameters = args.pop("parameters", {})
@@ -132,7 +124,7 @@ def format_kandinsky_args(args):
     return kandinsky_callback, args
 
 
-def format_stable_diffusion_args(args, workflow):
+async def format_stable_diffusion_args(args, workflow):
     # this is where all of the input arguments are rationalized and model specific
 
     size = None
@@ -152,11 +144,11 @@ def format_stable_diffusion_args(args, workflow):
     args["upscale"] = parameters.get("upscale", False)
 
     if workflow == "img2img" or "start_image_uri" in args:
-        start_image = get_image(args.pop("start_image_uri"), size)
+        start_image = await get_image(args.pop("start_image_uri"), size)
 
         controlnet = parameters.get("controlnet", None)
         if controlnet is not None:
-            control_image = get_control_image(start_image, controlnet, size)
+            control_image = await get_control_image(start_image, controlnet, size)
             if start_image is None:
                 start_image = control_image
             else:
@@ -191,7 +183,7 @@ def format_stable_diffusion_args(args, workflow):
         args.pop("height", None)
         args.pop("width", None)
 
-        args["mask_image"] = get_image(args.pop("mask_image_uri"), size)
+        args["mask_image"] = await get_image(args.pop("mask_image_uri"), size)
 
     if "num_inference_steps" not in args:
         # default num_inference_steps if not set - some pipelines have high default values
@@ -208,77 +200,3 @@ def format_stable_diffusion_args(args, workflow):
         args.pop(arg, None)
 
     return diffusion_callback, args
-
-
-def get_image(uri, size):
-    if not isNotBlank(uri):
-        return None
-
-    head = requests.head(uri, allow_redirects=True)
-    content_length = head.headers.pop("Content-Length", 0)
-    content_type = head.headers.pop("Content-Type", "")
-
-    if not content_type.startswith("image"):
-        raise Exception(
-            f"Input does not appear to be an image.\nContent type was {content_type}."
-        )
-
-    # to protect worker nodes, no external images over 3 MiB
-    if int(content_length) > 1048576 * 3:
-        raise Exception(
-            f"Input image too large.\nMax size is {1048576 * 3} bytes.\nImage was {content_length}."
-        )
-
-    image = download_image(uri)
-
-    # if we have a desired size and the image is larger than it, scale the image down
-    if size != None and (image.height > size[0] or image.width > size[1]):
-        image.thumbnail(size, Image.Resampling.LANCZOS)
-
-    elif image.height > max_size or image.width > max_size:
-        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-
-    return image
-
-
-def get_control_image(start_image, controlnet, size):
-    # base the resolution of of size - defaulting to 768
-    W, H = size if size is not None else (768, 768)
-    resolution = max(H, W)
-
-    # return the image and the pre-processed image if controlnet is specified
-    # preprocess means generate the control image from the input image
-    if controlnet.get("preprocess", False):
-        return preprocess_image(start_image, controlnet, resolution)
-
-    # user specified control image - go get it
-    if isNotBlank(controlnet.get("control_image_uri", None)):
-        control_image = get_image(controlnet.get("control_image_uri"), size)
-        return resize_for_condition_image(control_image, resolution)
-
-    # user passed a qrcode - generate image
-    if isNotBlank(controlnet.get("qr_code_contents", None)):
-        qr = qrcode.QRCode(
-            version=None,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(controlnet.get("qr_code_contents"))
-        qr.make(fit=True)
-
-        qrcode_image = qr.make_image(fill_color="black", back_color="white")
-        return resize_for_condition_image(qrcode_image, resolution)
-
-    # control image and input image are the same
-    return resize_for_condition_image(start_image, resolution)
-
-
-def download_image(url):
-    image = Image.open(requests.get(url, allow_redirects=True, stream=True).raw)
-    image = ImageOps.exif_transpose(image)
-    return image.convert("RGB")
-
-
-def isNotBlank(myString):
-    return bool(myString and myString.strip())

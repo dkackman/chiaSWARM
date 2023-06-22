@@ -1,23 +1,26 @@
-from .gpu.device import Device
-from .generator import do_work
-from .log_setup import setup_logging
-from . import __version__
 import diffusers
+import torch
+import asyncio
+import logging
+from swarm.hive import ask_for_work, submit_result
 from .settings import (
     load_settings,
     resolve_path,
 )
-import torch
-import asyncio
-import logging
-import aiohttp
-from datetime import datetime
-import json
 from packaging import version
+from .job_arguments import format_args
+from .output_processor import (
+    exception_image,
+    exception_message,
+    fatal_exception_response,
+)
+from .gpu.device import Device
+from .log_setup import setup_logging
+from . import __version__
 
 # assigned in startup
 
-# producer/consumer queue for job retreived
+# producer/consumer queue for job retrieved
 work_queue: asyncio.Queue
 
 # semaphore to limit the number of jobs running at once to the number of gpus
@@ -48,76 +51,40 @@ async def run_worker():
 
     # Main loop to request work
     while True:
+        # spin wait if work queue is full
         while work_queue.full():
             await asyncio.sleep(1)
 
-        sleep_seconds = await ask_for_work()
+        await available_gpus.acquire()
+        try:
+            for job in await ask_for_work(settings, hive_uri):
+                job_id = job["id"]
+                print(f"Got job {job_id}")
+                await work_queue.put(job)
+
+            sleep_seconds = 11
+
+        except Exception as e:
+            logging.exception(e)
+            print(e)
+            sleep_seconds = 121
+        finally:
+            available_gpus.release()
+
         await asyncio.sleep(sleep_seconds)
-
-
-async def ask_for_work():
-    # this blocks if there are no available gpus
-    await available_gpus.acquire()
-
-    print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
-    try:
-        timeout = aiohttp.ClientTimeout(total=10)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(
-                f"{hive_uri}/work",
-                timeout=10,
-                params={
-                    "worker_version": __version__,
-                    "worker_name": settings.worker_name,
-                },
-                headers={
-                    "Content-type": "application/json",
-                    "Authorization": f"Bearer {settings.sdaas_token}",
-                    "user-agent": f"chiaSWARM.worker/{__version__}",
-                },
-            ) as response:
-                if response.status == 200:
-                    response_dict = await response.json()
-
-                    found_work = False
-                    for job in response_dict["jobs"]:
-                        job_id = job["id"]
-                        print(f"Got job {job_id}")
-                        found_work = True
-                        await work_queue.put(job)
-
-                    # since there is work in the hive ask right away for more
-                    return 1 if found_work else 11
-
-                elif response.status == 400:
-                    # this is when workers are not returning results within expectations
-                    response_dict = await response.json()
-                    message = response_dict.pop("message", "bad worker")
-                    print(f"{hive_uri} says {message}")
-                    response.raise_for_status()
-
-                else:
-                    print(f"{hive_uri} returned {response.status}")
-                    response.raise_for_status()
-
-    except Exception as e:
-        logging.exception(e)
-        print(e)
-        return 121
-    finally:
-        available_gpus.release()
-
-    return 11
 
 
 async def device_worker(device: Device):
     while True:
         try:
             job = await work_queue.get()
+            worker_function, kwargs = await get_args(job)
+
             # we got work so acquire a gpu lock
             await available_gpus.acquire()
-            result = await do_work(job, device)
-            await result_queue.put(result)
+            if worker_function is not None:
+                result = await do_work(device, worker_function, kwargs)
+                await result_queue.put(result)
 
         except Exception as e:
             logging.exception(e)
@@ -128,11 +95,23 @@ async def device_worker(device: Device):
             work_queue.task_done()
 
 
+async def get_args(job):
+    try:
+        return await format_args(job)
+
+    except Exception as e:
+        # any error here is fatal (i.e. not something a worker could recover from)
+        # the job should not be resubmitted as input args are wrong somehow
+        await result_queue.put(fatal_exception_response(e, job["id"], job))
+
+    return None, None
+
+
 async def result_worker():
     while True:
         try:
             result = await result_queue.get()
-            await submit_result(result)
+            await submit_result(settings, hive_uri, result)
 
         except Exception as e:
             logging.exception(e)
@@ -142,25 +121,40 @@ async def result_worker():
             result_queue.task_done()
 
 
-async def submit_result(result):
-    print("Result complete")
+async def do_work(device, worker_function, kwargs):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        None, synchronous_do_work, device, worker_function, kwargs
+    )
 
-    timeout = aiohttp.ClientTimeout(total=60)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.post(
-            f"{hive_uri}/results",
-            data=json.dumps(result),
-            headers={
-                "Content-type": "application/json",
-                "Authorization": f"Bearer {settings.sdaas_token}",
-                "user-agent": f"chiaSWARM.worker/{__version__}",
-            },
-        ) as resultResponse:
-            if resultResponse.status == 500:
-                print(f"The hive returned an error: {resultResponse.reason}")
-            else:
-                response_dict = await resultResponse.json()
-                print(f"Result {response_dict}")
+
+def synchronous_do_work(device, worker_function, kwargs):
+    job_id = kwargs.pop("id")
+    print(f"Processing {job_id} on {device.descriptor()}")
+
+    try:
+        artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
+
+    # generation will throw this error if some is not-recoverable/fatal
+    # (e.g. a textual-inversion not compatible with the base model)
+    except (ValueError, TypeError) as e:
+        return fatal_exception_response(e, job_id, kwargs)
+
+    except Exception as e:
+        content_type = kwargs.get("content_type", "image/jpeg")
+        print(e)
+        if content_type.startswith("image/"):
+            artifacts, pipeline_config = exception_image(e, content_type)
+        else:
+            artifacts, pipeline_config = exception_message(e)
+
+    return {
+        "id": job_id,
+        "artifacts": artifacts,
+        "nsfw": pipeline_config.get("nsfw", False),  # type ignore
+        "worker_version": __version__,
+        "pipeline_config": pipeline_config,
+    }
 
 
 async def startup():
@@ -177,8 +171,8 @@ async def startup():
     logging.debug(f"Torch version {torch.__version__}")
 
     torch.set_float32_matmul_precision("high")
-    torch.backends.cudnn.benchmark = True  # type: ignore
-    torch.backends.cuda.matmul.allow_tf32 = True  # type: ignore
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
 
     gpu_count = torch.cuda.device_count()
     print(f"Found {gpu_count} GPUs")
