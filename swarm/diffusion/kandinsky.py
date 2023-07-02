@@ -41,16 +41,21 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
         prompt = ""
     else:
         image_embeds, negative_image_embeds = pipe_prior(
-            prompt, negative_prompt, guidance_scale=guidance_scale, generator=generator
+            prompt, negative_prompt, guidance_scale=1.0, generator=generator
         ).to_tuple()
 
     pipe = pipeline_type.from_pretrained(model_name, torch_dtype=torch.float16)
     pipe.to(device_identifier)
 
+    height = kwargs.pop("height", 768)
+    width = kwargs.pop("width", 768)
     images = pipe(
         prompt,
+        negative_prompt=negative_prompt,
         image_embeds=image_embeds,
         negative_image_embeds=negative_image_embeds,
+        height=height,
+        width=width,
         **kwargs,
     ).images
 
