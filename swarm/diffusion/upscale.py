@@ -3,7 +3,9 @@ from diffusers import StableDiffusionLatentUpscalePipeline
 from ..type_helpers import has_method
 
 
-def upscale_image(image, device_identifier, prompt, negative_prompt, num_images_per_prompt, generator):
+def upscale_image(
+    image, device_identifier, prompt, negative_prompt, num_images_per_prompt, generator
+):
     print("Upscaling...")
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
         "stabilityai/sd-x2-latent-upscaler",
@@ -11,8 +13,8 @@ def upscale_image(image, device_identifier, prompt, negative_prompt, num_images_
     )
 
     upscaler = upscaler.to(device_identifier)
-    upscaler.enable_attention_slicing()
-    upscaler.enable_sequential_cpu_offload()
+    # upscaler.enable_attention_slicing()
+    # upscaler.enable_sequential_cpu_offload()
     if has_method(upscaler, "enable_xformers_memory_efficient_attention"):
         upscaler.enable_xformers_memory_efficient_attention()
 
