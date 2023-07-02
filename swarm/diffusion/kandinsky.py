@@ -1,5 +1,6 @@
 from diffusers import DiffusionPipeline
 import torch
+from .upscale import upscale_image
 from ..output_processor import OutputProcessor
 
 
@@ -9,6 +10,8 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
     model_name_prior = kwargs.pop(
         "model_name_prior", "kandinsky-community/kandinsky-2-1-prior"
     )
+    upscale = kwargs.pop("upscale", False)
+    num_images_per_prompt = kwargs.get("num_images_per_prompt", 1)
 
     guidance_scale = kwargs.get(
         "guidance_scale", 1.0
@@ -50,6 +53,15 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
         negative_image_embeds=negative_image_embeds,
         **kwargs,
     ).images
+
+    if upscale:
+        images = upscale_image(
+            images,
+            device_identifier,
+            kwargs.get("prompt", ""),
+            num_images_per_prompt,
+            kwargs["generator"],
+        )
 
     output_processor.add_outputs(images)
     return (output_processor.get_results(), {})
