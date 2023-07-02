@@ -64,6 +64,7 @@ def kandinsky_callback(device_identifier, model_name, **kwargs):
             images,
             device_identifier,
             kwargs.get("prompt", ""),
+            kwargs.get("negative_prompt", ""),
             num_images_per_prompt,
             kwargs["generator"],
         )

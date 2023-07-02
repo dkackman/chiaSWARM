@@ -42,7 +42,7 @@ def resize_images(images, size=(thumb_size, thumb_size)):
         new_width = min(new_width, size[0])
         new_height = min(new_height, size[1])
 
-        resized_image = image.resize((new_width, new_height), Image.ANTIALIAS)
+        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
         draw = ImageDraw.Draw(resized_image)
         job_index = str(index + 1)
         draw.text((10, 10), job_index, fill=(255, 255, 255))
