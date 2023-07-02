@@ -1,7 +1,6 @@
 import math
 from PIL import Image, ImageDraw
 from ..output_processor import make_result, make_thumbnail, image_to_buffer
-from ..external_resources import download_images
 
 thumb_size = 144
 
@@ -13,8 +12,7 @@ def stitch_callback(device_id, model_name, **kwargs):
     }
 
     jobs = kwargs["jobs"]
-    image_urls = [job["resultUri"] for job in jobs]
-    images = download_images(image_urls)
+    images = kwargs["images"]
     resized_images = resize_images(images)
     stitched_image = stitch_images(resized_images)
 

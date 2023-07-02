@@ -9,7 +9,7 @@ from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
 from .controlnet.input_processor import scale_to_size
-from .external_resources import get_image, get_control_image, max_size
+from .external_resources import get_image, get_control_image, max_size, download_images
 
 
 async def format_args(job):
@@ -23,7 +23,7 @@ async def format_args(job):
         return format_txt2audio_args(args)
 
     if workflow == "stitch":
-        return stitch_callback, args
+        return await format_stitch_args(args)
 
     if workflow == "img2txt":
         return format_img2txt_args(args)
@@ -41,6 +41,15 @@ async def format_args(job):
         return await format_kandinsky_args(args)
 
     return await format_stable_diffusion_args(args, workflow)
+
+
+async def format_stitch_args(args):
+    # download all of the component images
+    jobs = args["jobs"]
+    image_urls = [job["resultUri"] for job in jobs]
+    args["images"] = await download_images(image_urls)
+
+    return stitch_callback, args
 
 
 def format_txt2audio_args(args):
