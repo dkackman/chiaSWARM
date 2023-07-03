@@ -95,8 +95,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             pipeline.enable_vae_slicing()
         if has_method(pipeline, "enable_vae_tiling"):
             pipeline.enable_vae_tiling()
-        if has_method(pipeline, "enable_sequential_cpu_offload"):
-            pipeline.enable_sequential_cpu_offload()
 
     p = pipeline(**kwargs)
 
