@@ -157,10 +157,11 @@ async def format_stable_diffusion_args(args, workflow):
         controlnet = parameters.get("controlnet", None)
         if controlnet is not None:
             control_image = await get_control_image(start_image, controlnet, size)
-            if start_image is None:
-                start_image = control_image
-            else:
-                start_image = scale_to_size(start_image, size or control_image.size)
+            start_image = (
+                control_image
+                if start_image is None
+                else scale_to_size(start_image, control_image.size)
+            )
 
             args["control_image"] = control_image
             parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
