@@ -30,10 +30,6 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
     )
     pipe_3.to(device_identifier)
 
-    pipe.unet.to(memory_format=torch.channels_last)
-    pipe_2.unet.to(memory_format=torch.channels_last)
-    pipe_3.unet.to(memory_format=torch.channels_last)
-
     if run_compile:
         pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
         pipe_2.unet = torch.compile(pipe_2.unet, mode="reduce-overhead", fullgraph=True)
