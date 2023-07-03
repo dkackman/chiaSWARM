@@ -169,3 +169,24 @@ def exception_message(e):
     pipe_config = {"error": message}
 
     return {"primary": make_text_result(str(e))}, pipe_config
+
+
+def is_nsfw(pipe):
+    if (
+        hasattr(pipe, "nsfw_content_detected")
+        and pipe.nsfw_content_detected is not None
+        and (
+            (
+                isinstance(pipe.nsfw_content_detected, bool)
+                and pipe.nsfw_content_detected
+            )
+            or (
+                isinstance(pipe.nsfw_content_detected, list)
+                and len(pipe.nsfw_content_detected) >= 1
+            )
+        )
+    ):
+        for _ in filter(lambda nsfw: nsfw, pipe.nsfw_content_detected):
+            return True
+
+    return False

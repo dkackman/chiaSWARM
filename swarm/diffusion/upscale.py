@@ -1,6 +1,5 @@
 import torch
 from diffusers import StableDiffusionLatentUpscalePipeline
-from ..type_helpers import has_method
 
 
 def upscale_image(

@@ -4,9 +4,9 @@ from diffusers import (
     DPMSolverMultistepScheduler,
     ControlNetModel,
 )
-from ..output_processor import OutputProcessor
+from ..type_helpers import has_method
+from ..output_processor import OutputProcessor, is_nsfw
 from .upscale import upscale_image
-from ..type_helpers import has_method, run_compile
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -42,7 +42,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         revision=kwargs.pop("revision", "main"),
         variant=kwargs.pop("variant", None),
         torch_dtype=torch.float16,
-        controlnet=controlnet if "controlnet" in locals() else None
+        controlnet=controlnet if "controlnet" in locals() else None,
     )
 
     if textual_inversion is not None:
@@ -54,15 +54,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             ) from e
 
     pipeline = pipeline.to(device_identifier)
-
-    if run_compile and hasattr(pipeline, "unet") and pipeline.unet is not None:
-        pipeline.unet = torch.compile(
-            pipeline.unet, mode="reduce-overhead", fullgraph=True
-        )
-        if hasattr(pipeline, "controlnet") and pipeline.controlnet is not None:
-            pipeline.controlnet = torch.compile(
-                pipeline.controlnet, mode="reduce-overhead", fullgraph=True
-            )
 
     if lora is not None and hasattr(pipeline, "unet") and pipeline.unet is not None:
         try:
@@ -81,28 +72,14 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         )
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
-    # if we're upscaling or mid-range on mem, preserve memory vs performance
+    # if we're mid-range on mem, preserve memory vs performance
     if num_images_per_prompt > 1 or mem_info[1] < 12000000000:
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()
 
     p = pipeline(**kwargs)
-
-    # if any image is nsfw, flag the entire result
-    if (
-        hasattr(p, "nsfw_content_detected")
-        and p.nsfw_content_detected is not None
-        and (
-            (isinstance(p.nsfw_content_detected, bool) and p.nsfw_content_detected)
-            or (
-                isinstance(p.nsfw_content_detected, list)
-                and len(p.nsfw_content_detected) >= 1
-            )
-        )
-    ):
-        for _ in filter(lambda nsfw: nsfw, p.nsfw_content_detected):
-            pipeline.config["nsfw"] = True
+    pipeline.config["nsfw"] = is_nsfw(p)
 
     images = p.images
     if upscale:

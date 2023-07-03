@@ -3,8 +3,7 @@ from diffusers import (
     DiffusionPipeline,
 )
 from diffusers.utils import pt_to_pil
-from ..output_processor import OutputProcessor
-from ..type_helpers import run_compile
+from ..output_processor import OutputProcessor, is_nsfw
 from diffusers import DiffusionPipeline
 from diffusers.utils import pt_to_pil
 import torch
@@ -29,11 +28,6 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
         "stabilityai/stable-diffusion-x4-upscaler", torch_dtype=torch.float16
     )
     pipe_3.to(device_identifier)
-
-    if run_compile:
-        pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
-        pipe_2.unet = torch.compile(pipe_2.unet, mode="reduce-overhead", fullgraph=True)
-        pipe_3.unet = torch.compile(pipe_3.unet, mode="reduce-overhead", fullgraph=True)
 
     prompt = kwargs.get("prompt", "")
     negative_prompt = kwargs.get("prompt", None)
@@ -65,23 +59,7 @@ def diffusion_if_callback(device_identifier, model_name, **kwargs):
     images[0].save("./if_stage_III.png")
 
     pipeline_config = {}
-    # if any image is nsfw, flag the entire result
-    if (
-        hasattr(pipe_3, "nsfw_content_detected")
-        and pipe_3.nsfw_content_detected is not None
-        and (
-            (
-                isinstance(pipe_3.nsfw_content_detected, bool)
-                and pipe_3.nsfw_content_detected
-            )
-            or (
-                isinstance(pipe_3.nsfw_content_detected, list)
-                and len(pipe_3.nsfw_content_detected) >= 1
-            )
-        )
-    ):
-        for _ in filter(lambda nsfw: nsfw, pipe_3.nsfw_content_detected):  # type: ignore
-            pipeline_config["nsfw"] = True
+    pipeline_config["nsfw"] = is_nsfw(p)
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
