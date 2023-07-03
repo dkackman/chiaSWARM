@@ -69,7 +69,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     if has_method(pipeline, "scheduler"):
         pipeline.scheduler = scheduler_type.from_config(
             pipeline.scheduler.config, use_karras_sigmas=True
-        )
+        ).to(device_identifier)
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're mid-range on mem, preserve memory vs performance
