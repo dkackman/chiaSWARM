@@ -23,8 +23,6 @@ def model_video_callback(device_identifier, model_name, **kwargs):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
-        if has_method(pipeline, "enable_vae_tiling"):
-            pipeline.enable_vae_tiling()  # type: ignore
 
     pipeline = pipeline.to(device_identifier)  # type: ignore
 

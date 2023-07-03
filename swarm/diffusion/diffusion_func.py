@@ -93,8 +93,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()
-        if has_method(pipeline, "enable_vae_tiling"):
-            pipeline.enable_vae_tiling()
 
     p = pipeline(**kwargs)
 

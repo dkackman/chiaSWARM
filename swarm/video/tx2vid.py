@@ -40,13 +40,8 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         and mem_info[1] < 16000000000  # for 3090's etc just let em go full bore
     ):
         # not all pipelines share these methods, so check first
-        if has_method(pipeline, "enable_attention_slicing"):
-            pipeline.enable_attention_slicing()
-
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
-        if has_method(pipeline, "enable_vae_tiling"):
-            pipeline.enable_vae_tiling()  # type: ignore
 
     if has_method(pipeline, "enable_model_cpu_offload"):
         pipeline.enable_model_cpu_offload()  # type: ignore
