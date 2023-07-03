@@ -13,10 +13,6 @@ def upscale_image(
     )
 
     upscaler = upscaler.to(device_identifier)
-    # upscaler.enable_attention_slicing()
-    # upscaler.enable_sequential_cpu_offload()
-    if has_method(upscaler, "enable_xformers_memory_efficient_attention"):
-        upscaler.enable_xformers_memory_efficient_attention()
 
     if num_images_per_prompt > 1:
         prompt = [prompt] * num_images_per_prompt

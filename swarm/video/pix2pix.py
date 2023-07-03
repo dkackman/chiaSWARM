@@ -23,8 +23,7 @@ def model_video_callback(device_identifier, model_name, **kwargs):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_attention_slicing"):
             pipeline.enable_attention_slicing()  # type: ignore
-        if has_method(pipeline, "enable_xformers_memory_efficient_attention"):
-            pipeline.enable_xformers_memory_efficient_attention()  # type: ignore
+
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()  # type: ignore
         if has_method(pipeline, "enable_vae_tiling"):

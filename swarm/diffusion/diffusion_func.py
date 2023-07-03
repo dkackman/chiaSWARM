@@ -4,7 +4,6 @@ from diffusers import (
     DPMSolverMultistepScheduler,
     ControlNetModel,
 )
-from diffusers.utils.import_utils import is_xformers_available
 from ..output_processor import OutputProcessor
 from .upscale import upscale_image
 from ..type_helpers import has_method, run_compile
@@ -19,7 +18,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     upscale = kwargs.pop("upscale", False)
     textual_inversion = kwargs.pop("textual_inversion", None)
     lora = kwargs.pop("lora", None)
-    enable_xformers = kwargs.pop("supports_xformers", True)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
 
     output_processor = OutputProcessor(
@@ -42,8 +40,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision", "main"),
+        variant=kwargs.pop("variant", None),
         torch_dtype=torch.float16,
-        controlnet=controlnet if "controlnet" in locals() else None,
+        controlnet=controlnet if "controlnet" in locals() else None
     )
 
     if textual_inversion is not None:
@@ -77,15 +76,10 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             pipeline.unet.load_attn_procs(lora)
             kwargs["cross_attention_kwargs"] = {"scale": cross_attention_scale}
 
-            # the attention slicers don't like the scaled cross attention
-            enable_xformers = False
         except Exception as e:
             raise ValueError(
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
             ) from e
-
-    if enable_xformers and is_xformers_available():
-        pipeline.enable_xformers_memory_efficient_attention()
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(pipeline, "scheduler"):

@@ -149,7 +149,6 @@ async def format_stable_diffusion_args(args, workflow):
         args["prompt"] = ""
 
     # these gets passed through to the diffusion callback
-    args["supports_xformers"] = parameters.get("supports_xformers", True)
     args["upscale"] = parameters.get("upscale", False)
 
     if workflow == "img2img" or "start_image_uri" in args:

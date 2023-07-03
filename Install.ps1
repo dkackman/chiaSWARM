@@ -79,9 +79,6 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python -m pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python -m pip install xformers
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 python -m pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
