@@ -9,9 +9,7 @@ def upscale_image(
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
         "stabilityai/sd-x2-latent-upscaler",
         torch_dtype=torch.float16,
-    )
-
-    upscaler = upscaler.to(device_identifier)
+    ).to(device_identifier)
 
     if num_images_per_prompt > 1:
         prompt = [prompt] * num_images_per_prompt
