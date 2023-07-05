@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import requests
 import torch
 from diffusers import DiffusionPipeline, ControlNetModel
 from . import __version__
@@ -10,9 +9,9 @@ from .settings import (
     get_settings_full_path,
     load_settings,
     resolve_path,
-    save_file,
     save_settings,
 )
+from .hive import get_models
 from .type_helpers import get_type
 
 
@@ -24,6 +23,11 @@ async def init():
         "--reset", action="store_true", help="overwrite existing settings"
     )
     parser.add_argument("--silent", action="store_true", help="do not prompt for input")
+    parser.add_argument(
+        "--download",
+        action="store_true",
+        help="download all the models (will use a lot of disk space))",
+    )
     args = parser.parse_args()
 
     settings_exist = load_settings() is not None
@@ -44,6 +48,7 @@ async def init():
 
             save_settings(settings)
             print(f"Configuration saved to {get_settings_full_path()}")
+
         except Exception as e:
             print(f"Failed to save configuration: {e}")
             raise
@@ -54,14 +59,15 @@ async def init():
     print(f"Torch version {torch.__version__}")
     print("App initialization complete")
 
-    await download_diffusers(settings)
+    if args.download:
+        await download_diffusers(settings)
 
     print("To be the swarm type 'python -m swarm.worker'")
 
 
 async def download_diffusers(settings):
     print("Downloading models...")
-    known_models = get_models_from_hive(f"{settings.sdaas_uri.rstrip('/')}/")
+    known_models = await get_models(f"{settings.sdaas_uri.rstrip('/')}/")
 
     for model in known_models:
         model_name = model["model_name"]
@@ -92,28 +98,6 @@ async def download_diffusers(settings):
             raise
 
     print("Model download complete")
-
-
-def get_models_from_hive(hive_uri):
-    print(f"Fetching known model list from the hive at {hive_uri}...")
-
-    try:
-        response = requests.get(
-            f"{hive_uri}api/models",
-            timeout=10,
-            headers={
-                "user-agent": f"chiaSWARM.worker/{__version__}",
-            },
-        )
-        data = response.json()
-        save_file(data, "models.json")
-
-        print("done")
-
-        return data["language_models"] + data["models"]
-    except Exception as e:
-        print(f"Failed to fetch known model list from {hive_uri}: {e}")
-        return []
 
 
 if __name__ == "__main__":

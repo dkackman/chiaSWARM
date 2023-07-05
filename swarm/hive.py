@@ -1,6 +1,7 @@
 import aiohttp
 import json
 from datetime import datetime
+from .settings import save_file
 from . import __version__
 
 
@@ -57,3 +58,25 @@ async def submit_result(settings, hive_uri, result):
             else:
                 response_dict = await resultResponse.json()
                 print(f"Result {response_dict}")
+
+
+async def get_models(hive_uri):
+    print(f"Fetching known model list from the hive at {hive_uri}...")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            headers = {
+                "user-agent": f"chiaSWARM.worker/{__version__}",
+            }
+            async with session.get(
+                f"{hive_uri}api/models", timeout=10, headers=headers
+            ) as response:
+                data = await response.json()
+                save_file(data, "models.json")
+
+                print("done")
+                return data["language_models"] + data["models"]
+
+    except Exception as e:
+        print(f"Failed to fetch known model list from {hive_uri}: {e}")
+        return []
