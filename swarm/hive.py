@@ -53,11 +53,9 @@ async def submit_result(settings, hive_uri, result):
                 "user-agent": f"chiaSWARM.worker/{__version__}",
             },
         ) as resultResponse:
-            if resultResponse.status == 500:
-                print(f"The hive returned an error: {resultResponse.reason}")
-            else:
-                response_dict = await resultResponse.json()
-                print(f"Result {response_dict}")
+            resultResponse.raise_for_status()
+            response_dict = await resultResponse.json()
+            print(f"Result {response_dict}")
 
 
 async def get_models(hive_uri):

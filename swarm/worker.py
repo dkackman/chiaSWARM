@@ -68,6 +68,7 @@ async def run_worker():
             logging.exception(e)
             print(e)
             sleep_seconds = 121
+
         finally:
             available_gpus.release()
 
@@ -78,10 +79,10 @@ async def device_worker(device: Device):
     while True:
         try:
             job = await work_queue.get()
-            worker_function, kwargs = await get_args(job)
-
             # we got work so acquire a gpu lock
             await available_gpus.acquire()
+            worker_function, kwargs = await get_args(job)
+
             if worker_function is not None:
                 result = await do_work(device, worker_function, kwargs)
                 await result_queue.put(result)
