@@ -42,15 +42,27 @@ txt2vidJob = {
     "outputs": ["primary"],
 }
 
+txt2vidJob2 = {
+    "id": "__test__",
+    "model_name": "damo-vilab/text-to-video-ms-1.7b",
+    "prompt": "Darth Vader surfing a wave",
+    "workflow": "txt2vid",
+    "outputs": ["primary"],
+    "num_frames": 24,
+    "content_type": "video/webm",
+}
+
 txt2vidZeroscopeJob = {
     "id": "__test__",
     "model_name": "cerspense/zeroscope_v2_576w",
-    "prompt": "Darth Vader surfing a wave",
+    "prompt": "A marmot dancing in a disco",
     "workflow": "txt2vid",
     "outputs": ["primary"],
     "height": 320,
     "width": 576,
     "num_frames": 36,
+    "content_type": "video/webm",
+    "upscale": False
 }
 
 bark_job = {

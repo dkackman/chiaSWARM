@@ -13,6 +13,7 @@ import cv2
 from typing import List
 import numpy as np
 import shutil
+from PIL import Image
 
 
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
@@ -20,6 +21,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
     kwargs["num_frames"] = kwargs.pop("num_frames", 25)
     content_type = kwargs.pop("content_type", "video/mp4")
+    upscale = kwargs.pop("upscale", False)
     kwargs.pop("outputs", ["primary"])
 
     pipeline = pipeline_type.from_pretrained(
@@ -28,10 +30,10 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         variant=kwargs.pop("variant", None),
         torch_dtype=torch.float16,
     )
-    pipeline = pipeline.to(device_identifier)  # type: ignore
+    pipeline = pipeline.to(device_identifier)
 
-    pipeline.scheduler = scheduler_type.from_config(  # type: ignore
-        pipeline.scheduler.config, use_karras_sigmas=True  # type: ignore
+    pipeline.scheduler = scheduler_type.from_config(
+        pipeline.scheduler.config, use_karras_sigmas=True
     )
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
@@ -48,10 +50,21 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         pipeline.enable_model_cpu_offload()
 
     p = pipeline(**kwargs)
-
     video_frames = p.frames
 
-    media_info = ("mp4", "h264") if content_type == "video/mp4" else ("webm", "VP90")
+    if upscale:
+        upscaler = DiffusionPipeline.from_pretrained(
+            "cerspense/zeroscope_v2_XL", torch_dtype=torch.float16
+        )
+        upscaler.scheduler = scheduler_type.from_config(
+            upscaler.scheduler.config, use_karras_sigmas=True
+        )
+        upscaler.enable_vae_slicing()
+
+        video = [Image.fromarray(frame).resize((1024, 576)) for frame in video_frames]
+        video_frames = upscaler(kwargs["prompt"], video=video, strength=0.6).frames
+
+    media_info = ("mp4", "XVID") if content_type == "video/mp4" else ("webm", "VP90")
 
     # convent to video
     with tempfile.TemporaryDirectory() as tmpdirname:
