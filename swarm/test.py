@@ -1,5 +1,5 @@
-from .generator import do_work
-from .worker import startup
+from .worker import startup, do_work
+from .job_arguments import format_args
 import asyncio
 from . import __version__
 from .gpu.device import Device
@@ -40,6 +40,17 @@ txt2vidJob = {
     "num_inference_steps": 10,
     "workflow": "txt2vid",
     "outputs": ["primary"],
+}
+
+txt2vidZeroscopeJob = {
+    "id": "__test__",
+    "model_name": "cerspense/zeroscope_v2_576w",
+    "prompt": "Darth Vader surfing a wave",
+    "workflow": "txt2vid",
+    "outputs": ["primary"],
+    "height": 320,
+    "width": 576,
+    "num_frames": 36,
 }
 
 bark_job = {
@@ -84,7 +95,8 @@ kandinsky_interpolate_job = {
 async def run_test(job):
     await startup()
     try:
-        result = await do_work(job, Device(0))
+        func, args = await format_args(job)
+        result = await do_work(Device(0), func, args)
 
         if "error" in result["pipeline_config"]:
             print(result["pipeline_config"]["error"])
@@ -96,4 +108,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(if_job))
+    asyncio.run(run_test(txt2vidZeroscopeJob))

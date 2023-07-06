@@ -12,6 +12,7 @@ from ..toolbox.video_helpers import get_frame
 import cv2
 from typing import List
 import numpy as np
+import shutil
 
 
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
@@ -41,14 +42,14 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     ):
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
-            pipeline.enable_vae_slicing()  # type: ignore
+            pipeline.enable_vae_slicing()
 
     if has_method(pipeline, "enable_model_cpu_offload"):
-        pipeline.enable_model_cpu_offload()  # type: ignore
+        pipeline.enable_model_cpu_offload()
 
-    p = pipeline(**kwargs)  # type: ignore
+    p = pipeline(**kwargs)
 
-    video_frames = p.frames  # type: ignore
+    video_frames = p.frames
 
     media_info = ("mp4", "h264") if content_type == "video/mp4" else ("webm", "VP90")
 
@@ -62,10 +63,11 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         with open(final_filepath, "rb") as video_file:
             video_buffer = BytesIO(video_file.read())
 
+        shutil.copy(final_filepath, "./video.mp4")
         thumbnail = get_frame(final_filepath, 0)
 
     results = {"primary": make_result(video_buffer, thumbnail, content_type)}
-    return (results, pipeline.config)  # type: ignore
+    return (results, pipeline.config)
 
 
 def export_to_video(
