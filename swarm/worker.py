@@ -51,26 +51,25 @@ async def run_worker():
 
     # Main loop to request work
     while True:
-        # spin wait if work queue is full
-        while work_queue.full():
-            await asyncio.sleep(1)
+        # wait if work queue is full
+        if not work_queue.full():
+            # only ask for work if there is a free gpu
+            await available_gpus.acquire()
+            try:
+                for job in await ask_for_work(settings, hive_uri):
+                    job_id = job["id"]
+                    print(f"Got job {job_id}")
+                    await work_queue.put(job)
 
-        await available_gpus.acquire()
-        try:
-            for job in await ask_for_work(settings, hive_uri):
-                job_id = job["id"]
-                print(f"Got job {job_id}")
-                await work_queue.put(job)
+                sleep_seconds = 11
 
-            sleep_seconds = 11
+            except Exception as e:
+                logging.exception(e)
+                print(e)
+                sleep_seconds = 121
 
-        except Exception as e:
-            logging.exception(e)
-            print(e)
-            sleep_seconds = 121
-
-        finally:
-            available_gpus.release()
+            finally:
+                available_gpus.release()
 
         await asyncio.sleep(sleep_seconds)
 
