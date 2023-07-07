@@ -7,6 +7,7 @@ from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
+from .ThreeD.diffusion3d_func import diffusion3d_callback
 from .type_helpers import get_type
 from .controlnet.input_processor import scale_to_size
 from .external_resources import get_image, get_control_image, max_size, download_images
@@ -34,6 +35,9 @@ async def format_args(job):
     if workflow == "txt2vid":
         return format_txt2vid_args(args)
 
+    if workflow == "txt23d":
+        return await format_txt23d_args(args)
+
     if args["model_name"].startswith("DeepFloyd/"):
         return diffusion_if_callback, args
 
@@ -41,6 +45,10 @@ async def format_args(job):
         return await format_kandinsky_args(args)
 
     return await format_stable_diffusion_args(args, workflow)
+
+
+async def format_txt23d_args(args):
+    return diffusion3d_callback, args
 
 
 async def format_stitch_args(args):

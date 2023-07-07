@@ -52,6 +52,17 @@ txt2vidJob2 = {
     "content_type": "video/webm",
 }
 
+txt23dJob = {
+    "id": "__test__",
+    "model_name": "openai/shap-e",
+    "prompt": "A marmot",
+    "workflow": "txt23d",
+    "outputs": ["primary"],
+    "guidance_scale": 15,
+    "num_inference_steps": 64,
+    "frame_size": 256,
+}
+
 txt2vidZeroscopeJob = {
     "id": "__test__",
     "model_name": "cerspense/zeroscope_v2_576w",
@@ -120,4 +131,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(txt2vidZeroscopeJob))
+    asyncio.run(run_test(txt23dJob))
