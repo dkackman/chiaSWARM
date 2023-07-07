@@ -13,7 +13,7 @@ import cv2
 from typing import List
 import numpy as np
 import shutil
-from PIL import Image
+from ..post_processors.upscale import upscale_video
 
 
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
@@ -53,16 +53,9 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     video_frames = p.frames
 
     if upscale:
-        upscaler = DiffusionPipeline.from_pretrained(
-            "cerspense/zeroscope_v2_XL", torch_dtype=torch.float16
+        video_frames = upscale_video(
+            kwargs["prompt"], scheduler_type, video_frames, strength=0.6
         )
-        upscaler.scheduler = scheduler_type.from_config(
-            upscaler.scheduler.config, use_karras_sigmas=True
-        )
-        upscaler.enable_vae_slicing()
-
-        video = [Image.fromarray(frame).resize((1024, 576)) for frame in video_frames]
-        video_frames = upscaler(kwargs["prompt"], video=video, strength=0.6).frames
 
     media_info = ("mp4", "XVID") if content_type == "video/mp4" else ("webm", "VP90")
 

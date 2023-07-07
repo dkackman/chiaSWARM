@@ -1,6 +1,6 @@
 from diffusers import DiffusionPipeline
 import torch
-from .upscale import upscale_image
+from ..post_processors.upscale import upscale_image
 from ..output_processor import OutputProcessor
 
 

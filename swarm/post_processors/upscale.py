@@ -1,5 +1,6 @@
 import torch
-from diffusers import StableDiffusionLatentUpscalePipeline
+from diffusers import DiffusionPipeline, StableDiffusionLatentUpscalePipeline
+from PIL import Image
 
 
 def upscale_image(
@@ -24,3 +25,16 @@ def upscale_image(
     ).images[0]
 
     return [image]
+
+
+def upscale_video(prompt, scheduler_type, video_frames, strength=0.6):
+    upscaler = DiffusionPipeline.from_pretrained(
+        "cerspense/zeroscope_v2_XL", torch_dtype=torch.float16
+    )
+    upscaler.scheduler = scheduler_type.from_config(
+        upscaler.scheduler.config, use_karras_sigmas=True
+    )
+    upscaler.enable_vae_slicing()
+
+    video = [Image.fromarray(frame).resize((1024, 576)) for frame in video_frames]
+    return upscaler(prompt, video=video, strength=strength).frames

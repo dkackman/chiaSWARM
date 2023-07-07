@@ -6,7 +6,8 @@ from diffusers import (
 )
 from ..type_helpers import has_method
 from ..output_processor import OutputProcessor, is_nsfw
-from .upscale import upscale_image
+from ..post_processors.upscale import upscale_image
+from ..post_processors.gfpgan import gfpgan_process
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -92,5 +93,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             kwargs["generator"],
         )
 
+    images = gfpgan_process(images)
     output_processor.add_outputs(images)
     return (output_processor.get_results(), pipeline.config)
