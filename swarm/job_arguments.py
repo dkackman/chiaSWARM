@@ -148,9 +148,6 @@ async def format_stable_diffusion_args(args, workflow):
     if "prompt" not in args:
         args["prompt"] = ""
 
-    # these gets passed through to the diffusion callback
-    args["upscale"] = parameters.get("upscale", False)
-
     if workflow == "img2img" or "start_image_uri" in args:
         start_image = await get_image(args.pop("start_image_uri"), size)
 
@@ -205,7 +202,12 @@ async def format_stable_diffusion_args(args, workflow):
         "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
     )
 
-    for arg in parameters.get("unsupported_pipeline_arguments", []):
+    # remove any unsupported args
+    for arg in parameters.pop("unsupported_pipeline_arguments", []):
         args.pop(arg, None)
+
+    # now pass any remaining special args to the pipeine
+    for key, value in parameters.items():
+        args[key] = value
 
     return diffusion_callback, args

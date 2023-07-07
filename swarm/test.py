@@ -62,7 +62,7 @@ txt2vidZeroscopeJob = {
     "width": 576,
     "num_frames": 36,
     "content_type": "video/webm",
-    "upscale": False
+    "upscale": False,
 }
 
 bark_job = {

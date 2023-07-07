@@ -14,11 +14,17 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     # everything else in kwargs gets passed through
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
-    num_images_per_prompt = kwargs.get("num_images_per_prompt", 1)
     upscale = kwargs.pop("upscale", False)
     textual_inversion = kwargs.pop("textual_inversion", None)
     lora = kwargs.pop("lora", None)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
+
+    # set output_type if already there or upscale is selected (we use the latent upscaler)
+    output_type = kwargs.pop("output_type", "latent" if upscale else None)
+    if output_type is not None:
+        kwargs["output_type"] = output_type
+
+    use_safe_tensors = kwargs.pop("use_safe_tensors", None)
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
@@ -43,6 +49,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         variant=kwargs.pop("variant", None),
         torch_dtype=torch.float16,
         controlnet=controlnet if "controlnet" in locals() else None,
+        use_safe_tensors=use_safe_tensors,
     )
 
     if textual_inversion is not None:
@@ -73,22 +80,40 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're mid-range on mem, preserve memory vs performance
-    if num_images_per_prompt > 1 or mem_info[1] < 12000000000:
+    if kwargs.get("num_images_per_prompt", 1) > 1 or mem_info[1] < 12000000000:
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()
 
+    refiner = kwargs.pop("refiner", None)
+
     p = pipeline(**kwargs)
+    images = p.images
     pipeline.config["nsfw"] = is_nsfw(p)
 
-    images = p.images
+    if refiner is not None:
+        refiner_pipeline = DiffusionPipeline.from_pretrained(
+            refiner["model_name"],
+            variant=refiner.get("variant", None),
+            revision=refiner.get("revision", "main"),
+            torch_dtype=torch.float16,
+            use_safetensors=refiner.get("use_safetensors", True),
+        ).to(device_identifier)
+
+        images = refiner_pipeline(
+            image=images,
+            prompt=kwargs.get("prompt", ""),
+            negative_prompt=kwargs.get("negative_prompt", None),
+            generator=kwargs["generator"],
+        ).images
+
     if upscale:
         images = upscale_image(
             images,
             device_identifier,
             kwargs.get("prompt", ""),
-            kwargs.get("negative_prompt", ""),
-            num_images_per_prompt,
+            kwargs.get("negative_prompt", None),
+            kwargs.get("num_images_per_prompt", 1),
             kwargs["generator"],
         )
 
