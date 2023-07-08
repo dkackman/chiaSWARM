@@ -3,11 +3,11 @@ import json
 from datetime import datetime
 from .settings import save_file
 from . import __version__
+import logging
 
 
 async def ask_for_work(settings, hive_uri):
     print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
-
     timeout = aiohttp.ClientTimeout(total=10)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.get(
@@ -24,19 +24,27 @@ async def ask_for_work(settings, hive_uri):
             },
         ) as response:
             if response.status == 200:
-                response_dict = await response.json()
-                return response_dict["jobs"]
+                try:
+                    response_dict = await response.json()
+                    return response_dict["jobs"]
+                
+                except Exception as e:
+                    logging.exception(e)
+                    print(f" error parsing response {e}")
+                    return []
 
             elif response.status == 400:
                 # this is when workers are not returning results within expectations
+                # in this case the hive will return a message with further details
                 response_dict = await response.json()
                 message = response_dict.pop("message", "bad worker")
                 print(f"{hive_uri} says {message}")
-                response.raise_for_status()
 
             else:
                 print(f"{hive_uri} returned {response.status}")
-                response.raise_for_status()
+            
+            response.raise_for_status()
+            return []
 
 
 async def submit_result(settings, hive_uri, result):

@@ -63,9 +63,13 @@ async def run_worker():
 
                 sleep_seconds = 11
 
+            except TimeoutError as e:
+                logging.exception(e)
+                print(f"Hive timeout")
+
             except Exception as e:
                 logging.exception(e)
-                print(e)
+                print(f"ask_for_work error {e}")
                 sleep_seconds = 121
 
             finally:
