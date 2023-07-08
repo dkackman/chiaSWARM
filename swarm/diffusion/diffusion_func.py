@@ -124,6 +124,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             kwargs.get("negative_prompt", None),
             kwargs.get("num_images_per_prompt", 1),
             kwargs["generator"],
+            preserve_vram,
         )
 
     output_processor.add_outputs(images)
