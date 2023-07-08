@@ -80,10 +80,16 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're mid-range on mem, preserve memory vs performance
-    if kwargs.get("num_images_per_prompt", 1) > 1 or mem_info[1] < 12000000000:
+    preserve_vram = (
+        kwargs.get("num_images_per_prompt", 1) > 1 and mem_info[1] < 12000000000
+    ) or (kwargs.pop("large_model", False) and mem_info[1] < 16000000000)
+
+    if preserve_vram:
         # not all pipelines share these methods, so check first
         if has_method(pipeline, "enable_vae_slicing"):
             pipeline.enable_vae_slicing()
+        if has_method(pipeline, "enable_model_cpu_offload"):
+            pipeline.enable_model_cpu_offload()
 
     refiner = kwargs.pop("refiner", None)
 
@@ -99,6 +105,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             torch_dtype=torch.float16,
             use_safetensors=refiner.get("use_safetensors", True),
         ).to(device_identifier)
+
+        if preserve_vram and has_method(refiner_pipeline, "enable_model_cpu_offload"):
+            refiner_pipeline.enable_model_cpu_offload()
 
         images = refiner_pipeline(
             image=images,
