@@ -7,7 +7,7 @@ from ..type_helpers import has_method
 import tempfile
 import pathlib
 from io import BytesIO
-from ..output_processor import make_result
+from ..post_processors.output_processor import make_result
 from ..toolbox.video_helpers import get_frame
 import cv2
 from typing import List
@@ -92,4 +92,5 @@ def export_to_video(
     for video_frame in video_frames:
         img = cv2.cvtColor(video_frame, cv2.COLOR_RGB2BGR)
         video_writer.write(img)
+
     return output_video_path

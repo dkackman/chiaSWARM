@@ -5,8 +5,8 @@ from diffusers import (
     ControlNetModel,
 )
 from ..type_helpers import has_method
-from ..output_processor import OutputProcessor, is_nsfw
-from .upscale import upscale_image
+from ..post_processors.output_processor import OutputProcessor, is_nsfw
+from ..post_processors.upscale import upscale_image
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):

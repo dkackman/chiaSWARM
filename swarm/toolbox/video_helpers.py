@@ -1,6 +1,9 @@
 from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 from io import BytesIO
 from PIL import Image
+import numpy as np
+import tempfile
 
 
 def get_frame(mp4_file_path, frame_index=0):
@@ -23,3 +26,20 @@ def get_frame(mp4_file_path, frame_index=0):
     except Exception as e:
         print(e)
         return None
+
+
+def make_video(images, duration_seconds):
+    frames = [np.array(img) for img in images]
+    fps = len(frames) / duration_seconds
+    clip = ImageSequenceClip.ImageSequenceClip(frames, fps=fps)
+    with tempfile.NamedTemporaryFile(suffix=".webm") as tmp:
+        clip.write_videofile(
+            filename=tmp.name,
+            codec="libvpx",  # webm codec
+            fps=fps,
+            threads=2,
+            preset="veryslow",  # veryslow == smallest file
+        )
+
+        # return the last image (used for thumbnail) and the video bytes
+        return images[len(images) - 1], BytesIO(tmp.read())

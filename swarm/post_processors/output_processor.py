@@ -5,7 +5,7 @@ import base64
 import json
 from io import BytesIO
 import itertools
-from . import __version__
+from .. import __version__
 
 
 class OutputProcessor:

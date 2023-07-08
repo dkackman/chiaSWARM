@@ -2,7 +2,7 @@ from bark import SAMPLE_RATE, generate_audio, preload_models
 import pathlib
 import tempfile
 from io import BytesIO
-from ..output_processor import make_result
+from ..post_processors.output_processor import make_result
 from pydub import AudioSegment
 import scipy
 import numpy as np

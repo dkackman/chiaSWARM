@@ -5,7 +5,7 @@ import numpy as np
 import tempfile
 import pathlib
 from io import BytesIO
-from ..output_processor import make_result
+from ..post_processors.output_processor import make_result
 from pydub import AudioSegment
 
 

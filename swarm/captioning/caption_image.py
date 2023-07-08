@@ -1,5 +1,5 @@
 import torch
-from ..output_processor import make_text_result
+from ..post_processors.output_processor import make_text_result
 from ..type_helpers import get_type
 
 

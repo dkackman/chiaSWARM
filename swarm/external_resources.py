@@ -3,7 +3,7 @@ import asyncio
 import qrcode
 from io import BytesIO
 from PIL import Image, ImageOps
-from .controlnet.input_processor import (
+from .pre_processors.controlnet import (
     preprocess_image,
     resize_for_condition_image,
 )

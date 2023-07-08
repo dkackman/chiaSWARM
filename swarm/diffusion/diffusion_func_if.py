@@ -3,7 +3,7 @@ from diffusers import (
     DiffusionPipeline,
 )
 from diffusers.utils import pt_to_pil
-from ..output_processor import OutputProcessor, is_nsfw
+from ..post_processors.output_processor import OutputProcessor, is_nsfw
 from diffusers import DiffusionPipeline
 from diffusers.utils import pt_to_pil
 import torch

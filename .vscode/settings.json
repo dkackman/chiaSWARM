@@ -13,7 +13,13 @@
         "pretrained",
         "qrcode",
         "randn",
+        "safetensors",
         "unet",
+        "upscaler",
+        "vram",
         "xformers"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python"
+    }
 }

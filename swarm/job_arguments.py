@@ -8,7 +8,7 @@ from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
-from .controlnet.input_processor import scale_to_size
+from .pre_processors.controlnet import scale_to_size
 from .external_resources import get_image, get_control_image, max_size, download_images
 
 
@@ -26,7 +26,7 @@ async def format_args(job):
         return await format_stitch_args(args)
 
     if workflow == "img2txt":
-        return format_img2txt_args(args)
+        return await format_img2txt_args(args)
 
     if workflow == "vid2vid":
         return model_video_callback, args
@@ -151,7 +151,7 @@ async def format_stable_diffusion_args(args, workflow):
     if workflow == "img2img" or "start_image_uri" in args:
         start_image = await get_image(args.pop("start_image_uri"), size)
 
-        controlnet = parameters.get("controlnet", None)
+        controlnet = parameters.pop("controlnet", None)
         if controlnet is not None:
             control_image = await get_control_image(start_image, controlnet, size)
             start_image = (
@@ -206,7 +206,7 @@ async def format_stable_diffusion_args(args, workflow):
     for arg in parameters.pop("unsupported_pipeline_arguments", []):
         args.pop(arg, None)
 
-    # now pass any remaining special args to the pipeine
+    # now pass any remaining special args to the pipeline
     for key, value in parameters.items():
         args[key] = value
 

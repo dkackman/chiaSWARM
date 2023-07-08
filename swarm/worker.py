@@ -9,7 +9,7 @@ from .settings import (
 )
 from packaging import version
 from .job_arguments import format_args
-from .output_processor import (
+from .post_processors.output_processor import (
     exception_image,
     exception_message,
     fatal_exception_response,

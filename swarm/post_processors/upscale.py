@@ -3,7 +3,13 @@ from diffusers import StableDiffusionLatentUpscalePipeline
 
 
 def upscale_image(
-    image, device_identifier, prompt, negative_prompt, num_images_per_prompt, generator, preserve_vram
+    image,
+    device_identifier,
+    prompt,
+    negative_prompt,
+    num_images_per_prompt,
+    generator,
+    preserve_vram,
 ):
     print("Upscaling...")
     upscaler = StableDiffusionLatentUpscalePipeline.from_pretrained(
@@ -14,7 +20,7 @@ def upscale_image(
 
     if preserve_vram:
         upscaler.enable_attention_slicing()
-        
+
     if num_images_per_prompt > 1:
         prompt = [prompt] * num_images_per_prompt
 

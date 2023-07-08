@@ -1,6 +1,10 @@
 import math
 from PIL import Image, ImageDraw
-from ..output_processor import make_result, make_thumbnail, image_to_buffer
+from ..post_processors.output_processor import (
+    make_result,
+    make_thumbnail,
+    image_to_buffer,
+)
 
 thumb_size = 144
 
