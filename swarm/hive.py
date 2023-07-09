@@ -30,18 +30,16 @@ async def ask_for_work(settings, hive_uri):
 
                 except Exception as e:
                     logging.exception(e)
-                    print(f" error parsing response {e}")
+                    print(f"error parsing response {e}")
                     return []
 
-            elif response.status == 400:
+            print(f"{hive_uri} returned {response.status}")
+            if response.status == 400:
                 # this is when workers are not returning results within expectations
                 # in this case the hive will return a message with further details
                 response_dict = await response.json()
                 message = response_dict.pop("message", "bad worker")
                 print(f"{hive_uri} says {message}")
-
-            else:
-                print(f"{hive_uri} returned {response.status}")
 
             response.raise_for_status()
             return []
