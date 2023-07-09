@@ -50,7 +50,7 @@ async def ask_for_work(settings, hive_uri):
 async def submit_result(settings, hive_uri, result):
     print("Result complete")
 
-    timeout = aiohttp.ClientTimeout(total=60)
+    timeout = aiohttp.ClientTimeout(total=90)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.post(
             f"{hive_uri}/results",
