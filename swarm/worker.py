@@ -18,13 +18,12 @@ from .gpu.device import Device
 from .log_setup import setup_logging
 from . import __version__
 
-# assigned in startup
-
+# these globals are assigned in startup
 # producer/consumer queue for job retrieved
 work_queue: asyncio.Queue
-
 # semaphore to limit the number of jobs running at once to the number of gpus
 available_gpus: asyncio.Semaphore
+
 
 # producer consumer queue for results waiting to be uploaded
 result_queue = asyncio.Queue()
@@ -108,6 +107,7 @@ async def get_args(job):
         # the job should not be resubmitted as input args are wrong somehow
         await result_queue.put(fatal_exception_response(e, job["id"], job))
 
+    # this signals the caller that something went wrong
     return None, None
 
 
@@ -177,6 +177,7 @@ async def startup():
     setup_logging(resolve_path(settings.log_filename), settings.log_level)
     logging.info(f"Version {__version__}")
     logging.debug(f"Torch version {torch.__version__}")
+    diffusers.logging.set_verbosity_error()
 
     torch.set_float32_matmul_precision("high")
     torch.backends.cudnn.benchmark = True
@@ -189,8 +190,6 @@ async def startup():
 
     global available_gpus
     available_gpus = asyncio.Semaphore(gpu_count)
-
-    diffusers.logging.set_verbosity_error()
 
 
 if __name__ == "__main__":

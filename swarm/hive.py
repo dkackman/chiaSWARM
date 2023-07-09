@@ -27,7 +27,7 @@ async def ask_for_work(settings, hive_uri):
                 try:
                     response_dict = await response.json()
                     return response_dict["jobs"]
-                
+
                 except Exception as e:
                     logging.exception(e)
                     print(f" error parsing response {e}")
@@ -42,7 +42,7 @@ async def ask_for_work(settings, hive_uri):
 
             else:
                 print(f"{hive_uri} returned {response.status}")
-            
+
             response.raise_for_status()
             return []
 

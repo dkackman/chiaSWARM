@@ -7,7 +7,7 @@ from pathlib import Path
 class Settings:
     # when true huggingface will look for auth from the environment -
     # otherwise the api key itself
-    huggingface_token: Union[bool, str] = True
+    huggingface_token: Union[bool, str] = True  # deprecated
     log_level: str = "WARN"
     log_filename: str = "log/generator.log"
     sdaas_token: str = ""
@@ -33,6 +33,7 @@ def load_settings():
     settings.sdaas_uri = settings_dict.get("sdaas_uri", "http://localhost:9511")
     settings.worker_name = settings_dict.get("worker_name", "worker")
 
+    # environment variables override settings file
     settings.sdaas_token = os.getenv("SDAAS_TOKEN", settings.sdaas_token)
     settings.sdaas_uri = os.getenv("SDAAS_URI", settings.sdaas_uri)
     settings.worker_name = os.getenv("SDAAS_WORKERNAME", settings.worker_name)
