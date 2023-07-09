@@ -117,6 +117,10 @@ async def result_worker():
             result = await result_queue.get()
             await submit_result(settings, hive_uri, result)
 
+        except TimeoutError as e:
+            logging.exception(e)
+            print(f"Timeout submitting result")
+
         except Exception as e:
             logging.exception(e)
             print(f"result_worker {e}")
