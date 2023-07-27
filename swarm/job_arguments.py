@@ -6,7 +6,6 @@ from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
-from .diffusion.kandinsky import kandinsky_callback
 from .type_helpers import get_type
 from .pre_processors.controlnet import scale_to_size
 from .external_resources import get_image, get_control_image, max_size, download_images
@@ -36,9 +35,6 @@ async def format_args(job):
 
     if args["model_name"].startswith("DeepFloyd/"):
         return diffusion_if_callback, args
-
-    if args["model_name"].startswith("kandinsky-"):
-        return await format_kandinsky_args(args)
 
     return await format_stable_diffusion_args(args, workflow)
 

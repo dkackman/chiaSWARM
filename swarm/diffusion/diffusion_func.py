@@ -19,7 +19,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     lora = kwargs.pop("lora", None)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
 
-    # set output_type if already there or upscale is selected (we use the latent upscaler)
+    # set output_type if already there or upscale is/ selected (we use the latent upscaler)
     output_type = kwargs.pop("output_type", "latent" if upscale else None)
     if output_type is not None:
         kwargs["output_type"] = output_type
@@ -43,14 +43,22 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 "preprocessed_input", [kwargs.get("control_image")]
             )
 
-    pipeline = pipeline_type.from_pretrained(
-        model_name,
-        revision=kwargs.pop("revision", "main"),
-        variant=kwargs.pop("variant", None),
-        torch_dtype=torch.float16,
-        controlnet=controlnet if "controlnet" in locals() else None,
-        use_safe_tensors=use_safe_tensors,
-    )
+        pipeline = pipeline_type.from_pretrained(
+            model_name,
+            revision=kwargs.pop("revision", "main"),
+            variant=kwargs.pop("variant", None),
+            torch_dtype=torch.float16,
+            controlnet=controlnet if "controlnet" in locals() else None,
+            use_safe_tensors=use_safe_tensors,
+        )
+    else:
+        pipeline = pipeline_type.from_pretrained(
+            model_name,
+            revision=kwargs.pop("revision", "main"),
+            variant=kwargs.pop("variant", None),
+            torch_dtype=torch.float16,
+            use_safe_tensors=use_safe_tensors,
+        )
 
     if textual_inversion is not None:
         try:
