@@ -11,6 +11,7 @@ from ..post_processors.upscale import upscale_image
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
     # these arguments won't be passed directly to the pipeline
+    # because they are not used by the pipelines directly
     # everything else in kwargs gets passed through
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
@@ -18,13 +19,12 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     textual_inversion = kwargs.pop("textual_inversion", None)
     lora = kwargs.pop("lora", None)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
+    refiner = kwargs.pop("refiner", None)
 
     # set output_type if already there or upscale is/ selected (we use the latent upscaler)
     output_type = kwargs.pop("output_type", "latent" if upscale else None)
     if output_type is not None:
         kwargs["output_type"] = output_type
-
-    use_safe_tensors = kwargs.pop("use_safe_tensors", None)
 
     output_processor = OutputProcessor(
         kwargs.pop("outputs", ["primary"]),
@@ -48,8 +48,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             revision=kwargs.pop("revision", "main"),
             variant=kwargs.pop("variant", None),
             torch_dtype=torch.float16,
-            controlnet=controlnet if "controlnet" in locals() else None,
-            use_safe_tensors=use_safe_tensors,
+            controlnet=controlnet,
+            use_safe_tensors=kwargs.pop("use_safe_tensors", None),
         )
     else:
         pipeline = pipeline_type.from_pretrained(
@@ -57,7 +57,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             revision=kwargs.pop("revision", "main"),
             variant=kwargs.pop("variant", None),
             torch_dtype=torch.float16,
-            use_safe_tensors=use_safe_tensors,
+            use_safe_tensors=kwargs.pop("use_safe_tensors", None),
         )
 
     if textual_inversion is not None:
@@ -98,8 +98,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             pipeline.enable_vae_slicing()
         if has_method(pipeline, "enable_model_cpu_offload"):
             pipeline.enable_model_cpu_offload()
-
-    refiner = kwargs.pop("refiner", None)
 
     p = pipeline(**kwargs)
     images = p.images
