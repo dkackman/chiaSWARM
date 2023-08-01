@@ -3,6 +3,7 @@ from .job_arguments import format_args
 import asyncio
 from . import __version__
 from .gpu.device import Device
+from .settings import load_settings
 
 test_job = {
     "id": "__test__",
@@ -103,11 +104,13 @@ kandinsky_interpolate_job = {
     "outputs": ["primary"],
 }
 
+settings = load_settings()
+
 
 async def run_test(job):
     await startup()
     try:
-        func, args = await format_args(job)
+        func, args = await format_args(job, settings)
         result = await do_work(Device(0), func, args)
 
         if "error" in result["pipeline_config"]:

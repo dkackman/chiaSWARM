@@ -70,9 +70,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     pipeline = pipeline.to(device_identifier)
 
-    if lora is not None and hasattr(pipeline, "unet") and pipeline.unet is not None:
+    if lora is not None and has_method(pipeline, "load_lora_weights"):
         try:
-            pipeline.unet.load_attn_procs(lora)
+            pipeline.load_lora_weights(lora, use_safetensors=True)
             kwargs["cross_attention_kwargs"] = {"scale": cross_attention_scale}
 
         except Exception as e:

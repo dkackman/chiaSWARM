@@ -13,6 +13,7 @@ class Settings:
     sdaas_token: str = ""
     sdaas_uri: str = "http://localhost:9511"
     worker_name: str = "worker"
+    lora_root_dir: str = "~/lora"
 
 
 def load_settings():
@@ -32,6 +33,7 @@ def load_settings():
     settings.sdaas_token = settings_dict.get("sdaas_token", "")
     settings.sdaas_uri = settings_dict.get("sdaas_uri", "http://localhost:9511")
     settings.worker_name = settings_dict.get("worker_name", "worker")
+    settings.lora_root_dir = settings_dict.get("lora_root_dir", "~/lora")
 
     # environment variables override settings file
     settings.sdaas_token = os.getenv("SDAAS_TOKEN", settings.sdaas_token)

@@ -64,7 +64,7 @@ async def run_worker():
 
             except TimeoutError as e:
                 logging.exception(e)
-                print(f"Hive timeout")
+                print("Hive timeout")
 
             except Exception as e:
                 logging.exception(e)
@@ -100,10 +100,10 @@ async def device_worker(device: Device):
 
 async def get_args(job):
     try:
-        return await format_args(job)
+        return await format_args(job, settings)
 
     except Exception as e:
-        # any error here is fatal (i.e. not something a worker could recover from)
+        # any error here is fatal i.e. not something a worker can recover from
         # the job should not be resubmitted as input args are wrong somehow
         await result_queue.put(fatal_exception_response(e, job["id"], job))
 
@@ -119,7 +119,7 @@ async def result_worker():
 
         except TimeoutError as e:
             logging.exception(e)
-            print(f"Timeout submitting result")
+            print("Timeout submitting result")
 
         except Exception as e:
             logging.exception(e)
@@ -141,7 +141,7 @@ def synchronous_do_work(device, worker_function, kwargs):
     print(f"Processing {job_id} on {device.descriptor()}")
 
     try:
-        artifacts, pipeline_config = device(worker_function, **kwargs)  # type: ignore
+        artifacts, pipeline_config = device(worker_function, **kwargs)
 
     # generation will throw this error if some is not-recoverable/fatal
     # (e.g. a textual-inversion not compatible with the base model)

@@ -9,10 +9,11 @@ from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type
 from .pre_processors.controlnet import scale_to_size
 from .external_resources import get_image, get_control_image, max_size, download_images
+from .loras import Loras
 
 
-async def format_args(job):
-    args = job.copy()
+async def format_args(job, settings):
+    args = prepare_args(job, settings)
 
     workflow = args.pop("workflow", None)
     if workflow == "txt2audio":
@@ -37,6 +38,16 @@ async def format_args(job):
         return diffusion_if_callback, args
 
     return await format_stable_diffusion_args(args, workflow)
+
+
+def prepare_args(job, settings):
+    # ares shared by more than 1 workflow
+    args = job.copy()
+    if "lora" in args:
+        loras = Loras(settings.lora_root_dir)
+        args["lora"] = loras.resolve_lora_path(args["lora"])
+
+    return args
 
 
 async def format_stitch_args(args):
