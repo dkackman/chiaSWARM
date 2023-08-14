@@ -3,6 +3,7 @@ from diffusers import (
     DiffusionPipeline,
     DPMSolverMultistepScheduler,
     ControlNetModel,
+    AutoencoderKL,
 )
 from ..type_helpers import has_method
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
@@ -31,34 +32,35 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         kwargs.pop("content_type", "image/jpeg"),
     )
 
+    pipeline_args = {}
+    pipeline_args["revision"] = kwargs.pop("revision", "main")
+    pipeline_args["variant"] = kwargs.pop("variant", None)
+    pipeline_args["torch_dtype"] = torch.float16
+    pipeline_args["use_safe_tensors"] = kwargs.pop("use_safe_tensors", None)
+
+    if "vae" in kwargs:
+        pipeline_args["vae"] = AutoencoderKL.from_pretrained(
+            kwargs.pop("vae"), torch_dtype=torch.float16
+        ).to(device_identifier)
+
     if "controlnet_model_name" in kwargs:
-        controlnet = ControlNetModel.from_pretrained(
+        pipeline_args["controlnet"] = ControlNetModel.from_pretrained(
             kwargs.pop("controlnet_model_name"),
             revision=kwargs.pop("controlnet_revision", "main"),
             torch_dtype=torch.float16,
         ).to(device_identifier)
 
         if kwargs.pop("save_preprocessed_input", False):
-            output_processor.add_other_outputs(
-                "preprocessed_input", [kwargs.get("control_image")]
-            )
+            if "control_image" not in kwargs:
+                output_processor.add_other_outputs(
+                    "preprocessed_input", [kwargs.get("image")]
+                )
+            else:
+                output_processor.add_other_outputs(
+                    "preprocessed_input", [kwargs.get("control_image")]
+                )
 
-        pipeline = pipeline_type.from_pretrained(
-            model_name,
-            revision=kwargs.pop("revision", "main"),
-            variant=kwargs.pop("variant", None),
-            torch_dtype=torch.float16,
-            controlnet=controlnet,
-            use_safe_tensors=kwargs.pop("use_safe_tensors", None),
-        )
-    else:
-        pipeline = pipeline_type.from_pretrained(
-            model_name,
-            revision=kwargs.pop("revision", "main"),
-            variant=kwargs.pop("variant", None),
-            torch_dtype=torch.float16,
-            use_safe_tensors=kwargs.pop("use_safe_tensors", None),
-        )
+    pipeline = pipeline_type.from_pretrained(model_name, **pipeline_args)
 
     if textual_inversion is not None:
         try:

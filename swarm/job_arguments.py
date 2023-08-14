@@ -107,39 +107,6 @@ async def format_img2txt_args(args):
     return caption_callback, args
 
 
-async def format_kandinsky_args(args):
-    size = None
-    if "height" in args and "width" in args:
-        size = (args["height"], args["width"])
-        if size[0] > max_size or size[1] > max_size:
-            raise Exception(
-                f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
-            )
-
-    if "num_inference_steps" not in args:
-        args["num_inference_steps"] = 100
-
-    if "start_image_uri" in args:
-        args.pop("height", None)
-        args.pop("width", None)
-
-        args["image"] = await get_image(args.pop("start_image_uri"), size)
-        args["pipeline_type"] = get_type("diffusers", "KandinskyImg2ImgPipeline")
-
-    # if there is start_image_uri2 we are interpolating
-    if "start_image_uri2" in args:
-        args["image2"] = await get_image(args.pop("start_image_uri2"), size)
-        args["pipeline_type"] = get_type("diffusers", "KandinskyPipeline")
-
-    parameters = args.pop("parameters", {})
-    if "model_name_prior" in parameters:
-        args["model_name_prior"] = parameters["model_name_prior"]
-
-    args.pop("revision", None)
-
-    return kandinsky_callback, args
-
-
 async def format_stable_diffusion_args(args, workflow):
     # this is where all of the input arguments are rationalized and model specific
 
@@ -160,15 +127,24 @@ async def format_stable_diffusion_args(args, workflow):
 
         controlnet = parameters.pop("controlnet", None)
         if controlnet is not None:
-            control_image = await get_control_image(start_image, controlnet, size)
-            start_image = (
-                control_image
-                if start_image is None
-                else scale_to_size(start_image, control_image.size)
-            )
+            if "pipeline_type" not in parameters:
+                parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
 
-            args["control_image"] = control_image
-            parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
+            control_image = await get_control_image(start_image, controlnet, size)
+
+            # the sdxl controlnet pipeline does not accept a control_image
+            if (
+                parameters["pipeline_type"]
+                == "StableDiffusionXLControlNetPipeline"
+            ):
+                start_image = control_image
+            else:
+                args["control_image"] = control_image
+                if start_image is None:
+                    start_image = control_image
+                else:
+                    start_image = scale_to_size(start_image, control_image.size)
+
             args["controlnet_model_name"] = controlnet.get(
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
