@@ -54,7 +54,7 @@ async def get_image(uri, size):
         return image
 
 
-async def get_control_image(start_image, controlnet, size):
+async def get_control_image(start_image, controlnet, size, device_identifier):
     # base the resolution of of size - defaulting to 768
     W, H = size if size is not None else (768, 768)
     resolution = max(H, W)
@@ -62,7 +62,7 @@ async def get_control_image(start_image, controlnet, size):
     # return the image and the pre-processed image if controlnet is specified
     # preprocess means generate the control image from the input image
     if controlnet.get("preprocess", False):
-        return preprocess_image(start_image, controlnet, resolution)
+        return preprocess_image(start_image, controlnet, resolution, device_identifier)
 
     # user specified control image - go get it
     if isNotBlank(controlnet.get("control_image_uri", None)):

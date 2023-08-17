@@ -83,7 +83,7 @@ async def device_worker(device: Device):
             job = await work_queue.get()
             # we got work so acquire a gpu lock
             await available_gpus.acquire()
-            worker_function, kwargs = await get_args(job)
+            worker_function, kwargs = await get_args(job, device.identifier())
 
             if worker_function is not None:
                 result = await do_work(device, worker_function, kwargs)
@@ -98,9 +98,9 @@ async def device_worker(device: Device):
             work_queue.task_done()
 
 
-async def get_args(job):
+async def get_args(job, device_identifier):
     try:
-        return await format_args(job, settings)
+        return await format_args(job, settings, device_identifier)
 
     except Exception as e:
         # any error here is fatal i.e. not something a worker can recover from

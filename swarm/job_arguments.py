@@ -12,7 +12,7 @@ from .external_resources import get_image, get_control_image, max_size, download
 from .loras import Loras
 
 
-async def format_args(job, settings):
+async def format_args(job, settings, device_identifier):
     args = prepare_args(job, settings)
 
     workflow = args.pop("workflow", None)
@@ -37,7 +37,7 @@ async def format_args(job, settings):
     if args["model_name"].startswith("DeepFloyd/"):
         return diffusion_if_callback, args
 
-    return await format_stable_diffusion_args(args, workflow)
+    return await format_stable_diffusion_args(args, workflow, device_identifier)
 
 
 def prepare_args(job, settings):
@@ -107,7 +107,7 @@ async def format_img2txt_args(args):
     return caption_callback, args
 
 
-async def format_stable_diffusion_args(args, workflow):
+async def format_stable_diffusion_args(args, workflow, device_identifier):
     # this is where all of the input arguments are rationalized and model specific
 
     size = None
@@ -130,13 +130,10 @@ async def format_stable_diffusion_args(args, workflow):
             if "pipeline_type" not in parameters:
                 parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
 
-            control_image = await get_control_image(start_image, controlnet, size)
+            control_image = await get_control_image(start_image, controlnet, size, device_identifier)
 
             # the sdxl controlnet pipeline does not accept a control_image
-            if (
-                parameters["pipeline_type"]
-                == "StableDiffusionXLControlNetPipeline"
-            ):
+            if parameters["pipeline_type"] == "StableDiffusionXLControlNetPipeline":
                 start_image = control_image
             else:
                 args["control_image"] = control_image

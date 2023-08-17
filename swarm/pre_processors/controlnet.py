@@ -10,11 +10,16 @@ from controlnet_aux import (
     PidiNetDetector,
     ContentShuffleDetector,
 )
-from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
+from transformers import (
+    AutoImageProcessor,
+    UperNetForSemanticSegmentation,
+    DPTForDepthEstimation,
+    DPTFeatureExtractor,
+)
 import torch
 
 
-def preprocess_image(image, controlnet, resolution):
+def preprocess_image(image, controlnet, resolution, device_identifier):
     if controlnet.get("preprocess", False) == False:
         return image
 
@@ -25,7 +30,7 @@ def preprocess_image(image, controlnet, resolution):
         return MLSDdetector.from_pretrained("lllyasviel/ControlNet")(image)
 
     if controlnet.get("type") == "depth":
-        return image_to_depth(image)
+        return image_to_depth(image, device_identifier)
 
     if controlnet.get("type") == "normalbae":
         return NormalBaeDetector.from_pretrained("lllyasviel/Annotators")(image)
@@ -92,13 +97,32 @@ def image_to_canny(image, controlnet):
     return Image.fromarray(image)
 
 
-def image_to_depth(image):
-    depth_estimator = pipeline("depth-estimation")
-    image = depth_estimator(image)["depth"]
-    image = np.array(image)
-    image = image[:, :, None]
-    image = np.concatenate([image, image, image], axis=2)
-    return Image.fromarray(image)
+def image_to_depth(image, device_identifier):
+    depth_estimator = DPTForDepthEstimation.from_pretrained(
+        "Intel/dpt-hybrid-midas"
+    ).to(device_identifier)
+    feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-hybrid-midas")
+
+    image = feature_extractor(images=image, return_tensors="pt").pixel_values.to(
+        device_identifier
+    )
+    with torch.no_grad(), torch.autocast("cuda"):
+        depth_map = depth_estimator(image).predicted_depth
+
+    depth_map = torch.nn.functional.interpolate(
+        depth_map.unsqueeze(1),
+        size=(1024, 1024),
+        mode="bicubic",
+        align_corners=False,
+    )
+    depth_min = torch.amin(depth_map, dim=[1, 2, 3], keepdim=True)
+    depth_max = torch.amax(depth_map, dim=[1, 2, 3], keepdim=True)
+    depth_map = (depth_map - depth_min) / (depth_max - depth_min)
+    image = torch.cat([depth_map] * 3, dim=1)
+
+    image = image.permute(0, 2, 3, 1).cpu().numpy()[0]
+    image = Image.fromarray((image * 255.0).clip(0, 255).astype(np.uint8))
+    return image
 
 
 def image_to_segmentation(image):
