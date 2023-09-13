@@ -1,6 +1,6 @@
 import platform
 import sys
-import torch
+import importlib
 
 is_windows = any(platform.win32_ver())
 is_3_11 = sys.version_info >= (3, 11)
@@ -9,6 +9,16 @@ is_3_11 = sys.version_info >= (3, 11)
 def get_type(module_name, type_name):
     module = __import__(module_name)
     return getattr(module, type_name)
+
+def load_type_from_full_name(full_name):
+    # Split the full name into module path and object name
+    module_path, object_name = full_name.rsplit('.', 1)
+
+    # Dynamically import the module
+    module = importlib.import_module(module_path)
+
+    # Get the object from the module
+    return getattr(module, object_name)
 
 
 def has_method(o, name):

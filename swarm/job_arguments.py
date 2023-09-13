@@ -6,7 +6,7 @@ from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
-from .type_helpers import get_type
+from .type_helpers import get_type, load_type_from_full_name
 from .pre_processors.controlnet import scale_to_size
 from .external_resources import get_image, get_control_image, max_size, download_images
 from .loras import Loras
@@ -181,6 +181,15 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     args["scheduler_type"] = get_type(
         "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
     )
+
+    if "prior_timesteps" in parameters:
+        args["prior_timesteps"] = load_type_from_full_name(parameters.pop("prior_timesteps"))
+
+    # set defaults if the model specifies them
+    if "default_height" in parameters and "height" not in args:
+        args["height"] = parameters.pop("default_height")
+    if "default_width" in parameters and "width" not in args:
+        args["width"] = parameters.pop("default_width")
 
     # remove any unsupported args
     for arg in parameters.pop("unsupported_pipeline_arguments", []):
