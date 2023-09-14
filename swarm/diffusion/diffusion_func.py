@@ -74,7 +74,12 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     if lora is not None and has_method(pipeline, "load_lora_weights"):
         try:
-            pipeline.load_lora_weights(lora, use_safetensors=True)
+            pipeline.load_lora_weights(
+                lora["lora"],
+                weight_name=lora["weight_name"],
+                subfolder=lora["subfolder"],
+                use_safetensors=True,
+            )
             kwargs["cross_attention_kwargs"] = {"scale": cross_attention_scale}
 
         except Exception as e:
@@ -92,7 +97,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     # if we're mid-range on mem, preserve memory vs performance
     preserve_vram = (
         kwargs.get("num_images_per_prompt", 1) > 1 and mem_info[1] < 12000000000
-    ) or (kwargs.pop("large_model", False) and mem_info[1] < 16000000000)
+    ) or (kwargs.pop("large_model", False) and mem_info[1] < 12000000000)
 
     if preserve_vram:
         # not all pipelines share these methods, so check first

@@ -10,9 +10,10 @@ def get_type(module_name, type_name):
     module = __import__(module_name)
     return getattr(module, type_name)
 
+
 def load_type_from_full_name(full_name):
     # Split the full name into module path and object name
-    module_path, object_name = full_name.rsplit('.', 1)
+    module_path, object_name = full_name.rsplit(".", 1)
 
     # Dynamically import the module
     module = importlib.import_module(module_path)

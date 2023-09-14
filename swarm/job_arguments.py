@@ -45,7 +45,7 @@ def prepare_args(job, settings):
     args = job.copy()
     if "lora" in args:
         loras = Loras(settings.lora_root_dir)
-        args["lora"] = loras.resolve_lora_path(args["lora"])
+        args["lora"] = loras.resolve_lora(args["lora"])
 
     return args
 
@@ -130,7 +130,9 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             if "pipeline_type" not in parameters:
                 parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
 
-            control_image = await get_control_image(start_image, controlnet, size, device_identifier)
+            control_image = await get_control_image(
+                start_image, controlnet, size, device_identifier
+            )
 
             # the sdxl controlnet pipeline does not accept a control_image
             if parameters["pipeline_type"] == "StableDiffusionXLControlNetPipeline":
@@ -183,7 +185,9 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     )
 
     if "prior_timesteps" in parameters:
-        args["prior_timesteps"] = load_type_from_full_name(parameters.pop("prior_timesteps"))
+        args["prior_timesteps"] = load_type_from_full_name(
+            parameters.pop("prior_timesteps")
+        )
 
     # set defaults if the model specifies them
     if "default_height" in parameters and "height" not in args:
