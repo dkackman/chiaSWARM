@@ -16,6 +16,7 @@ from transformers import (
     DPTForDepthEstimation,
     DPTFeatureExtractor,
 )
+from .zoe_depth import colorize, model_zoe_n
 import torch
 
 
@@ -65,7 +66,17 @@ def preprocess_image(image, controlnet, resolution, device_identifier):
     if controlnet.get("type") == "qrcode":
         return resize_for_condition_image(image, resolution)
 
+    if controlnet.get("type") == "zoe-depth":
+        return resize_for_condition_image(image, resolution)
+
     raise Exception("Unknown controlnet type")
+
+
+def get_zoe_depth_map(image):
+    with torch.autocast("cuda", enabled=True):
+        depth = model_zoe_n.infer_pil(image)
+    depth = colorize(depth, cmap="gray_r")
+    return depth
 
 
 def resize_for_condition_image(image, resolution=1024):
