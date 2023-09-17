@@ -18,14 +18,22 @@ class Loras:
                 "weight_name": None,
                 "subfolder": None,
             }
-        
+
         # just the model repo publisher/repo
         if len(parts) == 2:
             return {"lora": lora, "weight_name": None, "subfolder": None}
-        
+
         # publisher/repo/file_name
         if len(parts) == 3:
-            return {"lora": "/".join(parts[0:2]), "subfolder": None, "weight_name": parts[-1]}
-        
+            return {
+                "lora": "/".join(parts[0:2]),
+                "subfolder": None,
+                "weight_name": parts[-1],
+            }
+
         # publisher/repo/subfolder(s)/file_name
-        return {"lora": "/".join(parts[0:2]), "subfolder": "/".join(parts[parts[2:-1]]), "weight_name": parts[-1]}
+        return {
+            "lora": "/".join(parts[0:2]),
+            "subfolder": "/".join(parts[parts[2:-1]]),
+            "weight_name": parts[-1],
+        }

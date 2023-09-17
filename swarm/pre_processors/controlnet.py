@@ -16,7 +16,7 @@ from transformers import (
     DPTForDepthEstimation,
     DPTFeatureExtractor,
 )
-from .zoe_depth import colorize, model_zoe_n
+from .zoe_depth import colorize, load_zoe
 import torch
 
 
@@ -73,6 +73,7 @@ def preprocess_image(image, controlnet, resolution, device_identifier):
 
 
 def get_zoe_depth_map(image):
+    model_zoe_n = load_zoe()
     with torch.autocast("cuda", enabled=True):
         depth = model_zoe_n.infer_pil(image)
     depth = colorize(depth, cmap="gray_r")

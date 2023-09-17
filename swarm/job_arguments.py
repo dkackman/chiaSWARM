@@ -157,13 +157,20 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             args.pop("height", None)
             args.pop("width", None)
 
-        if args["model_name"] == "timbrooks/instruct-pix2pix":
+        if (
+            args["model_name"] == "timbrooks/instruct-pix2pix"
+            or args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
+        ):
             # pix2pix models use image_guidance_scale instead of strength
             # image_guidance_scale has a range of 1-5 instead 0-1
             args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
 
         if start_image is None:
             raise ValueError("Workflow requires an input image. None provided")
+
+        # force the input image to set resolution for this model
+        if args["model_name"] == "diffusers/sdxl-instructpix2pix-768":
+            start_image = start_image.resize((768, 768))
 
         args["image"] = start_image
 

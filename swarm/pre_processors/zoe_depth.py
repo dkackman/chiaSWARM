@@ -4,11 +4,26 @@ import matplotlib.cm
 import numpy as np
 from PIL import Image
 
-torch.hub.help("intel-isl/MiDaS", "DPT_BEiT_L_384")  # Triggers fresh download of MiDaS repo
-model_zoe_n = torch.hub.load("isl-org/ZoeDepth", "ZoeD_NK", pretrained=True).eval()
-model_zoe_n = model_zoe_n.to("cuda")
 
-def colorize(value, vmin=None, vmax=None, cmap='gray_r', invalid_val=-99, invalid_mask=None, background_color=(128, 128, 128, 255), gamma_corrected=False, value_transform=None):
+def load_zoe():
+    torch.hub.help(
+        "intel-isl/MiDaS", "DPT_BEiT_L_384"
+    )  # Triggers fresh download of MiDaS repo
+    model_zoe_n = torch.hub.load("isl-org/ZoeDepth", "ZoeD_NK", pretrained=True).eval()
+    return model_zoe_n.to("cuda")
+
+
+def colorize(
+    value,
+    vmin=None,
+    vmax=None,
+    cmap="gray_r",
+    invalid_val=-99,
+    invalid_mask=None,
+    background_color=(128, 128, 128, 255),
+    gamma_corrected=False,
+    value_transform=None,
+):
     if isinstance(value, torch.Tensor):
         value = value.detach().cpu().numpy()
 
@@ -18,13 +33,13 @@ def colorize(value, vmin=None, vmax=None, cmap='gray_r', invalid_val=-99, invali
     mask = np.logical_not(invalid_mask)
 
     # normalize
-    vmin = np.percentile(value[mask],2) if vmin is None else vmin
-    vmax = np.percentile(value[mask],85) if vmax is None else vmax
+    vmin = np.percentile(value[mask], 2) if vmin is None else vmin
+    vmax = np.percentile(value[mask], 85) if vmax is None else vmax
     if vmin != vmax:
         value = (value - vmin) / (vmax - vmin)  # vmin..vmax
     else:
         # Avoid 0-division
-        value = value * 0.
+        value = value * 0.0
 
     # squeeze last dim if it exists
     # grey out the invalid values
