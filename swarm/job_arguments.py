@@ -170,6 +170,7 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             raise ValueError("Workflow requires an input image. None provided")
 
         # force the input image to set resolution for this model
+        # TODO - need to figure out how to generalize these size constraints
         if args["model_name"] == "diffusers/sdxl-instructpix2pix-768":
             start_image = start_image.resize((768, 768))
 
