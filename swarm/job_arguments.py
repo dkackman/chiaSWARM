@@ -8,6 +8,7 @@ from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type, load_type_from_full_name
 from .pre_processors.controlnet import scale_to_size
+from .pre_processors.depth_estimator import make_hint
 from .external_resources import get_image, get_control_image, max_size, download_images
 from .loras import Loras
 
@@ -172,7 +173,10 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         if args["model_name"] == "diffusers/sdxl-instructpix2pix-768":
             start_image = start_image.resize((768, 768))
 
-        args["image"] = start_image
+        if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
+            args["hint"] = make_hint(start_image.resize((768, 768))).to(device_identifier)  ## because... kandinsky says so
+        else:
+            args["image"] = start_image
 
     if "mask_image_uri" in args:
         args.pop("height", None)
@@ -190,6 +194,12 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     args["scheduler_type"] = get_type(
         "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
     )
+
+    if "pipeline_prior_type" in parameters:
+        args["pipeline_prior_type"] = get_type(
+            "diffusers",
+            parameters.pop("pipeline_prior_type", "KandinskyV22PriorPipeline"),
+        )
 
     if "prior_timesteps" in parameters:
         args["prior_timesteps"] = load_type_from_full_name(

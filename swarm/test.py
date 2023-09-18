@@ -84,24 +84,48 @@ if_job = {
 
 kandinsky_job = {
     "id": "__test__",
-    "model_name": "kandinsky-community/kandinsky-2-1",
-    # "start_image_uri": "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg",
+    "model_name": "kandinsky-community/kandinsky-2-2-decoder",
     "prompt": "A fantasy landscape, Cinematic lighting",
     "negative_prompt": "low quality, bad quality",
     "workflow": "txt2img",
     "num_inference_steps": 50,
     "guidance_scale": 4.0,
     "outputs": ["primary"],
+    "parameters": {
+        "pipeline_type": "AutoPipelineForText2Image",
+        "prior_guidance_scale": 1.0,
+    },
 }
-kandinsky_interpolate_job = {
+kandinsky_img2img_job = {
     "id": "__test__",
     "model_name": "kandinsky-community/kandinsky-2-1",
-    "start_image_uri": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky/cat.png",
-    "start_image_uri2": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky/starry_night.jpeg",
-    "prompt": "A cat",
-    "workflow": "interpolate",
-    "num_inference_steps": 150,
+    "start_image_uri": "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg",
+    "prompt": "A fantasy landscape, Cinematic lighting",
+    "negative_prompt": "low quality, bad quality",
+    "workflow": "img2img",
+    "num_inference_steps": 30,
     "outputs": ["primary"],
+    "parameters": {
+        "pipeline_type": "AutoPipelineForImage2Image",
+        "prior_guidance_scale": 1.0,
+    },
+}
+kandinsky_controlnet_job = {
+    "id": "__test__",
+    "model_name": "kandinsky-community/kandinsky-2-2-controlnet-depth",
+    "start_image_uri": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinskyv22/cat.png",
+    "prompt": "A robot, 4k photo",
+    "negative_prompt": "low quality, bad quality",
+    "workflow": "img2img",
+    "num_inference_steps": 30,
+    "outputs": ["primary"],
+    "parameters": {
+        "pipeline_type": "KandinskyV22ControlnetPipeline",
+        "pipeline_prior_type": "KandinskyV22PriorPipeline",
+        "prior_model_name": "kandinsky-community/kandinsky-2-2-prior",
+        "default_height": 768,
+        "default_width": 768
+    },
 }
 
 settings = load_settings()
@@ -110,7 +134,7 @@ settings = load_settings()
 async def run_test(job):
     await startup()
     try:
-        func, args = await format_args(job, settings)
+        func, args = await format_args(job, settings, "cuda")
         result = await do_work(Device(0), func, args)
 
         if "error" in result["pipeline_config"]:
@@ -123,4 +147,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(txt2vidZeroscopeJob))
+    asyncio.run(run_test(kandinsky_controlnet_job))

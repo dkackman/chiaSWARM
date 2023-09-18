@@ -8,6 +8,7 @@ from diffusers import (
 from ..type_helpers import has_method
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
 from ..post_processors.upscale import upscale_image
+from .diffusion_prior import process_prior_pipeline
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -105,6 +106,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             pipeline.enable_vae_slicing()
         if has_method(pipeline, "enable_model_cpu_offload"):
             pipeline.enable_model_cpu_offload()
+
+    if "pipeline_prior_type" in kwargs:
+        process_prior_pipeline(kwargs, device_identifier)
 
     p = pipeline(**kwargs)
     images = p.images
