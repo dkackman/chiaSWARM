@@ -169,13 +169,17 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         if start_image is None:
             raise ValueError("Workflow requires an input image. None provided")
 
-        # force the input image to set resolution for this model
-        # TODO - need to figure out how to generalize these size constraints
-        if args["model_name"] == "diffusers/sdxl-instructpix2pix-768":
-            start_image = start_image.resize((768, 768))
+        # These two models need the size set to the size of the input image or the error out
+        if args["model_name"] == "diffusers/sdxl-instructpix2pix-768" or args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
+            args["height"] = start_image.height
+            args["width"] = start_image.width
 
-        if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
-            args["hint"] = make_hint(start_image.resize((768, 768))).to(device_identifier)  ## because... kandinsky says so
+            # further kandinsky controlnet uses "hint" instead of "image"
+            if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
+                args["hint"] = make_hint(start_image).to(device_identifier) 
+            else: 
+                args["image"] = start_image
+
         else:
             args["image"] = start_image
 
@@ -208,9 +212,11 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         )
 
     # set defaults if the model specifies them
-    if "default_height" in parameters and "height" not in args:
-        args["height"] = parameters.pop("default_height")
-    if "default_width" in parameters and "width" not in args:
+    default_height = parameters.pop("default_height", None)
+    default_width = parameters.pop("default_width", None)
+    if default_height is not None and "height" not in args:
+        args["height"] = default_height
+    if default_width is not None and "width" not in args:
         args["width"] = parameters.pop("default_width")
 
     # remove any unsupported args
