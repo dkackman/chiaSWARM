@@ -183,6 +183,9 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         # further kandinsky controlnet uses "hint" instead of "image"
         if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
             args["hint"] = make_hint(start_image).to(device_identifier)
+            if parameters.get("pipeline_type", None) == "KandinskyV22ControlnetImg2ImgPipeline":
+                args["image"] = start_image
+
         else:
             args["image"] = start_image
 
