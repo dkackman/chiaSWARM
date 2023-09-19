@@ -7,8 +7,7 @@ from diffusers import (
 )
 from ..type_helpers import has_method
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
-from ..post_processors.upscale import upscale_image
-from .diffusion_prior import process_prior_pipeline
+from .pipeline_steps import prior_pipeline, refiner_pipeline, upscale_pipeline
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -33,19 +32,19 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         kwargs.pop("content_type", "image/jpeg"),
     )
 
-    pipeline_args = {}
-    pipeline_args["revision"] = kwargs.pop("revision", "main")
-    pipeline_args["variant"] = kwargs.pop("variant", None)
-    pipeline_args["torch_dtype"] = torch.float16
-    pipeline_args["use_safe_tensors"] = kwargs.pop("use_safe_tensors", None)
+    load_pipeline_args = {}
+    load_pipeline_args["revision"] = kwargs.pop("revision", "main")
+    load_pipeline_args["variant"] = kwargs.pop("variant", None)
+    load_pipeline_args["torch_dtype"] = torch.float16
+    load_pipeline_args["use_safe_tensors"] = kwargs.pop("use_safe_tensors", None)
 
     if "vae" in kwargs:
-        pipeline_args["vae"] = AutoencoderKL.from_pretrained(
+        load_pipeline_args["vae"] = AutoencoderKL.from_pretrained(
             kwargs.pop("vae"), torch_dtype=torch.float16
         ).to(device_identifier)
 
     if "controlnet_model_name" in kwargs:
-        pipeline_args["controlnet"] = ControlNetModel.from_pretrained(
+        load_pipeline_args["controlnet"] = ControlNetModel.from_pretrained(
             kwargs.pop("controlnet_model_name"),
             revision=kwargs.pop("controlnet_revision", "main"),
             torch_dtype=torch.float16,
@@ -61,21 +60,21 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                     "preprocessed_input", [kwargs.get("control_image")]
                 )
 
-    pipeline = pipeline_type.from_pretrained(model_name, **pipeline_args)
+    main_pipeline = pipeline_type.from_pretrained(model_name, **load_pipeline_args)
 
     if textual_inversion is not None:
         try:
-            pipeline.load_textual_inversion(textual_inversion)
+            main_pipeline.load_textual_inversion(textual_inversion)
         except Exception as e:
             raise ValueError(
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}\n{lora}\n\n{e}"
             ) from e
 
-    pipeline = pipeline.to(device_identifier)
+    main_pipeline = main_pipeline.to(device_identifier)
 
-    if lora is not None and has_method(pipeline, "load_lora_weights"):
+    if lora is not None and has_method(main_pipeline, "load_lora_weights"):
         try:
-            pipeline.load_lora_weights(
+            main_pipeline.load_lora_weights(
                 lora["lora"],
                 weight_name=lora["weight_name"],
                 subfolder=lora["subfolder"],
@@ -89,9 +88,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             ) from e
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
-    if has_method(pipeline, "scheduler"):
-        pipeline.scheduler = scheduler_type.from_config(
-            pipeline.scheduler.config, use_karras_sigmas=True
+    if has_method(main_pipeline, "scheduler"):
+        main_pipeline.scheduler = scheduler_type.from_config(
+            main_pipeline.scheduler.config, use_karras_sigmas=True
         ).to(device_identifier)
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
@@ -102,47 +101,19 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
 
     if preserve_vram:
         # not all pipelines share these methods, so check first
-        if has_method(pipeline, "enable_vae_slicing"):
-            pipeline.enable_vae_slicing()
-        if has_method(pipeline, "enable_model_cpu_offload"):
-            pipeline.enable_model_cpu_offload()
+        if has_method(main_pipeline, "enable_vae_slicing"):
+            main_pipeline.enable_vae_slicing()
+        if has_method(main_pipeline, "enable_model_cpu_offload"):
+            main_pipeline.enable_model_cpu_offload()
 
-    if "pipeline_prior_type" in kwargs:
-        process_prior_pipeline(kwargs, device_identifier)
+    prior_pipeline(kwargs, device_identifier)
 
-    p = pipeline(**kwargs)
-    images = p.images
-    pipeline.config["nsfw"] = is_nsfw(p)
+    images = main_pipeline(**kwargs).images
 
-    if refiner is not None:
-        refiner_pipeline = DiffusionPipeline.from_pretrained(
-            refiner["model_name"],
-            variant=refiner.get("variant", None),
-            revision=refiner.get("revision", "main"),
-            torch_dtype=torch.float16,
-            use_safetensors=refiner.get("use_safetensors", True),
-        ).to(device_identifier)
+    images = refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs)
 
-        if preserve_vram and has_method(refiner_pipeline, "enable_model_cpu_offload"):
-            refiner_pipeline.enable_model_cpu_offload()
+    images = upscale_pipeline(upscale, images, device_identifier, kwargs)
 
-        images = refiner_pipeline(
-            image=images,
-            prompt=kwargs.get("prompt", ""),
-            negative_prompt=kwargs.get("negative_prompt", None),
-            generator=kwargs["generator"],
-        ).images
-
-    if upscale:
-        images = upscale_image(
-            images,
-            device_identifier,
-            kwargs.get("prompt", ""),
-            kwargs.get("negative_prompt", None),
-            kwargs.get("num_images_per_prompt", 1),
-            kwargs["generator"],
-            preserve_vram,
-        )
-
+    main_pipeline.config["nsfw"] = is_nsfw(main_pipeline)
     output_processor.add_outputs(images)
-    return (output_processor.get_results(), pipeline.config)
+    return (output_processor.get_results(), main_pipeline.config)
