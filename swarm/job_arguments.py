@@ -223,7 +223,7 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     if default_height is not None and "height" not in args:
         args["height"] = default_height
     if default_width is not None and "width" not in args:
-        args["width"] = parameters.pop("default_width")
+        args["width"] = default_width
 
     # remove any unsupported args
     for arg in parameters.pop("unsupported_pipeline_arguments", []):
