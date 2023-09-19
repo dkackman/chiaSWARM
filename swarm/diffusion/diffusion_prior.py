@@ -4,8 +4,8 @@ import torch
 def process_prior_pipeline(args, device_identifier):
     pipeline_prior_type = args.pop("pipeline_prior_type", None)
     if pipeline_prior_type is not None:
-        prompt = args.pop("prompt", None)
-        negative_prompt = args.pop("negative_prompt", None)
+        prompt = args.pop("prompt", "")
+        negative_prompt = args.pop("negative_prompt", "")
         generator = args["generator"]
 
         pipe_prior = pipeline_prior_type.from_pretrained(
