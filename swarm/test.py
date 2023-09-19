@@ -124,7 +124,7 @@ kandinsky_controlnet_job = {
         "pipeline_prior_type": "KandinskyV22PriorPipeline",
         "prior_model_name": "kandinsky-community/kandinsky-2-2-prior",
         "default_height": 768,
-        "default_width": 768
+        "default_width": 768,
     },
 }
 

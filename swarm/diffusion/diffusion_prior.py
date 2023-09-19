@@ -8,7 +8,7 @@ def process_prior_pipeline(args, device_identifier):
             args.pop("prior_model_name"), torch_dtype=torch.float16
         ).to(device_identifier)
         image_embeds, negative_image_embeds = pipe_prior(
-            # prompt arguments are consumed by the prior pipeline 
+            # prompt arguments are consumed by the prior pipeline
             prompt=args.pop("prompt", None),
             negative_prompt=args.pop("negative_prompt", None),
             generator=args["generator"],

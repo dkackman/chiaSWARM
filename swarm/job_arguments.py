@@ -170,16 +170,17 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             raise ValueError("Workflow requires an input image. None provided")
 
         # These two models need the size set to the size of the input image or the error out
-        if args["model_name"] == "diffusers/sdxl-instructpix2pix-768" or args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
+        if (
+            args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
+            or args["model_name"]
+            == "kandinsky-community/kandinsky-2-2-controlnet-depth"
+        ):
             args["height"] = start_image.height
             args["width"] = start_image.width
 
-            # further kandinsky controlnet uses "hint" instead of "image"
-            if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
-                args["hint"] = make_hint(start_image).to(device_identifier) 
-            else: 
-                args["image"] = start_image
-
+        # further kandinsky controlnet uses "hint" instead of "image"
+        if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
+            args["hint"] = make_hint(start_image).to(device_identifier)
         else:
             args["image"] = start_image
 

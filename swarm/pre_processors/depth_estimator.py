@@ -3,6 +3,7 @@ import numpy as np
 
 from transformers import pipeline
 
+
 def make_hint(image):
     depth_estimator = pipeline("depth-estimation")
 
