@@ -9,6 +9,7 @@ from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type, load_type_from_full_name
 from .pre_processors.controlnet import scale_to_size
 from .pre_processors.depth_estimator import make_hint
+from .pre_processors.image_utils import resize_square
 from .external_resources import get_image, get_control_image, max_size, download_images
 from .loras import Loras
 
@@ -175,6 +176,7 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             or args["model_name"]
             == "kandinsky-community/kandinsky-2-2-controlnet-depth"
         ):
+            start_image = resize_square(start_image).resize((768, 768))
             args["height"] = start_image.height
             args["width"] = start_image.width
 
