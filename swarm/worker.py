@@ -48,6 +48,7 @@ async def run_worker():
     # Create a task for submitting results
     result_task = asyncio.create_task(result_worker())
 
+    sleep_seconds = 11
     # Main loop to request work
     while True:
         # wait if work queue is full
