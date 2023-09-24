@@ -1,4 +1,4 @@
-from .diffusion.diffusion_func import diffusion_callback
+from .diffusion.diffusion_func import diffusion_callback, diffusion_callback2
 from .video.tx2vid import txt2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
 from .toolbox.stitch import stitch_callback
@@ -7,10 +7,16 @@ from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type, load_type_from_full_name
-from .pre_processors.controlnet import scale_to_size
+from .pre_processors.controlnet import preprocess_image
 from .pre_processors.depth_estimator import make_hint
-from .pre_processors.image_utils import resize_square
-from .external_resources import get_image, get_control_image, max_size, download_images
+from .pre_processors.image_utils import resize_square, center_crop_resize
+from .external_resources import (
+    get_image,
+    get_qrcode_image,
+    max_size,
+    download_images,
+    isNotBlank,
+)
 from .loras import Loras
 
 
@@ -126,32 +132,50 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
 
     if workflow == "img2img" or "start_image_uri" in args:
         start_image = await get_image(args.pop("start_image_uri"), size)
+        control_image = start_image
+
+        if size is None and start_image is not None:
+            size = start_image.size
 
         controlnet = parameters.pop("controlnet", None)
         if controlnet is not None:
             if "pipeline_type" not in parameters:
                 parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
 
-            control_image = await get_control_image(
-                start_image, controlnet, size, device_identifier
-            )
-
-            # the sdxl controlnet pipeline does not accept a control_image
-            if parameters["pipeline_type"] == "StableDiffusionXLControlNetPipeline":
-                start_image = control_image
-            else:
-                args["control_image"] = control_image
+            if isNotBlank(controlnet.get("qr_code_contents", None)):
+                control_image = await get_qrcode_image(
+                    controlnet["qr_code_contents"], size
+                )
                 if start_image is None:
                     start_image = control_image
-                else:
-                    start_image = scale_to_size(start_image, control_image.size)
 
+            elif "preprocessor" in controlnet:
+                control_image = preprocess_image(
+                    start_image, controlnet["preprocessor"], device_identifier
+                )
+                args["save_preprocessed_input"] = True
+
+            controlnet_parameters = controlnet.get("parameters", {})
+
+            args["controlnet_model_type"] = get_type(
+                "diffusers",
+                controlnet_parameters.get("controlnet_model_type", "ControlNetModel"),
+            )
+            if "controlnet_prepipeline_type" in controlnet_parameters:
+                args["controlnet_prepipeline_type"] = get_type(
+                    "diffusers", controlnet_parameters["controlnet_prepipeline_type"]
+                )
             args["controlnet_model_name"] = controlnet.get(
                 "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
             )
-            args["save_preprocessed_input"] = controlnet.get("preprocess", False)
             args["controlnet_conditioning_scale"] = float(
                 controlnet.get("controlnet_conditioning_scale", 1.0)
+            )
+            args["control_guidance_start"] = float(
+                controlnet.get("control_guidance_start", 0.0)
+            )
+            args["control_guidance_end"] = float(
+                controlnet.get("control_guidance_end", 1.0)
             )
 
         elif "pipeline_type" not in parameters:
@@ -166,10 +190,10 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             # pix2pix models use image_guidance_scale instead of strength
             # image_guidance_scale has a range of 1-5 instead 0-1
             args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
-
+            
         if start_image is None:
             raise ValueError("Workflow requires an input image. None provided")
-
+        
         # These two models need the size set to the size of the input image or the error out
         if (
             args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
@@ -180,17 +204,19 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             args["height"] = start_image.height
             args["width"] = start_image.width
 
-        # further kandinsky controlnet uses "hint" instead of "image"
+        # kandinsky controlnet uses "hint" instead of "image"
         if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
             args["hint"] = make_hint(start_image).to(device_identifier)
-            if (
-                parameters.get("pipeline_type", None)
-                == "KandinskyV22ControlnetImg2ImgPipeline"
-            ):
-                args["image"] = start_image
 
-        else:
-            args["image"] = start_image
+        if (
+            control_image is not None
+            and parameters["pipeline_type"]
+            == "StableDiffusionControlNetImg2ImgPipeline"
+        ):
+            args["control_image"] = control_image
+            start_image = center_crop_resize(start_image, control_image.size)
+
+        args["image"] = start_image
 
     if "mask_image_uri" in args:
         args.pop("height", None)
@@ -236,4 +262,4 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     for key, value in parameters.items():
         args[key] = value
 
-    return diffusion_callback, args
+    return diffusion_callback2, args

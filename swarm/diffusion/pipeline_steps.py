@@ -1,7 +1,18 @@
 import torch
 from diffusers import DiffusionPipeline
 from ..type_helpers import has_method
-from ..post_processors.upscale import upscale_image
+from ..post_processors.upscale import upscale_image_sdx2
+
+
+def controlnet_prepipeline(
+    model_name, controlnet_prepipeline_type, load_pipeline_args, device_identifier
+):
+    return controlnet_prepipeline_type.from_pretrained(
+        model_name,
+        controlnet=load_pipeline_args["controlnet"],
+        vae=load_pipeline_args.get("vae", None),
+        torch_dtype=torch.float16,
+    ).to(device_identifier)
 
 
 def prior_pipeline(args, device_identifier):
@@ -37,7 +48,7 @@ def prior_pipeline(args, device_identifier):
         args["negative_image_embeds"] = negative_image_embeds
 
 
-def refiner_pipeline(refiner, images, device_identifier, preserve_vram, args):
+def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
     if refiner is not None:
         refiner_pipeline = DiffusionPipeline.from_pretrained(
             refiner["model_name"],
@@ -50,26 +61,21 @@ def refiner_pipeline(refiner, images, device_identifier, preserve_vram, args):
         if preserve_vram and has_method(refiner_pipeline, "enable_model_cpu_offload"):
             refiner_pipeline.enable_model_cpu_offload()
 
-        return refiner_pipeline(
-            image=images,
-            prompt=args.get("prompt", ""),
-            negative_prompt=args.get("negative_prompt", None),
-            generator=args["generator"],
-        ).images
+        return refiner_pipeline(image=images, **kwargs).images
 
     return images
 
 
 def upscale_pipeline(upscale, images, device_identifier, args):
     if upscale:
-        return upscale_image(
+        return upscale_image_sdx2(
             images,
             device_identifier,
             args.get("prompt", ""),
             args.get("negative_prompt", None),
             args.get("num_images_per_prompt", 1),
             args["generator"],
-            True, # always preserve vram fro upscaling
+            True,  # always preserve vram fro upscaling
         )
 
     return images

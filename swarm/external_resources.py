@@ -3,10 +3,7 @@ import asyncio
 import qrcode
 from io import BytesIO
 from PIL import Image, ImageOps
-from .pre_processors.controlnet import (
-    preprocess_image,
-    resize_for_condition_image,
-)
+from .pre_processors.image_utils import resize_for_condition_image
 
 max_size = 1024
 
@@ -54,37 +51,23 @@ async def get_image(uri, size):
         return image
 
 
-async def get_control_image(start_image, controlnet, size, device_identifier):
+async def get_qrcode_image(qr_code_contents, size):
     # base the resolution of of size - defaulting to 768
     W, H = size if size is not None else (768, 768)
     resolution = max(H, W)
 
-    # return the image and the pre-processed image if controlnet is specified
-    # preprocess means generate the control image from the input image
-    if controlnet.get("preprocess", False):
-        return preprocess_image(start_image, controlnet, resolution, device_identifier)
-
-    # user specified control image - go get it
-    if isNotBlank(controlnet.get("control_image_uri", None)):
-        control_image = await get_image(controlnet.get("control_image_uri"), size)
-        return resize_for_condition_image(control_image, resolution)
-
     # user passed a qrcode - generate image
-    if isNotBlank(controlnet.get("qr_code_contents", None)):
-        qr = qrcode.QRCode(
-            version=None,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(controlnet.get("qr_code_contents"))
-        qr.make(fit=True)
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data("qr_code_contents")
+    qr.make(fit=True)
 
-        qrcode_image = qr.make_image(fill_color="black", back_color="white")
-        return resize_for_condition_image(qrcode_image, resolution)
-
-    # control image and input image are the same
-    return resize_for_condition_image(start_image, resolution)
+    qrcode_image = qr.make_image(fill_color="black", back_color="white")
+    return resize_for_condition_image(qrcode_image, resolution)
 
 
 async def download_images(image_urls):

@@ -17,93 +17,75 @@ from transformers import (
     DPTFeatureExtractor,
 )
 from .zoe_depth import colorize, load_zoe
+from .image_utils import center_crop_resize, resize_for_condition_image
+from .depth_estimator import make_hint_image
 import torch
 
 
-def preprocess_image(image, controlnet, resolution, device_identifier):
-    if controlnet.get("preprocess", False) == False:
-        return image
+def preprocess_image(image, preprocessor, device_identifier):
+    preprocessor = preprocessor.lower()
+    if preprocessor == "canny":
+        return image_to_canny(image)
 
-    if controlnet.get("type") == "canny":
-        return image_to_canny(image, controlnet)
-
-    if controlnet.get("type") == "mlsd":
+    if preprocessor == "mlsd":
         return MLSDdetector.from_pretrained("lllyasviel/ControlNet")(image)
 
-    if controlnet.get("type") == "depth":
+    if preprocessor == "depth":
         return image_to_depth(image, device_identifier)
 
-    if controlnet.get("type") == "normalbae":
+    if preprocessor == "normal bae":
         return NormalBaeDetector.from_pretrained("lllyasviel/Annotators")(image)
 
-    if controlnet.get("type") == "seg":
+    if preprocessor == "segmentation":
         return image_to_segmentation(image)
 
-    if controlnet.get("type") == "lineart":
+    if preprocessor == "lineart":
         return LineartDetector.from_pretrained("lllyasviel/Annotators")(image)
 
-    if controlnet.get("type") == "openpose":
+    if preprocessor == "openpose":
         return OpenposeDetector.from_pretrained("lllyasviel/ControlNet")(image)
 
-    if controlnet.get("type") == "pix2pix":
+    if preprocessor == "pix2pix":
         return image
 
-    if controlnet.get("type") == "scribble":
+    if preprocessor == "scribble":
         return HEDdetector.from_pretrained("lllyasviel/Annotators")(
             image, scribble=True
         )
 
-    if controlnet.get("type") == "softedge":
+    if preprocessor == "soft edge":
         return PidiNetDetector.from_pretrained("lllyasviel/Annotators")(image)
 
-    if controlnet.get("type") == "shuffle":
+    if preprocessor == "shuffle":
         processor = ContentShuffleDetector()
         return processor(image)
 
-    if controlnet.get("type") == "tile":
-        return resize_for_condition_image(image, resolution)
+    if preprocessor == "tile":
+        return resize_for_condition_image(image)
 
-    if controlnet.get("type") == "qrcode":
-        return resize_for_condition_image(image, resolution)
+    if preprocessor == "zoe depth":
+        return get_zoe_depth_map(image, device_identifier)
 
-    if controlnet.get("type") == "zoe-depth":
-        return resize_for_condition_image(image, resolution)
+    if preprocessor == "center crop":
+        return center_crop_resize(image)
+
+    if preprocessor == "depth estimator":
+        return make_hint_image(image)
 
     raise Exception("Unknown controlnet type")
 
 
-def get_zoe_depth_map(image):
+def get_zoe_depth_map(image, device_identifier):
     model_zoe_n = load_zoe()
-    with torch.autocast("cuda", enabled=True):
+    with torch.autocast(device_identifier, enabled=True):
         depth = model_zoe_n.infer_pil(image)
-    depth = colorize(depth, cmap="gray_r")
-    return depth
+    return colorize(depth, cmap="gray_r")
 
 
-def resize_for_condition_image(image, resolution=1024):
-    input_image = image.convert("RGB")
-    W, H = input_image.size
-    k = float(resolution) / min(H, W)
-    H *= k
-    W *= k
-    H = int(round(H / 64.0)) * 64
-    W = int(round(W / 64.0)) * 64
-    return input_image.resize((W, H), resample=Image.LANCZOS)
-
-
-def scale_to_size(image, size):
-    input_image = image.convert("RGB")
-    return input_image.resize(size)
-
-
-def image_to_canny(image, controlnet):
+def image_to_canny(image, low_threshold=100, high_threshold=200):
     image = np.array(image)
 
-    image = cv2.Canny(
-        image,
-        controlnet.get("low_threshold", 100),
-        controlnet.get("high_threshold", 200),
-    )
+    image = cv2.Canny(image, low_threshold, high_threshold)
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     return Image.fromarray(image)

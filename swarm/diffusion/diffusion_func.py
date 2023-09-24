@@ -4,10 +4,23 @@ from diffusers import (
     DPMSolverMultistepScheduler,
     ControlNetModel,
     AutoencoderKL,
+    StableDiffusionControlNetPipeline,
+    StableDiffusionControlNetImg2ImgPipeline,
 )
 from ..type_helpers import has_method
+from ..pre_processors.image_utils import center_crop_resize
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
-from .pipeline_steps import prior_pipeline, refiner_pipeline, upscale_pipeline
+from ..post_processors.upscale import upscale_image
+from .pipeline_steps import (
+    prior_pipeline,
+    refiner_pipeline,
+    upscale_pipeline,
+    controlnet_prepipeline,
+)
+
+
+def diffusion_callback2(device_identifier, model_name, **kwargs):
+    return diffusion_callback(device_identifier, model_name, **kwargs)
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -43,22 +56,43 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             kwargs.pop("vae"), torch_dtype=torch.float16
         ).to(device_identifier)
 
+    # if there is a controlnet load and configure it
     if "controlnet_model_name" in kwargs:
-        load_pipeline_args["controlnet"] = ControlNetModel.from_pretrained(
+        controlnet_model_type = kwargs.pop("controlnet_model_type", ControlNetModel)
+
+        load_pipeline_args["controlnet"] = controlnet_model_type.from_pretrained(
             kwargs.pop("controlnet_model_name"),
             revision=kwargs.pop("controlnet_revision", "main"),
             torch_dtype=torch.float16,
         ).to(device_identifier)
 
         if kwargs.pop("save_preprocessed_input", False):
-            if "control_image" not in kwargs:
-                output_processor.add_other_outputs(
-                    "preprocessed_input", [kwargs.get("image")]
-                )
-            else:
-                output_processor.add_other_outputs(
-                    "preprocessed_input", [kwargs.get("control_image")]
-                )
+            output_processor.add_other_outputs(
+                "preprocessed_input", [kwargs.get("control_image")]
+            )
+
+    # if there is a controlnet prepipeline execute it
+    # this is how QR code monster works. it runs a prepipeline to get the latent
+    # and then runs the main pipeline with the latent
+    if "controlnet_prepipeline_type" in kwargs:
+        prepipeline = controlnet_prepipeline(
+            model_name,
+            kwargs.pop("controlnet_prepipeline_type"),
+            load_pipeline_args,
+            device_identifier,
+        )
+        control_image = kwargs.pop(
+            "control_image"
+        )  # take out the original control_image
+        image = prepipeline(output_type="latent", **kwargs)
+
+        # the start_image was center cropped and sized to 512x512
+        # this will make is 1024x1024
+        upscaled_latents = upscale_image(image, "nearest-exact", 2)
+        # put the control_image back upscaled to match the latent dimensions
+        kwargs["control_image"] = center_crop_resize(control_image, (1024, 1024))
+        kwargs["image"] = upscaled_latents
+        load_pipeline_args["unet"] = prepipeline.unet
 
     main_pipeline = pipeline_type.from_pretrained(model_name, **load_pipeline_args)
 
@@ -69,8 +103,6 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             raise ValueError(
                 f"Textual inversion\n{textual_inversion}\nis incompatible with\n{model_name}\n{lora}\n\n{e}"
             ) from e
-
-    main_pipeline = main_pipeline.to(device_identifier)
 
     if lora is not None and has_method(main_pipeline, "load_lora_weights"):
         try:
@@ -86,6 +118,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             raise ValueError(
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
             ) from e
+
+    main_pipeline = main_pipeline.to(device_identifier)
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if has_method(main_pipeline, "scheduler"):
@@ -106,10 +140,12 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         if has_method(main_pipeline, "enable_model_cpu_offload"):
             main_pipeline.enable_model_cpu_offload()
 
+    # prior pipeline is used by the Kandinsky and others
     prior_pipeline(kwargs, device_identifier)
 
     images = main_pipeline(**kwargs).images
 
+    # SDXL uses a refiner pipeline
     images = refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs)
 
     images = upscale_pipeline(upscale, images, device_identifier, kwargs)
