@@ -66,7 +66,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             torch_dtype=torch.float16,
         ).to(device_identifier)
 
-        if kwargs.pop("save_preprocessed_input", False):
+        if kwargs.pop("save_preprocessed_input", False) and "control_image" in kwargs:
             output_processor.add_other_outputs(
                 "preprocessed_input", [kwargs.get("control_image")]
             )
@@ -146,9 +146,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     images = main_pipeline(**kwargs).images
 
     # SDXL uses a refiner pipeline
-    images = refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs)
+    images = refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs.copy())
 
-    images = upscale_pipeline(upscale, images, device_identifier, kwargs)
+    images = upscale_pipeline(upscale, images, device_identifier, kwargs.copy())
 
     main_pipeline.config["nsfw"] = is_nsfw(main_pipeline)
     output_processor.add_outputs(images)

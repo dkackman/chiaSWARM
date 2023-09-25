@@ -60,7 +60,9 @@ def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
 
         if preserve_vram and has_method(refiner_pipeline, "enable_model_cpu_offload"):
             refiner_pipeline.enable_model_cpu_offload()
-
+            
+        kwargs.pop("cross_attention_kwargs", None)
+        kwargs["output_type"] = "pil"
         return refiner_pipeline(image=images, **kwargs).images
 
     return images
@@ -75,7 +77,7 @@ def upscale_pipeline(upscale, images, device_identifier, args):
             args.get("negative_prompt", None),
             args.get("num_images_per_prompt", 1),
             args["generator"],
-            True,  # always preserve vram fro upscaling
+            True,  # always preserve vram for upscaling
         )
 
     return images

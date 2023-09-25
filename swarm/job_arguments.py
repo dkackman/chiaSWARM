@@ -190,10 +190,10 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
             # pix2pix models use image_guidance_scale instead of strength
             # image_guidance_scale has a range of 1-5 instead 0-1
             args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
-            
+
         if start_image is None:
             raise ValueError("Workflow requires an input image. None provided")
-        
+
         # These two models need the size set to the size of the input image or the error out
         if (
             args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
