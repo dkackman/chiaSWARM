@@ -4,23 +4,16 @@ from diffusers import (
     DPMSolverMultistepScheduler,
     ControlNetModel,
     AutoencoderKL,
-    StableDiffusionControlNetPipeline,
-    StableDiffusionControlNetImg2ImgPipeline,
 )
 from ..type_helpers import has_method
 from ..pre_processors.image_utils import center_crop_resize
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
 from ..post_processors.upscale import upscale_image
 from .pipeline_steps import (
-    prior_pipeline,
     refiner_pipeline,
     upscale_pipeline,
     controlnet_prepipeline,
 )
-
-
-def diffusion_callback2(device_identifier, model_name, **kwargs):
-    return diffusion_callback(device_identifier, model_name, **kwargs)
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -84,7 +77,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         control_image = kwargs.pop(
             "control_image"
         )  # take out the original control_image
-        image = prepipeline(output_type="latent", **kwargs)
+        args = kwargs.copy()
+        args.pop("strength", None)
+        image = prepipeline(output_type="latent", **args)
 
         # the start_image was center cropped and sized to 512x512
         # this will make is 1024x1024
@@ -146,7 +141,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     images = main_pipeline(**kwargs).images
 
     # SDXL uses a refiner pipeline
-    images = refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs.copy())
+    images = refiner_pipeline(
+        refiner, images, device_identifier, preserve_vram, kwargs.copy()
+    )
 
     images = upscale_pipeline(upscale, images, device_identifier, kwargs.copy())
 

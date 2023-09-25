@@ -1,4 +1,4 @@
-from .diffusion.diffusion_func import diffusion_callback, diffusion_callback2
+from .diffusion.diffusion_func import diffusion_callback
 from .video.tx2vid import txt2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
 from .toolbox.stitch import stitch_callback
@@ -262,4 +262,4 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     for key, value in parameters.items():
         args[key] = value
 
-    return diffusion_callback2, args
+    return diffusion_callback, args

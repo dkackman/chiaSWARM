@@ -60,7 +60,7 @@ def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
 
         if preserve_vram and has_method(refiner_pipeline, "enable_model_cpu_offload"):
             refiner_pipeline.enable_model_cpu_offload()
-            
+
         kwargs.pop("cross_attention_kwargs", None)
         kwargs["output_type"] = "pil"
         return refiner_pipeline(image=images, **kwargs).images
