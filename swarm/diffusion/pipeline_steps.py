@@ -22,22 +22,22 @@ def prior_pipeline(args, device_identifier):
         negative_prompt = args.pop("negative_prompt", "")
         generator = args["generator"]
 
-        pipe_prior = pipeline_prior_type.from_pretrained(
+        pipeline = pipeline_prior_type.from_pretrained(
             args.pop("prior_model_name"), torch_dtype=torch.float16
         ).to(device_identifier)
 
         if args.pop("split_embeds", False):
             img = args["image"]
             strength = args.get("strength", 0.6)
-            image_embeds = pipe_prior(
+            image_embeds = pipeline(
                 prompt=prompt, image=img, strength=strength, generator=generator
             ).image_embeds
-            negative_image_embeds = pipe_prior(
+            negative_image_embeds = pipeline(
                 prompt=negative_prompt, image=img, strength=1, generator=generator
             ).negative_image_embeds
 
         else:
-            image_embeds, negative_image_embeds = pipe_prior(
+            image_embeds, negative_image_embeds = pipeline(
                 # prompt arguments are consumed by the prior pipeline
                 prompt=prompt,
                 negative_prompt=negative_prompt,
@@ -50,7 +50,7 @@ def prior_pipeline(args, device_identifier):
 
 def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
     if refiner is not None:
-        refiner_pipeline = DiffusionPipeline.from_pretrained(
+        pipeline = DiffusionPipeline.from_pretrained(
             refiner["model_name"],
             variant=refiner.get("variant", None),
             revision=refiner.get("revision", "main"),
@@ -58,12 +58,19 @@ def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
             use_safetensors=refiner.get("use_safetensors", True),
         ).to(device_identifier)
 
-        if preserve_vram and has_method(refiner_pipeline, "enable_model_cpu_offload"):
-            refiner_pipeline.enable_model_cpu_offload()
+        if preserve_vram and has_method(pipeline, "enable_model_cpu_offload"):
+            pipeline.enable_model_cpu_offload()
 
+        # we need to modify some of the args from what the main pipeline is doing
+        # TODO = generalize this logic
+        kwargs.pop("controlnet_conditioning_scale", None)
+        kwargs.pop("control_guidance_start", None)
+        kwargs.pop("control_guidance_end", None)
+        kwargs.pop("image", None)
         kwargs.pop("cross_attention_kwargs", None)
         kwargs["output_type"] = "pil"
-        return refiner_pipeline(image=images, **kwargs).images
+        kwargs["image"] = images
+        return pipeline( **kwargs).images
 
     return images
 

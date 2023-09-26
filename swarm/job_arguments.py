@@ -135,17 +135,10 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         await format_img2img_args(args, parameters, size, device_identifier)
 
     elif workflow == "inpaint" or "mask_image_uri" in args:
-        # inpaint inherits img2img setup since it has a start image
-        await format_img2img_args(args, parameters, device_identifier)
-        args["mask_image"] = await get_image(args.pop("mask_image_uri"), size)
-        args.pop("height", None)
-        args.pop("width", None)
+        await format_inpaint_args(args, parameters, size, device_identifier)
 
-    elif workflow == "txt2img" and "controlnet" in parameters:
-        if "pipeline_type" not in parameters:
-            parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
-
-        await format_controlnet_args(args, parameters, None, size, device_identifier)
+    elif workflow == "txt2img":
+        await format_txt2img_args(args, parameters, size, device_identifier)
 
     if "num_inference_steps" not in args:
         # default num_inference_steps if not set - some pipelines have high default values
@@ -188,6 +181,46 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
     return diffusion_callback, args
 
 
+async def format_inpaint_args(args, parameters, size, device_identifier):
+    # inpaint inherits img2img setup since it has a start image
+    await format_img2img_args(args, parameters, device_identifier)
+    args["mask_image"] = await get_image(args.pop("mask_image_uri"), size)
+    args.pop("height", None)
+    args.pop("width", None)
+
+    if "controlnet" in parameters:
+        if "pipeline_type" not in parameters:
+            # TODO don't rely on large_model flag for this
+            if parameters.get("large_model", False):
+                parameters[
+                    "pipeline_type"
+                ] = "StableDiffusionXLControlNetInpaintPipeline"
+            else:
+                parameters["pipeline_type"] = "StableDiffusionControlNetInpaintPipeline"
+
+        await format_controlnet_args(args, parameters, None, size, device_identifier)
+
+    else:
+        if "pipeline_type" not in parameters:
+            # TODO don't rely on large_model flag for this
+            if parameters.get("large_model", False):
+                parameters["pipeline_type"] = "StableDiffusionXLInpaintPipeline"
+            else:
+                parameters["pipeline_type"] = "StableDiffusionInpaintPipeline"
+
+
+async def format_txt2img_args(args, parameters, size, device_identifier):
+    if "controlnet" in parameters:
+        if "pipeline_type" not in parameters:
+            # TODO don't rely on large_model flag for this
+            if parameters.get("large_model", False):
+                parameters["pipeline_type"] = "StableDiffusionXLControlNetPipeline"
+            else:
+                parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
+
+        await format_controlnet_args(args, parameters, None, size, device_identifier)
+
+
 async def format_img2img_args(args, parameters, size, device_identifier):
     start_image = await get_image(args.pop("start_image_uri"), size)
 
@@ -199,10 +232,21 @@ async def format_img2img_args(args, parameters, size, device_identifier):
             args, parameters, start_image, size, device_identifier
         )
         if "pipeline_type" not in parameters:
-            parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
+            # TODO don't rely on large_model flag for this
+            if parameters.get("large_model", False):
+                parameters[
+                    "pipeline_type"
+                ] = "StableDiffusionXLControlNetImg2ImgPipeline"
+            else:
+                parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
 
     elif "pipeline_type" not in parameters:
-        parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
+        # TODO don't rely on large_model flag for this
+        if parameters.get("large_model", False):
+            parameters["pipeline_type"] = "StableDiffusionXLImg2ImgPipeline"
+        else:
+            parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
+
         args.pop("height", None)
         args.pop("width", None)
 
@@ -292,7 +336,11 @@ async def format_controlnet_args(
     # kandinsky controlnet uses "hint" instead of "image"
     if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
         args["hint"] = make_hint(control_image).to(device_identifier)
-    elif parameters.get("pipeline_type", None) == "StableDiffusionControlNetPipeline":
+    elif (
+        parameters.get("pipeline_type", None) == "StableDiffusionControlNetPipeline"
+        or parameters.get("pipeline_type", None)
+        == "StableDiffusionXLControlNetPipeline"
+    ):
         args["image"] = control_image
     else:
         args["control_image"] = control_image
