@@ -68,9 +68,13 @@ def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
         kwargs.pop("control_guidance_end", None)
         kwargs.pop("image", None)
         kwargs.pop("cross_attention_kwargs", None)
+        kwargs.pop("image_guidance_scale", None)
+        kwargs.pop("height", None)
+        kwargs.pop("width", None)
+
         kwargs["output_type"] = "pil"
         kwargs["image"] = images
-        return pipeline( **kwargs).images
+        return pipeline(**kwargs).images
 
     return images
 
