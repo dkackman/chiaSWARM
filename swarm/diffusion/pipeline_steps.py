@@ -4,17 +4,6 @@ from ..type_helpers import has_method
 from ..post_processors.upscale import upscale_image_sdx2
 
 
-def controlnet_prepipeline(
-    model_name, controlnet_prepipeline_type, load_pipeline_args, device_identifier
-):
-    return controlnet_prepipeline_type.from_pretrained(
-        model_name,
-        controlnet=load_pipeline_args["controlnet"],
-        vae=load_pipeline_args.get("vae", None),
-        torch_dtype=torch.float16,
-    ).to(device_identifier)
-
-
 def prior_pipeline(args, device_identifier):
     pipeline_prior_type = args.pop("pipeline_prior_type", None)
     if pipeline_prior_type is not None:

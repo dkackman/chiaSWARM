@@ -9,12 +9,7 @@ from ..type_helpers import has_method
 from ..pre_processors.image_utils import center_crop_resize
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
 from ..post_processors.upscale import upscale_image
-from .pipeline_steps import (
-    prior_pipeline,
-    refiner_pipeline,
-    upscale_pipeline,
-    controlnet_prepipeline,
-)
+from .pipeline_steps import prior_pipeline, refiner_pipeline, upscale_pipeline
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -78,15 +73,15 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     # this is how QR code monster works. it runs a prepipeline to get the latent
     # and then runs the main pipeline with the latent
     if "controlnet_prepipeline_type" in kwargs:
-        prepipeline = controlnet_prepipeline(
+        controlnet_prepipeline_type = kwargs.pop("controlnet_prepipeline_type")
+        prepipeline = controlnet_prepipeline_type.from_pretrained(
             model_name,
-            kwargs.pop("controlnet_prepipeline_type"),
-            load_pipeline_args,
-            device_identifier,
-        )
-        control_image = kwargs.pop(
-            "control_image"
-        )  # take out the original control_image
+            controlnet=load_pipeline_args["controlnet"],
+            vae=load_pipeline_args.get("vae", None),
+            torch_dtype=torch.float16,
+        ).to(device_identifier)
+        # take out the original control_image
+        control_image = kwargs.pop("control_image")
         args = kwargs.copy()
         args.pop("strength", None)
         image = prepipeline(output_type="latent", **args)
