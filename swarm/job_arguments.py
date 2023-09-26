@@ -15,7 +15,7 @@ from .external_resources import (
     get_qrcode_image,
     max_size,
     download_images,
-    isNotBlank,
+    is_not_blank,
 )
 from .loras import Loras
 
@@ -126,114 +126,30 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
                 f"The max image size is (1024, 1024); got ({size[0]}, {size[1]})."
             )
 
-    parameters = args.pop("parameters", {})
     if "prompt" not in args:
         args["prompt"] = ""
 
-    if workflow == "img2img" or "start_image_uri" in args:
-        start_image = await get_image(args.pop("start_image_uri"), size)
-        control_image = start_image
+    parameters = args.pop("parameters", {})
 
-        if size is None and start_image is not None:
-            size = start_image.size
+    if workflow == "img2img":
+        await format_img2img_args(args, parameters, size, device_identifier)
 
-        controlnet = parameters.pop("controlnet", None)
-        if controlnet is not None:
-            if "pipeline_type" not in parameters:
-                parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
-
-            if isNotBlank(controlnet.get("qr_code_contents", None)):
-                control_image = await get_qrcode_image(
-                    controlnet["qr_code_contents"], size
-                )
-                if start_image is None:
-                    start_image = control_image
-
-            elif "preprocessor" in controlnet:
-                control_image = preprocess_image(
-                    start_image, controlnet["preprocessor"], device_identifier
-                )
-                args["save_preprocessed_input"] = True
-
-            controlnet_parameters = controlnet.get("parameters", {})
-
-            args["controlnet_model_type"] = get_type(
-                "diffusers",
-                controlnet_parameters.get("controlnet_model_type", "ControlNetModel"),
-            )
-            if "controlnet_prepipeline_type" in controlnet_parameters:
-                args["controlnet_prepipeline_type"] = get_type(
-                    "diffusers", controlnet_parameters["controlnet_prepipeline_type"]
-                )
-            args["controlnet_model_name"] = controlnet.get(
-                "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
-            )
-            args["controlnet_conditioning_scale"] = float(
-                controlnet.get("controlnet_conditioning_scale", 1.0)
-            )
-            args["control_guidance_start"] = float(
-                controlnet.get("control_guidance_start", 0.0)
-            )
-            args["control_guidance_end"] = float(
-                controlnet.get("control_guidance_end", 1.0)
-            )
-
-        elif "pipeline_type" not in parameters:
-            parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
-            args.pop("height", None)
-            args.pop("width", None)
-
-        if (
-            args["model_name"] == "timbrooks/instruct-pix2pix"
-            or args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
-        ):
-            # pix2pix models use image_guidance_scale instead of strength
-            # image_guidance_scale has a range of 1-5 instead 0-1
-            args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
-
-        if start_image is None:
-            raise ValueError("Workflow requires an input image. None provided")
-
-        # These two models need the size set to the size of the input image or the error out
-        if (
-            args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
-            or args["model_name"]
-            == "kandinsky-community/kandinsky-2-2-controlnet-depth"
-        ):
-            start_image = resize_square(start_image).resize((768, 768))
-            args["height"] = start_image.height
-            args["width"] = start_image.width
-
-        # kandinsky controlnet uses "hint" instead of "image"
-        if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
-            args["hint"] = make_hint(start_image).to(device_identifier)
-
-        if (
-            control_image is not None
-            and parameters["pipeline_type"]
-            == "StableDiffusionControlNetImg2ImgPipeline"
-        ):
-            args["control_image"] = control_image
-            start_image = center_crop_resize(start_image, control_image.size)
-
-        args["image"] = start_image
-
-    if "mask_image_uri" in args:
+    elif workflow == "inpaint" or "mask_image_uri" in args:
+        # inpaint inherits img2img setup since it has a start image
+        await format_img2img_args(args, parameters, device_identifier)
+        args["mask_image"] = await get_image(args.pop("mask_image_uri"), size)
         args.pop("height", None)
         args.pop("width", None)
 
-        args["mask_image"] = await get_image(args.pop("mask_image_uri"), size)
+    elif workflow == "txt2img" and "controlnet" in parameters:
+        if "pipeline_type" not in parameters:
+            parameters["pipeline_type"] = "StableDiffusionControlNetPipeline"
+
+        await format_controlnet_args(args, parameters, None, size, device_identifier)
 
     if "num_inference_steps" not in args:
         # default num_inference_steps if not set - some pipelines have high default values
         args["num_inference_steps"] = 30
-
-    args["pipeline_type"] = get_type(
-        "diffusers", parameters.pop("pipeline_type", "DiffusionPipeline")
-    )
-    args["scheduler_type"] = get_type(
-        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
-    )
 
     if "pipeline_prior_type" in parameters:
         args["pipeline_prior_type"] = get_type(
@@ -245,6 +161,13 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         args["prior_timesteps"] = load_type_from_full_name(
             parameters.pop("prior_timesteps")
         )
+
+    args["pipeline_type"] = get_type(
+        "diffusers", parameters.pop("pipeline_type", "DiffusionPipeline")
+    )
+    args["scheduler_type"] = get_type(
+        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
+    )
 
     # set defaults if the model specifies them
     default_height = parameters.pop("default_height", None)
@@ -263,3 +186,113 @@ async def format_stable_diffusion_args(args, workflow, device_identifier):
         args[key] = value
 
     return diffusion_callback, args
+
+
+async def format_img2img_args(args, parameters, size, device_identifier):
+    start_image = await get_image(args.pop("start_image_uri"), size)
+
+    if size is None and start_image is not None:
+        size = start_image.size
+
+    if "controlnet" in parameters:
+        await format_controlnet_args(
+            args, parameters, start_image, size, device_identifier
+        )
+        if "pipeline_type" not in parameters:
+            parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
+
+    elif "pipeline_type" not in parameters:
+        parameters["pipeline_type"] = "StableDiffusionImg2ImgPipeline"
+        args.pop("height", None)
+        args.pop("width", None)
+
+    if (
+        args["model_name"] == "timbrooks/instruct-pix2pix"
+        or args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
+    ):
+        # pix2pix models use image_guidance_scale instead of strength
+        # image_guidance_scale has a range of 1-5 instead 0-1
+        args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
+
+    if start_image is None:
+        raise ValueError("Workflow requires an input image. None provided")
+
+    # These two models need the size set to the size of the input image or they error out
+    if (
+        args["model_name"] == "diffusers/sdxl-instructpix2pix-768"
+        or args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth"
+    ):
+        start_image = resize_square(start_image).resize((768, 768))
+        args["height"] = start_image.height
+        args["width"] = start_image.width
+
+    # if there is a control image, resize it to the size of the start image to match it
+    if "control_image" in args:
+        start_image = center_crop_resize(start_image, args["control_image"].size)
+
+    args["image"] = start_image
+
+
+async def format_controlnet_args(
+    args, parameters, start_image, size, device_identifier
+):
+    controlnet = parameters.pop("controlnet")
+    control_image = await get_image(controlnet.get("control_image_uri", None), size)
+    args["save_preprocessed_input"] = True
+
+    # if we have a qr code, use it to get the control image even if a control image was provided
+    if is_not_blank(controlnet.get("qr_code_contents", None)):
+        control_image = await get_qrcode_image(controlnet["qr_code_contents"], size)
+        if start_image is None:
+            start_image = control_image
+
+    # if a preprocessor is specified derive the control_image from start image if present
+    elif start_image is not None and is_not_blank(controlnet.get("preprocessor", None)):
+        control_image = preprocess_image(
+            start_image, controlnet["preprocessor"], device_identifier
+        )
+
+    # there's no start image but there is a control image - preprocess that if needed
+    elif control_image is not None and is_not_blank(
+        controlnet.get("preprocessor", None)
+    ):
+        control_image = preprocess_image(
+            control_image, controlnet["preprocessor"], device_identifier
+        )
+
+    # finally just use the start_image as the control image
+    elif control_image is None:
+        control_image = start_image
+
+    # we've tried every way we know to get a control image from the inputs but no joy
+    if control_image is None:
+        raise ValueError("Controlnet specified but no control image provided")
+
+    controlnet_parameters = controlnet.get("parameters", {})
+
+    args["controlnet_model_type"] = get_type(
+        "diffusers",
+        controlnet_parameters.get("controlnet_model_type", "ControlNetModel"),
+    )
+    if "controlnet_prepipeline_type" in controlnet_parameters:
+        args["controlnet_prepipeline_type"] = get_type(
+            "diffusers", controlnet_parameters["controlnet_prepipeline_type"]
+        )
+    args["controlnet_model_name"] = controlnet.get(
+        "controlnet_model_name", "lllyasviel/control_v11p_sd15_canny"
+    )
+    args["controlnet_conditioning_scale"] = float(
+        controlnet.get("controlnet_conditioning_scale", 1.0)
+    )
+    args["control_guidance_start"] = float(
+        controlnet.get("control_guidance_start", 0.0)
+    )
+    args["control_guidance_end"] = float(controlnet.get("control_guidance_end", 1.0))
+
+    # kandinsky controlnet uses "hint" instead of "image"
+    if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
+        args["hint"] = make_hint(control_image).to(device_identifier)
+    elif parameters.get("pipeline_type", None) == "StableDiffusionControlNetPipeline":
+        args["image"] = control_image
+    else:
+        args["control_image"] = control_image

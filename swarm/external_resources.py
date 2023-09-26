@@ -9,7 +9,7 @@ max_size = 1024
 
 
 async def get_image(uri, size):
-    if not isNotBlank(uri):
+    if is_blank(uri):
         return None
 
     timeout = aiohttp.ClientTimeout(total=10)
@@ -63,7 +63,7 @@ async def get_qrcode_image(qr_code_contents, size):
         box_size=10,
         border=4,
     )
-    qr.add_data("qr_code_contents")
+    qr.add_data(qr_code_contents)
     qr.make(fit=True)
 
     qrcode_image = qr.make_image(fill_color="black", back_color="white")
@@ -90,5 +90,9 @@ async def async_download_image(session, url):
     return Image.open(BytesIO(content))
 
 
-def isNotBlank(myString):
-    return bool(myString and myString.strip())
+def is_blank(s):
+    return not (s and s.strip())
+
+
+def is_not_blank(s):
+    return bool(s and s.strip())
