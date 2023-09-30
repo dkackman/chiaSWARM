@@ -22,5 +22,6 @@
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.python"
-    }
+    },
+    "python.analysis.typeCheckingMode": "off"
 }

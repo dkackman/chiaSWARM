@@ -34,6 +34,14 @@
       "module": "swarm.test",
       "cwd": "${workspaceFolder}/",
       "justMyCode": true
+    },
+    {
+      "name": "test-animatediff",
+      "type": "python",
+      "request": "launch",
+      "module": "swarm.test_ad",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
     }
   ]
 }
