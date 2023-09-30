@@ -89,21 +89,31 @@ def format_txt2audio_args(args):
 
 
 def format_txt2vid_args(args):
-    parameters = args.pop("parameters", {})
     if "prompt" not in args:
         args["prompt"] = ""
 
     if "num_inference_steps" not in args:
         args["num_inference_steps"] = 25
-
+        
     args.pop("num_images_per_prompt", None)
 
+    parameters = args.pop("parameters", {})
     args["pipeline_type"] = get_type(
         "diffusers", parameters.pop("pipeline_type", "DiffusionPipeline")
     )
     args["scheduler_type"] = get_type(
         "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
     )
+    if "unet_model_type" in parameters:
+        args["unet_model_type"] = get_type(
+            "diffusers", parameters.pop("unet_model_type", "UNet3DConditionModel")
+        )
+        
+    if "unet" in parameters:
+        args["unet"] = parameters["unet"]   
+        # specific to https://huggingface.co/Tune-A-Video-library/df-cpt-mo-di-bear-guitar
+        args.pop("num_frames", None)
+        args["video_length"] = parameters.pop("video_length", 10)
 
     return txt2vid_diffusion_callback, args
 

@@ -2,6 +2,7 @@ import torch
 from diffusers import (
     DiffusionPipeline,
     DPMSolverMultistepScheduler,
+    UNet3DConditionModel
 )
 from ..type_helpers import has_method
 import tempfile
@@ -12,23 +13,29 @@ from ..toolbox.video_helpers import get_frame
 import cv2
 from typing import List
 import numpy as np
-import shutil
 from PIL import Image
 
 
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
     pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
-    kwargs["num_frames"] = kwargs.pop("num_frames", 25)
     content_type = kwargs.pop("content_type", "video/mp4")
     upscale = kwargs.pop("upscale", False)
     kwargs.pop("outputs", ["primary"])
+
+    load_pipeline_args = {}
+    if "unet" in kwargs:
+        unet_model_type = kwargs.pop("unet_model_type", UNet3DConditionModel)
+        unet_model_name = kwargs.pop("unet")
+        unet = unet_model_type.from_pretrained(unet_model_name, subfolder="unet", torch_dtype=torch.float16).to(device_identifier)
+        load_pipeline_args["unet"] = unet
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision", "main"),
         variant=kwargs.pop("variant", None),
         torch_dtype=torch.float16,
+        **load_pipeline_args
     )
     pipeline = pipeline.to(device_identifier)
 
@@ -39,7 +46,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're doing a long video or mid-range on mem, preserve memory vs performance
     if (
-        kwargs["num_frames"] > 30
+        (kwargs.get("num_frames", 25) > 30 or kwargs.get("video_length", 5) > 5)
         and mem_info[1] < 16000000000  # for 3090's etc just let em go full bore
     ):
         # not all pipelines share these methods, so check first
@@ -48,7 +55,8 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     if has_method(pipeline, "enable_model_cpu_offload"):
         pipeline.enable_model_cpu_offload()
-
+    if has_method(pipeline, "enable_vae_slicing"):
+        pipeline.enable_vae_slicing()
     p = pipeline(**kwargs)
     video_frames = p.frames
 
@@ -76,7 +84,6 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         with open(final_filepath, "rb") as video_file:
             video_buffer = BytesIO(video_file.read())
 
-        shutil.copy(final_filepath, "./video.mp4")
         thumbnail = get_frame(final_filepath, 0)
 
     results = {"primary": make_result(video_buffer, thumbnail, content_type)}
