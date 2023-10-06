@@ -18,7 +18,7 @@ RUN python -m pip install wheel setuptools
 
 RUN pip install torch torchvision torchaudio
 RUN pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
-RUN pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib
+RUN pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib PyWavelets
 RUN pip install --no-deps invisible-watermark
 RUN pip install git+https://github.com/suno-ai/bark.git@main
 
