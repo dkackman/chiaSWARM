@@ -23,6 +23,9 @@ class Device:
     def name(self):
         return torch.cuda.get_device_name(self.device_id)
 
+    def memory(self):
+        return torch.cuda.mem_get_info(self.device_id)[1]
+
     def __call__(self, func, **kwargs):
         if not self.mutex.acquire(False):
             logging.error(f"Device {self.device_id} is busy but got invoked.")

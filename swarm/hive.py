@@ -6,7 +6,7 @@ from . import __version__
 import logging
 
 
-async def ask_for_work(settings, hive_uri):
+async def ask_for_work(settings, hive_uri, device):
     print(f"{datetime.now()}: Asking for work from the hive at {hive_uri}...")
     timeout = aiohttp.ClientTimeout(total=10)
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -16,6 +16,8 @@ async def ask_for_work(settings, hive_uri):
             params={
                 "worker_version": __version__,
                 "worker_name": settings.worker_name,
+                "memory": device.memory(),
+                "gpu": device.name(),
             },
             headers={
                 "Content-type": "application/json",

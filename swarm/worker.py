@@ -1,3 +1,4 @@
+from typing import Any
 import diffusers
 import torch
 import asyncio
@@ -22,12 +23,13 @@ from . import __version__
 # producer/consumer queue for job retrieved
 work_queue: asyncio.Queue
 # semaphore to limit the number of jobs running at once to the number of gpus
-available_gpus: asyncio.Semaphore
+from asyncio import Queue, Semaphore
+from swarm.settings import load_settings
 
+available_gpus: Semaphore
 
 # producer consumer queue for results waiting to be uploaded
-result_queue = asyncio.Queue()
-
+result_queue: Queue[Any] = Queue()
 
 settings = load_settings()
 hive_uri = f"{settings.sdaas_uri.rstrip('/')}/api"
@@ -40,6 +42,7 @@ async def run_worker():
 
     # Create a task for each device to process work
     device_tasks = []
+    device = None
     for i in range(torch.cuda.device_count()):
         device = Device(i)
         device_tasks.append(asyncio.create_task(device_worker(device)))
@@ -56,7 +59,7 @@ async def run_worker():
             # only ask for work if there is a free gpu
             await available_gpus.acquire()
             try:
-                for job in await ask_for_work(settings, hive_uri):
+                for job in await ask_for_work(settings, hive_uri, device):
                     job_id = job["id"]
                     print(f"Got job {job_id}")
                     await work_queue.put(job)
