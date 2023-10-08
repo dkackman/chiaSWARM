@@ -122,10 +122,10 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     main_pipeline = main_pipeline.to(device_identifier)
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
-    if has_method(main_pipeline, "scheduler"):
+    if main_pipeline.scheduler is not None:
         main_pipeline.scheduler = scheduler_type.from_config(
             main_pipeline.scheduler.config, use_karras_sigmas=True
-        ).to(device_identifier)
+        )
 
     mem_info = torch.cuda.mem_get_info(device_identifier)
     # if we're mid-range on mem (12GB or less), preserve memory vs performance

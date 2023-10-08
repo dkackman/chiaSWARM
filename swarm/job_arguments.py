@@ -336,6 +336,7 @@ async def format_controlnet_args(
     # kandinsky controlnet uses "hint" instead of "image"
     if args["model_name"] == "kandinsky-community/kandinsky-2-2-controlnet-depth":
         args["hint"] = make_hint(control_image).to(device_identifier)
+    # in this case we are not doing an img2img controlnet
     elif (
         parameters.get("pipeline_type", None) == "StableDiffusionControlNetPipeline"
         or parameters.get("pipeline_type", None)
