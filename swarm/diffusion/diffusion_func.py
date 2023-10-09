@@ -81,7 +81,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             torch_dtype=torch.float16,
         ).to(device_identifier)
         # take out the original control_image
-        control_image = kwargs.pop("control_image")
+        control_image = kwargs.pop("control_image", None)
+
         args = kwargs.copy()
         args.pop("strength", None)
         image = prepipeline(output_type="latent", **args)
@@ -90,7 +91,9 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         # this will make is 1024x1024
         upscaled_latents = upscale_image(image, "nearest-exact", 2)
         # put the control_image back upscaled to match the latent dimensions
-        kwargs["control_image"] = center_crop_resize(control_image, (1024, 1024))
+        if control_image is not None:
+            kwargs["control_image"] = center_crop_resize(control_image, (1024, 1024))
+            
         kwargs["image"] = upscaled_latents
         load_pipeline_args["unet"] = prepipeline.unet
 
