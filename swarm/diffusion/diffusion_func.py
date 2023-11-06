@@ -93,7 +93,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         # put the control_image back upscaled to match the latent dimensions
         if control_image is not None:
             kwargs["control_image"] = center_crop_resize(control_image, (1024, 1024))
-            
+
         kwargs["image"] = upscaled_latents
         load_pipeline_args["unet"] = prepipeline.unet
 
@@ -125,7 +125,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     main_pipeline = main_pipeline.to(device_identifier)
 
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
-    if main_pipeline.scheduler is not None:
+    if hasattr(main_pipeline, "scheduler") and kwargs.pop("allow_user_scheduler", True):
         main_pipeline.scheduler = scheduler_type.from_config(
             main_pipeline.scheduler.config, use_karras_sigmas=True
         )

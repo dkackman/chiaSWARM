@@ -1,5 +1,4 @@
 {
-    "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "cSpell.words": [
         "aiohttp",
@@ -19,8 +18,5 @@
         "upscaler",
         "vram",
         "xformers"
-    ],
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.python"
-    }
+    ]
 }
