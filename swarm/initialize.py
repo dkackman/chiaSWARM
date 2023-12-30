@@ -11,7 +11,7 @@ from .settings import (
     resolve_path,
     save_settings,
 )
-from .hive import get_models
+from .hive.remote import get_models
 from .type_helpers import get_type
 
 

@@ -1,8 +1,8 @@
 import aiohttp
 import json
 from datetime import datetime
-from .settings import save_file
-from . import __version__
+from ..settings import save_file
+from .. import __version__
 import logging
 
 

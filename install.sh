@@ -219,7 +219,7 @@ python -m pip install wheel setuptools
 
 pip install torch torchvision torchaudio
 pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
-pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib PyWavelets
+pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib PyWavelets types-Pillow
 pip install --no-deps invisible-watermark
 pip install git+https://github.com/suno-ai/bark.git@main
 

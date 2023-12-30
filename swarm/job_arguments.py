@@ -1,7 +1,7 @@
 from .diffusion.diffusion_func import diffusion_callback
 from .video.tx2vid import txt2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
-from .toolbox.stitch import stitch_callback
+from .post_processors.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
 from .audio.audioldm import txt2audio_diffusion_callback
 from .audio.bark import bark_diffusion_callback
@@ -10,14 +10,14 @@ from .type_helpers import get_type, load_type_from_full_name
 from .pre_processors.controlnet import preprocess_image
 from .pre_processors.depth_estimator import make_hint
 from .pre_processors.image_utils import resize_square, center_crop_resize
-from .external_resources import (
+from .resources.external_resources import (
     get_image,
     get_qrcode_image,
     max_size,
     download_images,
     is_not_blank,
 )
-from .loras import Loras
+from .resources.loras import Loras
 
 
 async def format_args(job, settings, device_identifier):

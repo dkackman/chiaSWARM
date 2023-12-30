@@ -3,7 +3,7 @@ import asyncio
 import qrcode
 from io import BytesIO
 from PIL import Image, ImageOps
-from .pre_processors.image_utils import resize_for_condition_image
+from ..pre_processors.image_utils import resize_for_condition_image
 
 max_size = 1024
 
@@ -42,7 +42,7 @@ async def get_image(uri, size):
         image = ImageOps.exif_transpose(image).convert("RGB")
 
         # if we have a desired size and the image is larger than it, scale the image down
-        if size != None and (image.height > size[0] or image.width > size[1]):
+        if size is not None and (image.height > size[0] or image.width > size[1]):
             image.thumbnail(size, Image.Resampling.LANCZOS)
 
         elif image.height > max_size or image.width > max_size:

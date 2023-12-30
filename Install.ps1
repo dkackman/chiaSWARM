@@ -79,7 +79,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python -m pip install diffusers[torch] transformers accelerate scipy ftfy safetensors moviepy opencv-python sentencepiece
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python -m pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib PyWavelets
+python -m pip install aiohttp concurrent-log-handler pydub controlnet_aux qrcode matplotlib PyWavelets types-Pillow
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 pip install --no-deps invisible-watermark

@@ -3,7 +3,7 @@ import diffusers
 import torch
 import asyncio
 import logging
-from swarm.hive import ask_for_work, submit_result
+from .hive.remote import ask_for_work, submit_result
 from .settings import (
     load_settings,
     resolve_path,
@@ -18,13 +18,12 @@ from .post_processors.output_processor import (
 from .gpu.device import Device
 from .log_setup import setup_logging
 from . import __version__
+from asyncio import Queue, Semaphore
 
 # these globals are assigned in startup
 # producer/consumer queue for job retrieved
 work_queue: asyncio.Queue
 # semaphore to limit the number of jobs running at once to the number of gpus
-from asyncio import Queue, Semaphore
-from swarm.settings import load_settings
 
 available_gpus: Semaphore
 
