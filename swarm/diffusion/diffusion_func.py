@@ -34,15 +34,16 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         kwargs.pop("content_type", "image/jpeg"),
     )
 
+    torch_dtype = torch.bfloat16 if kwargs.pop("use_bfloat16", False) else torch.float16
     load_pipeline_args = {}
     load_pipeline_args["revision"] = kwargs.pop("revision", "main")
     load_pipeline_args["variant"] = kwargs.pop("variant", None)
-    load_pipeline_args["torch_dtype"] = torch.float16
+    load_pipeline_args["torch_dtype"] = torch_dtype
     load_pipeline_args["use_safe_tensors"] = kwargs.pop("use_safe_tensors", None)
 
     if "vae" in kwargs:
         load_pipeline_args["vae"] = AutoencoderKL.from_pretrained(
-            kwargs.pop("vae"), torch_dtype=torch.float16
+            kwargs.pop("vae"), torch_dtype=torch_dtype
         ).to(device_identifier)
 
     # if there is a controlnet load and configure it
@@ -52,7 +53,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         load_pipeline_args["controlnet"] = controlnet_model_type.from_pretrained(
             kwargs.pop("controlnet_model_name"),
             revision=kwargs.pop("controlnet_revision", "main"),
-            torch_dtype=torch.float16,
+            torch_dtype=torch_dtype,
         ).to(device_identifier)
 
         if kwargs.pop("save_preprocessed_input", False):
@@ -78,7 +79,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             model_name,
             controlnet=load_pipeline_args["controlnet"],
             vae=load_pipeline_args.get("vae", None),
-            torch_dtype=torch.float16,
+            torch_dtype=torch_dtype,
         ).to(device_identifier)
         # take out the original control_image
         control_image = kwargs.pop("control_image", None)
