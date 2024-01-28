@@ -73,7 +73,7 @@ def format_txt2audio_args(args):
         args["prompt"] = ""
 
     if "num_inference_steps" not in args:
-        args["num_inference_steps"] = 25
+        args["num_inference_steps"] = 20
 
     args["pipeline_type"] = get_type(
         "diffusers", parameters.pop("pipeline_type", "AudioLDMPipeline")
