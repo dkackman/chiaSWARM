@@ -148,7 +148,10 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
         if has_method(main_pipeline, "enable_model_cpu_offload"):
             main_pipeline.enable_model_cpu_offload()
 
-    # prior pipeline is used by the Kandinsky and others
+    if kwargs.pop("always_offload", False) and has_method(main_pipeline, "enable_model_cpu_offload"):
+        main_pipeline.enable_model_cpu_offload()
+
+    # prior pipeline is used by the Kandinsky v2 and others
     prior_pipeline(kwargs, device_identifier)
 
     images = main_pipeline(**kwargs).images

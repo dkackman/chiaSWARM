@@ -127,7 +127,23 @@ kandinsky_controlnet_job = {
         "default_width": 768,
     },
 }
-
+kandinsky3_job = {
+    "id": "__test__",
+    "model_name": "kandinsky-community/kandinsky-3",
+    "prompt": "A fantasy landscape, Cinematic lighting",
+    "negative_prompt": "low quality, bad quality",
+    "workflow": "txt2img",
+    "variant": "fp16",
+    "num_inference_steps": 20,
+    "guidance_scale": 4.0,
+    "outputs": ["primary"],
+    "parameters": {
+        "large_model": True,
+        "always_offload": True,
+        "use_bfloat16": True,
+        "pipeline_type": "AutoPipelineForText2Image"
+    },
+}
 settings = load_settings()
 
 
@@ -147,4 +163,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(kandinsky_controlnet_job))
+    asyncio.run(run_test(kandinsky3_job))

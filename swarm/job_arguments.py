@@ -1,5 +1,6 @@
 from .diffusion.diffusion_func import diffusion_callback
 from .video.tx2vid import txt2vid_diffusion_callback
+from .video.img2vid import img2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
 from .toolbox.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
@@ -41,6 +42,9 @@ async def format_args(job, settings, device_identifier):
 
     if workflow == "txt2vid":
         return format_txt2vid_args(args)
+
+    if workflow == "img2vid":
+        return await format_img2vid_args(args)
 
     if args["model_name"].startswith("DeepFloyd/"):
         return diffusion_if_callback, args
@@ -106,6 +110,29 @@ def format_txt2vid_args(args):
     )
 
     return txt2vid_diffusion_callback, args
+
+
+async def format_img2vid_args(args):
+    parameters = args.pop("parameters", {})
+    if "prompt" not in args:
+        args["prompt"] = ""
+
+    if "num_inference_steps" not in args:
+        args["num_inference_steps"] = 25
+
+    args.pop("num_images_per_prompt", None)
+
+    args["pipeline_type"] = get_type(
+        "diffusers", parameters.pop("pipeline_type", "I2VGenXLPipeline")
+    )
+    args["scheduler_type"] = get_type(
+        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
+    )
+
+    if "start_image_uri" in args:
+        args["image"] = await get_image(args.pop("start_image_uri"), None)
+
+    return img2vid_diffusion_callback, args
 
 
 async def format_img2txt_args(args):
