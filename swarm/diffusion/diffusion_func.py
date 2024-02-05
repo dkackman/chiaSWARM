@@ -145,10 +145,8 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
             main_pipeline.enable_vae_slicing()
         if has_method(main_pipeline, "enable_vae_tiling"):
             main_pipeline.enable_vae_tiling()
-        if has_method(main_pipeline, "enable_model_cpu_offload"):
-            main_pipeline.enable_model_cpu_offload()
 
-    if kwargs.pop("always_offload", False) and has_method(main_pipeline, "enable_model_cpu_offload"):
+    if (preserve_vram or kwargs.pop("always_offload", False)) and has_method(main_pipeline, "enable_model_cpu_offload"):
         main_pipeline.enable_model_cpu_offload()
 
     # prior pipeline is used by the Kandinsky v2 and others
