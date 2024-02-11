@@ -132,6 +132,10 @@ async def format_img2vid_args(args):
     if "start_image_uri" in args:
         args["image"] = await get_image(args.pop("start_image_uri"), None)
 
+    # remove any unsupported args
+    for arg in parameters.pop("unsupported_pipeline_arguments", []):
+        args.pop(arg, None)
+        
     return img2vid_diffusion_callback, args
 
 

@@ -1,8 +1,5 @@
 import torch
-from diffusers import (
-    DiffusionPipeline,
-    DPMSolverMultistepScheduler,
-)
+from diffusers import StableVideoDiffusionPipeline
 from ..type_helpers import has_method
 import tempfile
 import pathlib
@@ -14,51 +11,42 @@ from typing import List
 import numpy as np
 import shutil
 from diffusers.utils import export_to_gif
+from PIL import Image
 
 def img2vid_diffusion_callback(device_identifier, model_name, **kwargs):
-    scheduler_type = kwargs.pop("scheduler_type", DPMSolverMultistepScheduler)
-    pipeline_type = kwargs.pop("pipeline_type", DiffusionPipeline)
-    kwargs.pop("num_frames", 25)
+    kwargs.pop("scheduler_type", None)
+    pipeline_type = kwargs.pop("pipeline_type", StableVideoDiffusionPipeline)
+    kwargs["num_frames"] = kwargs.pop("num_frames", 12)
     kwargs.pop("guidance_scale", 25)
-    kwargs["num_inference_steps"] = 1
-    kwargs["decode_chunk_size"] = 1
     content_type = kwargs.pop("content_type", "video/mp4")
     kwargs.pop("outputs", ["primary"])
+
+    torch_dtype = torch.bfloat16 if kwargs.pop("use_bfloat16", False) else torch.float16
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
         revision=kwargs.pop("revision", "main"),
         variant=kwargs.pop("variant", None),
-        torch_dtype=torch.float16,
+        torch_dtype=torch_dtype,
     )
     pipeline = pipeline.to(device_identifier)
 
-    pipeline.scheduler = scheduler_type.from_config(
-        pipeline.scheduler.config, use_karras_sigmas=True
-    )
-
-    # mem_info = torch.cuda.mem_get_info(device_identifier)
-    # if we're doing a long video or mid-range on mem, preserve memory vs performance
-    # if (
-    #     kwargs["num_frames"] > 30
-    #     and mem_info[1] < 16000000000  # for 3090's etc just let em go full bore
-    # ):
-    #     # not all pipelines share these methods, so check first
-    #     if has_method(pipeline, "enable_vae_slicing"):
-    #         pipeline.enable_vae_slicing()
-
-    # if has_method(pipeline, "enable_model_cpu_offload"):
-    #     pipeline.enable_model_cpu_offload()
+    if has_method(pipeline, "enable_vae_slicing"):
+        pipeline.enable_vae_slicing()
+    if has_method(pipeline, "enable_vae_tiling"):
+        pipeline.enable_vae_tiling()
+    if has_method(pipeline, "enable_model_cpu_offload"):
+        pipeline.enable_model_cpu_offload()
 
     p = pipeline(**kwargs)
-    video_frames = p.frames
+    video_frames = p.frames[0]
 
     if content_type.startswith("video"):
         media_info = ("mp4", "XVID") if content_type == "video/mp4" else ("webm", "VP90")
 
         # convert to video
         with tempfile.TemporaryDirectory() as tmpdirname:
-            final_filepath = export_to_video(
+            final_filepath = export_to_video_pil(
                 video_frames,
                 pathlib.Path(tmpdirname).joinpath(f"video.{media_info[0]}").__str__(),
                 media_info[1],
@@ -74,7 +62,7 @@ def img2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         final_filepath = export_to_gif(
-            video_frames[0],
+            video_frames,
             pathlib.Path(tmpdirname).joinpath(f"video.gif").__str__()
         )
         with open(final_filepath, "rb") as video_file:
@@ -97,4 +85,31 @@ def export_to_video(
         img = cv2.cvtColor(video_frame, cv2.COLOR_RGB2BGR)
         video_writer.write(img)
 
+    video_writer.release()  # Ensure to release the video writer
+
+    return output_video_path
+
+
+def export_to_video_pil(
+    video_frames: List[Image.Image],  # Expect a list of PIL images
+    output_video_path: str,
+    codec: str,
+    fps: int = 8  # Added fps as a parameter for flexibility
+) -> str:
+    # Convert the first PIL image to NumPy to get dimensions
+    first_frame = np.array(video_frames[0])
+    h, w, _ = first_frame.shape
+    
+    # Initialize the video writer
+    fourcc = cv2.VideoWriter_fourcc(*codec)
+    video_writer = cv2.VideoWriter(output_video_path, fourcc, fps, frameSize=(w, h))
+    
+    for video_frame in video_frames:
+        # Convert each PIL image to a NumPy array
+        img_array = np.array(video_frame)
+        # Convert RGB (PIL's default) to BGR (OpenCV's default)
+        img = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        video_writer.write(img)
+    
+    video_writer.release()  # Ensure to release the video writer
     return output_video_path

@@ -141,7 +141,8 @@ kandinsky3_job = {
         "large_model": True,
         "always_offload": True,
         "use_bfloat16": True,
-        "pipeline_type": "AutoPipelineForText2Image"
+        "pipeline_type": "AutoPipelineForText2Image",
+        "allow_user_scheduler": False
     },
 }
 settings = load_settings()
