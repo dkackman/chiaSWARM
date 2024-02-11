@@ -263,7 +263,6 @@ async def format_img2img_args(args, parameters, size, device_identifier):
             args, parameters, start_image, size, device_identifier
         )
         if "pipeline_type" not in parameters:
-            # TODO don't rely on large_model flag for this
             if parameters.get("large_model", False):
                 parameters[
                     "pipeline_type"
@@ -272,7 +271,6 @@ async def format_img2img_args(args, parameters, size, device_identifier):
                 parameters["pipeline_type"] = "StableDiffusionControlNetImg2ImgPipeline"
 
     elif "pipeline_type" not in parameters:
-        # TODO don't rely on large_model flag for this
         if parameters.get("large_model", False):
             parameters["pipeline_type"] = "StableDiffusionXLImg2ImgPipeline"
         else:
@@ -288,6 +286,10 @@ async def format_img2img_args(args, parameters, size, device_identifier):
         # pix2pix models use image_guidance_scale instead of strength
         # image_guidance_scale has a range of 1-5 instead 0-1
         args["image_guidance_scale"] = args.pop("strength", 0.6) * 5
+
+    # if we don't have a start image but do have a control image
+    if start_image is None and args["control_image"] is not None:
+        start_image = args["control_image"]
 
     if start_image is None:
         raise ValueError("Workflow requires an input image. None provided")
