@@ -1,6 +1,6 @@
 import torch
 from diffusers import DiffusionPipeline
-from ..type_helpers import has_method
+from ..type_helpers import has_method, get_type
 from ..post_processors.upscale import upscale_image_sdx2
 
 
@@ -65,6 +65,28 @@ def refiner_pipeline(refiner, images, device_identifier, preserve_vram, kwargs):
         kwargs["image"] = images
         return pipeline(**kwargs).images
 
+    return images
+
+def decoder_pipeline(decoder, images, device_identifier, preserve_vram, kwargs):
+    if (decoder is not None):
+        pipeline_type = get_type("diffusers", decoder.get("pipeline_type", "StableCascadeDecoderPipeline"))
+        pipeline = pipeline_type.from_pretrained(decoder["model_name"], 
+            variant=decoder.get("variant", None), 
+            revision=decoder.get("revision", "main"),
+            torch_dtype=torch.float16,
+            use_safetensors=decoder.get("use_safetensors", True)).to(device_identifier)
+    
+        if (preserve_vram):
+            pipeline.enable_model_cpu_offload()
+
+        kwargs.pop("height", None)
+        kwargs.pop("width", None)
+        kwargs["image_embeddings"] = images.to(torch.float16)
+        kwargs["num_inference_steps"] = 10
+        kwargs["guidance_scale"] = 0
+        kwargs["output_type"] = "pil"
+        return pipeline(**kwargs).images
+    
     return images
 
 

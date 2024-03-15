@@ -9,7 +9,7 @@ from ..type_helpers import has_method
 from ..pre_processors.image_utils import center_crop_resize
 from ..post_processors.output_processor import OutputProcessor, is_nsfw
 from ..post_processors.upscale import upscale_image
-from .pipeline_steps import prior_pipeline, refiner_pipeline, upscale_pipeline
+from .pipeline_steps import prior_pipeline, refiner_pipeline, upscale_pipeline, decoder_pipeline
 
 
 def diffusion_callback(device_identifier, model_name, **kwargs):
@@ -23,6 +23,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     lora = kwargs.pop("lora", None)
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
     refiner = kwargs.pop("refiner", None)
+    decoder = kwargs.pop("decoder", None)
 
     # set output_type if already there or upscale is/ selected (we use the latent upscaler)
     output_type = kwargs.pop("output_type", "latent" if upscale else None)
@@ -152,11 +153,16 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     # prior pipeline is used by the Kandinsky v2 and others
     prior_pipeline(kwargs, device_identifier)
 
-    images = main_pipeline(**kwargs).images
+    main_pipeline_output = main_pipeline(**kwargs)
+    images = main_pipeline_output.images if hasattr(main_pipeline_output, "images") else main_pipeline_output.image_embeddings
 
     # SDXL uses a refiner pipeline
     images = refiner_pipeline(
         refiner, images, device_identifier, preserve_vram, kwargs.copy()
+    )
+
+    images = decoder_pipeline(
+        decoder, images, device_identifier, preserve_vram, kwargs.copy()
     )
 
     images = upscale_pipeline(upscale, images, device_identifier, kwargs.copy())
