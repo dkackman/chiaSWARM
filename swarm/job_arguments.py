@@ -105,9 +105,25 @@ def format_txt2vid_args(args):
     args["pipeline_type"] = get_type(
         "diffusers", parameters.pop("pipeline_type", "DiffusionPipeline")
     )
-    args["scheduler_type"] = get_type(
-        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
-    )
+
+    # the model scheduler args trump user settings
+    if "scheduler_args" in parameters:
+        scheduler_args = parameters["scheduler_args"]
+        args["scheduler_type"] = get_type(
+            "diffusers", scheduler_args.pop("scheduler_type", "LCMScheduler")
+        )
+    else:
+        args["scheduler_type"] = get_type(
+            "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
+        )
+
+    if "motion_adapter" in parameters:
+        args["motion_adapter"] = parameters["motion_adapter"]
+    if "lora" in parameters:
+        args["lora"] = parameters["lora"]
+
+    for arg in parameters.pop("unsupported_pipeline_arguments", []):
+        args.pop(arg, None)
 
     return txt2vid_diffusion_callback, args
 

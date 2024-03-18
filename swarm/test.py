@@ -145,6 +145,38 @@ kandinsky3_job = {
         "allow_user_scheduler": False
     },
 }
+animatelcm_job = {
+    "id": "__test__",
+    "model_name": "emilianJR/epiCRealism",
+    "prompt": "A dancing marmot, 4k, high resolution",
+    "negative_prompt": "bad quality, worse quality, low resolution",
+    "workflow": "txt2vid",
+    "num_inference_steps": 6,
+    "guidance_scale": 2.0,
+    "outputs": ["primary"],
+    "num_frames": 32,
+    "content_type": "image/gif",
+    "parameters": {
+        "pipeline_type": "AnimateDiffPipeline",
+        "allow_user_scheduler": False,
+        "scheduler_type": "LCMScheduler",
+        "motion_adapter":
+        {
+            "model_name": "wangfuyun/AnimateLCM"
+        },
+        "lora" :
+        {
+            "model_name": "wangfuyun/AnimateLCM",
+            "weight_name": "AnimateLCM_sd15_t2v_lora.safetensors",
+            "adapter_name": "lcm-lora",
+            "weight": 0.8
+        },
+        "scheduler_args":
+        {
+            "beta_schedule": "linear"
+        }
+    },
+}
 settings = load_settings()
 
 
@@ -164,4 +196,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(kandinsky3_job))
+    asyncio.run(run_test(animatelcm_job))
