@@ -29,6 +29,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         if "checkpoint_file" in motion_adapter_args:
             motion_adapter = MotionAdapter()
             motion_adapter.load_state_dict(load_file(hf_hub_download(motion_adapter_args["model_name"], motion_adapter_args["checkpoint_file"])))
+            kwargs["num_inference_steps"] = motion_adapter_args.pop("num_inference_steps", 4)
         else:
             motion_adapter = MotionAdapter.from_pretrained(motion_adapter_args["model_name"], torch_dtype=torch_dtype)
 

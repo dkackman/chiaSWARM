@@ -184,7 +184,7 @@ animatediff_job = {
     "prompt": "A dancing marmot, 4k, high resolution",
     "negative_prompt": "bad quality, worse quality, low resolution",
     "workflow": "txt2vid",
-    "num_inference_steps": 8,
+    "num_inference_steps": 6,
     "guidance_scale": 2.0,
     "outputs": ["primary"],
     "num_frames": 32,
@@ -196,9 +196,9 @@ animatediff_job = {
         "motion_adapter":
         {
             "model_name": "ByteDance/AnimateDiff-Lightning",
-            "checkpoint_file": "animatediff_lightning_8step_diffusers.safetensors",
+            "num_inference_steps": 4,
+            "checkpoint_file": "animatediff_lightning_4step_diffusers.safetensors",
         },
-
         "scheduler_args": {
             "scheduler_type": "EulerDiscreteScheduler",
             "beta_schedule": "linear",
