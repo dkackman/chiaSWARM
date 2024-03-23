@@ -177,6 +177,35 @@ animatelcm_job = {
         }
     },
 }
+
+animatediff_job = {
+    "id": "__test__",
+    "model_name": "emilianJR/epiCRealism",
+    "prompt": "A dancing marmot, 4k, high resolution",
+    "negative_prompt": "bad quality, worse quality, low resolution",
+    "workflow": "txt2vid",
+    "num_inference_steps": 8,
+    "guidance_scale": 2.0,
+    "outputs": ["primary"],
+    "num_frames": 32,
+    "content_type": "image/gif",
+    "parameters": {
+        "pipeline_type": "AnimateDiffPipeline",
+        "allow_user_scheduler": False,
+        "scheduler_type": "LCMScheduler",
+        "motion_adapter":
+        {
+            "model_name": "ByteDance/AnimateDiff-Lightning",
+            "checkpoint_file": "animatediff_lightning_8step_diffusers.safetensors",
+        },
+
+        "scheduler_args": {
+            "scheduler_type": "EulerDiscreteScheduler",
+            "beta_schedule": "linear",
+            "timestep_spacing": "trailing"
+        },
+    },
+}
 settings = load_settings()
 
 
@@ -196,4 +225,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(animatelcm_job))
+    asyncio.run(run_test(animatediff_job))

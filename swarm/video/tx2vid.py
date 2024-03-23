@@ -8,6 +8,8 @@ from ..type_helpers import has_method
 from ..post_processors.output_processor import make_result
 from ..toolbox.video_helpers import export_to_video
 from PIL import Image
+from huggingface_hub import hf_hub_download
+from safetensors.torch import load_file
 
 
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
@@ -17,12 +19,20 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     content_type = kwargs.pop("content_type", "video/mp4")
     upscale = kwargs.pop("upscale", False)
     lora = kwargs.pop("lora", None)
+    scheduler_args = kwargs.pop("scheduler_args", {})
     kwargs.pop("outputs", ["primary"])
     torch_dtype = torch.bfloat16 if kwargs.pop("use_bfloat16", False) else torch.float16
 
     motion_adapter = None
     if "motion_adapter" in kwargs:
-        motion_adapter = MotionAdapter.from_pretrained(kwargs["motion_adapter"]["model_name"], torch_dtype=torch_dtype)
+        motion_adapter_args = kwargs["motion_adapter"]
+        if "checkpoint_file" in motion_adapter_args:
+            motion_adapter = MotionAdapter()
+            motion_adapter.load_state_dict(load_file(hf_hub_download(motion_adapter_args["model_name"], motion_adapter_args["checkpoint_file"])))
+        else:
+            motion_adapter = MotionAdapter.from_pretrained(motion_adapter_args["model_name"], torch_dtype=torch_dtype)
+
+        motion_adapter.to(device_identifier)
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
@@ -39,7 +49,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     pipeline = pipeline.to(device_identifier)
 
     pipeline.scheduler = scheduler_type.from_config(
-        pipeline.scheduler.config, beta_schedule="linear"
+        pipeline.scheduler.config, **scheduler_args
     )
 
     # not all pipelines share these methods, so check first

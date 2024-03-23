@@ -112,6 +112,7 @@ def format_txt2vid_args(args):
         args["scheduler_type"] = get_type(
             "diffusers", scheduler_args.pop("scheduler_type", "LCMScheduler")
         )
+        args["scheduler_args"] = scheduler_args
     else:
         args["scheduler_type"] = get_type(
             "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
