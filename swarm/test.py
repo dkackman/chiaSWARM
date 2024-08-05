@@ -206,6 +206,41 @@ animatediff_job = {
         },
     },
 }
+
+qr_monster_job = {
+    "id": "__test__",
+    "workflow": "img2img",
+    "model_name": "SG161222/Realistic_Vision_V5.1_noVAE",
+    "prompt": "a badger",
+    "negative_prompt": "disfigured, ugly, misshapen, low quality, nsfw, blurry",
+    "guidance_scale": 7.5,
+    "num_inference_steps": 40,
+    "strength": 0.95,
+    "content_type": "image/jpeg",
+    "start_image_uri": "",
+    "num_images_per_prompt": 1,
+    "parameters": {
+        "scheduler_type": "EulerAncestralDiscreteScheduler",
+        "controlnet": {
+            "type": "qrcode",
+            "controlnet_model_name": "monster-labs/control_v1p_sd15_qrcode_monster",
+            "preprocess": True,
+            "controlnet_conditioning_scale": 0.88,
+            "qr_code_contents": "https://api.mintgarden.io/collections/col1wsnmtt8egrgd4zw3kd53zx2wczzdxdkmf9wgntg9atnrhvma4mpqgzcjdh/offers/random/bech32",
+            "parameters": {
+                "controlnet_model_type": "ControlNetModel",
+                "controlnet_prepipeline_type": "StableDiffusionControlNetPipeline"
+            }
+        },
+        "vae": "stabilityai/sd-vae-ft-mse"
+    },
+    "outputs": [
+        "primary"
+    ],
+
+    "revision": "fp16"
+}
+
 settings = load_settings()
 
 
@@ -225,4 +260,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(animatediff_job))
+    asyncio.run(run_test(qr_monster_job))
