@@ -241,6 +241,54 @@ qr_monster_job = {
     "revision": "fp16"
 }
 
+flux_job = {
+    "id": "__test__",
+    "workflow": "txt2img",
+    "model_name": "black-forest-labs/FLUX.1-dev",
+    "prompt": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.",
+    "guidance_scale": 3.5,
+    "num_inference_steps": 50,
+    "content_type": "image/jpeg",
+    "num_images_per_prompt": 1,
+    "parameters": {
+        "large_model": True,
+        "always_offload_sequential": True,
+        "use_bfloat16": True,
+        "pipeline_type": "FluxPipeline",
+        "allow_user_scheduler": False,
+        "max_sequence_length": 512,
+        "default_height": 1024,
+        "default_width": 1024,
+    },
+    "outputs": [
+        "primary"
+    ],
+}
+
+flux_fast_job = {
+    "id": "__test__",
+    "workflow": "txt2img",
+    "model_name": "black-forest-labs/FLUX.1-schnell",
+    "prompt": "a cartoon picture of someone being stabbed with spoons",
+    "guidance_scale": 0,
+    "num_inference_steps": 5,
+    "content_type": "image/jpeg",
+    "num_images_per_prompt": 1,
+    "parameters": {
+        "large_model": True,
+        "always_offload_sequential": True,
+        "use_bfloat16": True,
+        "pipeline_type": "FluxPipeline",
+        "allow_user_scheduler": False,
+        "max_sequence_length": 256,
+        "default_height": 1024,
+        "default_width": 1024,
+    },
+    "outputs": [
+        "primary"
+    ],
+}
+
 settings = load_settings()
 
 
@@ -260,4 +308,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(qr_monster_job))
+    asyncio.run(run_test(flux_fast_job))

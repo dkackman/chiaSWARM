@@ -24,6 +24,7 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
     cross_attention_scale = kwargs.pop("cross_attention_scale", 1.0)
     refiner = kwargs.pop("refiner", None)
     decoder = kwargs.pop("decoder", None)
+    large_model = kwargs.pop("large_model", False)
 
     # set output_type if already there or upscale is/ selected (we use the latent upscaler)
     output_type = kwargs.pop("output_type", "latent" if upscale else None)
@@ -124,45 +125,39 @@ def diffusion_callback(device_identifier, model_name, **kwargs):
                 f"Could not load lora \n{lora}\nIt might be incompatible with {model_name}\n{e}"
             ) from e
 
-    main_pipeline = main_pipeline.to(device_identifier)
-
     # not all pipelines use a scheduler, so check first (UnCLIPPipeline)
     if hasattr(main_pipeline, "scheduler") and kwargs.pop("allow_user_scheduler", True):
         main_pipeline.scheduler = scheduler_type.from_config(
             main_pipeline.scheduler.config, use_karras_sigmas=True
         )
 
-    mem_info = torch.cuda.mem_get_info(device_identifier)
-    # if we're mid-range on mem (12GB or less), preserve memory vs performance
-    preserve_vram = (
-        kwargs.get("num_images_per_prompt", 1) > 1 and mem_info[1] < 13884377600
-    ) or (kwargs.pop("large_model", False) and mem_info[1] < 13884377600)
+    if (kwargs.pop("set_unet_memory_format", False)) and hasattr(main_pipeline, 'unet'):
+        main_pipeline.unet.to(memory_format=torch.channels_last)
+    if (kwargs.pop("enable_vae_slicing", False)) and has_method(main_pipeline, "enable_vae_slicing"):
+        main_pipeline.enable_vae_slicing()
+    if (kwargs.pop("enable_vae_tiling", False)) and has_method(main_pipeline, "enable_vae_tiling"):
+        main_pipeline.enable_vae_tiling()
 
-    if preserve_vram:
-        if main_pipeline.unet is not None:
-            main_pipeline.unet.to(memory_format=torch.channels_last)
-        # not all pipelines share these methods, so check first
-        if has_method(main_pipeline, "enable_vae_slicing"):
-            main_pipeline.enable_vae_slicing()
-        if has_method(main_pipeline, "enable_vae_tiling"):
-            main_pipeline.enable_vae_tiling()
-
-    if (preserve_vram or kwargs.pop("always_offload", False)) and has_method(main_pipeline, "enable_model_cpu_offload"):
+    if (kwargs.pop("always_offload", False)) and has_method(main_pipeline, "enable_model_cpu_offload"):
         main_pipeline.enable_model_cpu_offload()
+    elif (kwargs.pop("always_offload_sequential", False)) and has_method(main_pipeline, "enable_sequential_cpu_offload"):
+        main_pipeline.enable_sequential_cpu_offload()
+    else:
+        main_pipeline = main_pipeline.to(device_identifier)
 
     # prior pipeline is used by the Kandinsky v2 and others
     prior_pipeline(kwargs, device_identifier)
 
     main_pipeline_output = main_pipeline(**kwargs)
     images = main_pipeline_output.images if hasattr(main_pipeline_output, "images") else main_pipeline_output.image_embeddings
-
+    images[0].save("flux-schnell.png")
     # SDXL uses a refiner pipeline
     images = refiner_pipeline(
-        refiner, images, device_identifier, preserve_vram, kwargs.copy()
+        refiner, images, device_identifier, large_model, kwargs.copy()
     )
 
     images = decoder_pipeline(
-        decoder, images, device_identifier, preserve_vram, kwargs.copy()
+        decoder, images, device_identifier, large_model, kwargs.copy()
     )
 
     images = upscale_pipeline(upscale, images, device_identifier, kwargs.copy())
