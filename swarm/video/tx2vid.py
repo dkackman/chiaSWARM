@@ -37,9 +37,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     pipeline = pipeline_type.from_pretrained(
         model_name,
-        revision=kwargs.pop("revision", "main"),
-        variant=kwargs.pop("variant", None),
-        motion_adapter=motion_adapter,
+
         torch_dtype=torch_dtype,
     )
 

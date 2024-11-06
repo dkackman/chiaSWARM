@@ -7,10 +7,10 @@ from .settings import load_settings
 
 test_job = {
     "id": "__test__",
-    "model_name": "stabilityai/stable-diffusion-2-1",
-    "prompt": "spoons",
-    "num_inference_steps": 10,
-    "outputs": ["primary", "inference_image_strip"],
+    "model_name": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    "prompt": "A picture of Cthulhu, the many testicled god of the deep",
+    "num_inference_steps": 25,
+    "outputs": ["primary"],
 }
 
 txt2audio_job = {
@@ -85,7 +85,7 @@ if_job = {
 kandinsky_job = {
     "id": "__test__",
     "model_name": "kandinsky-community/kandinsky-2-2-decoder",
-    "prompt": "A fantasy landscape, Cinematic lighting",
+    "prompt": "A picture of Cthulhu, the many testicled god of the deep",
     "negative_prompt": "low quality, bad quality",
     "workflow": "txt2img",
     "num_inference_steps": 50,
@@ -245,9 +245,9 @@ flux_job = {
     "id": "__test__",
     "workflow": "txt2img",
     "model_name": "black-forest-labs/FLUX.1-dev",
-    "prompt": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.",
-    "guidance_scale": 3.5,
-    "num_inference_steps": 50,
+    "prompt": "A picture of Cthulhu, the many testicled god of the deep",
+    "guidance_scale": 1.7,
+    "num_inference_steps": 40,
     "content_type": "image/jpeg",
     "num_images_per_prompt": 1,
     "parameters": {
@@ -260,6 +260,7 @@ flux_job = {
         "default_height": 1024,
         "default_width": 1024,
     },
+    # "lora": "alvdansen/flux-koda/araminta_k_flux_koda.safetensors",
     "outputs": [
         "primary"
     ],
@@ -269,7 +270,7 @@ flux_fast_job = {
     "id": "__test__",
     "workflow": "txt2img",
     "model_name": "black-forest-labs/FLUX.1-schnell",
-    "prompt": "a cartoon picture of someone being stabbed with spoons",
+    "prompt": "a marmot holding a sign that says 'feed me mojos!'",
     "guidance_scale": 0,
     "num_inference_steps": 5,
     "content_type": "image/jpeg",
@@ -280,10 +281,51 @@ flux_fast_job = {
         "use_bfloat16": True,
         "pipeline_type": "FluxPipeline",
         "allow_user_scheduler": False,
-        "max_sequence_length": 256,
-        "default_height": 1024,
-        "default_width": 1024,
+        "max_sequence_length": 256
     },
+    #"lora": "alvdansen/flux-koda/araminta_k_flux_koda.safetensors",
+    "outputs": [
+        "primary"
+    ],
+}
+
+cog_video_job = {
+    "id": "__test__",
+    "workflow": "txt2vid",
+    "model_name": "THUDM/CogVideoX-2b",
+    "prompt": "Tracking shot,late afternoon light casting long shadows,a cyclist in athletic gear pedaling down a scenic mountain road,winding path with trees and a lake in the background,invigorating and adventurous atmosphere.",
+    "guidance_scale": 6,
+    "num_inference_steps": 50,
+    "content_type": "image/mp4",
+    "num_frames": 49,
+    "parameters": {
+        "large_model": True,
+        "always_offload_sequential": True,
+        "use_bfloat16": True,
+        "pipeline_type": "CogVideoXPipeline",
+        "allow_user_scheduler": False,
+    },
+    "outputs": [
+        "primary"
+    ],
+}
+
+sd35_job = {
+    "id": "__test__",
+    "workflow": "txt2img",
+    "model_name": "stabilityai/stable-diffusion-3.5-large",
+    "prompt": "A picture of Cthulhu, the many testicled god of the deep",
+    "guidance_scale": 3.5,
+    "num_inference_steps": 25,
+    "content_type": "image/jpeg",
+    "num_images_per_prompt": 1,
+    "parameters": {
+        "large_model": True,
+        "always_offload": True,
+        "use_bfloat16": True,
+        "pipeline_type": "StableDiffusion3Pipeline",
+    },
+    # "lora": "alvdansen/flux-koda/araminta_k_flux_koda.safetensors",
     "outputs": [
         "primary"
     ],
