@@ -4,8 +4,6 @@ from .video.img2vid import img2vid_diffusion_callback
 from .captioning.caption_image import caption_callback
 from .toolbox.stitch import stitch_callback
 from .video.pix2pix import model_video_callback
-from .audio.audioldm import txt2audio_diffusion_callback
-from .audio.bark import bark_diffusion_callback
 from .diffusion.diffusion_func_if import diffusion_if_callback
 from .type_helpers import get_type, load_type_from_full_name
 from .pre_processors.controlnet import preprocess_image
@@ -25,11 +23,6 @@ async def format_args(job, settings, device_identifier):
     args = prepare_args(job, settings)
 
     workflow = args.pop("workflow", None)
-    if workflow == "txt2audio":
-        if args["model_name"] == "suno/bark":
-            return bark_diffusion_callback, args
-
-        return format_txt2audio_args(args)
 
     if workflow == "stitch":
         return await format_stitch_args(args)
@@ -71,27 +64,6 @@ async def format_stitch_args(args):
     return stitch_callback, args
 
 
-def format_txt2audio_args(args):
-    parameters = args.pop("parameters", {})
-    if "prompt" not in args:
-        args["prompt"] = ""
-
-    if "num_inference_steps" not in args:
-        args["num_inference_steps"] = 20
-
-    args["pipeline_type"] = get_type(
-        "diffusers", parameters.pop("pipeline_type", "AudioLDMPipeline")
-    )
-    args["scheduler_type"] = get_type(
-        "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
-    )
-
-    for arg in parameters.get("unsupported_pipeline_arguments", []):
-        args.pop(arg, None)
-
-    return txt2audio_diffusion_callback, args
-
-
 def format_txt2vid_args(args):
     parameters = args.pop("parameters", {})
     if "prompt" not in args:
@@ -120,8 +92,12 @@ def format_txt2vid_args(args):
 
     if "motion_adapter" in parameters:
         args["motion_adapter"] = parameters["motion_adapter"]
+    if "vae" in parameters:
+        args["vae"] = parameters["vae"]
     if "lora" in parameters:
         args["lora"] = parameters["lora"]
+    if "always_offload" in parameters:
+        args["always_offload"] = parameters["always_offload"]
 
     for arg in parameters.pop("unsupported_pipeline_arguments", []):
         args.pop(arg, None)

@@ -10,6 +10,7 @@ from ..toolbox.video_helpers import export_to_video
 from PIL import Image
 from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
+#from diffusers.utils import export_to_video
 
 
 def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
@@ -21,6 +22,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     lora = kwargs.pop("lora", None)
     scheduler_args = kwargs.pop("scheduler_args", {})
     kwargs.pop("outputs", ["primary"])
+    vae = kwargs.pop("vae", None)
     torch_dtype = torch.bfloat16 if kwargs.pop("use_bfloat16", False) else torch.float16
 
     motion_adapter = None
@@ -45,18 +47,29 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         pipeline.load_lora_weights(lora["model_name"], weight_name=lora["weight_name"], adapter_name=lora["adapter_name"])
         pipeline.set_adapters([lora["adapter_name"]], [lora["weight"]])
 
-    pipeline = pipeline.to(device_identifier)
-
     pipeline.scheduler = scheduler_type.from_config(
         pipeline.scheduler.config, **scheduler_args
     )
 
-    # not all pipelines share these methods, so check first
-    if has_method(pipeline, "enable_vae_slicing"):
+    if (kwargs.pop("set_unet_memory_format", False)) and hasattr(pipeline, 'unet'):
+        pipeline.unet.to(memory_format=torch.channels_last)
+    if (kwargs.pop("enable_vae_slicing", False)) and has_method(pipeline, "enable_vae_slicing"):
         pipeline.enable_vae_slicing()
+    if (kwargs.pop("enable_vae_tiling", False)) and has_method(pipeline, "enable_vae_tiling"):
+        pipeline.enable_vae_tiling()
 
-    if has_method(pipeline, "enable_model_cpu_offload"):
+    if (kwargs.pop("always_offload", False)) and has_method(pipeline, "enable_model_cpu_offload"):
         pipeline.enable_model_cpu_offload()
+    elif (kwargs.pop("always_offload_sequential", False)) and has_method(pipeline, "enable_sequential_cpu_offload"):
+        pipeline.enable_sequential_cpu_offload()
+    else:
+        pipeline = pipeline.to(device_identifier)
+    
+    if vae is not None:
+        if (vae.pop("enable_tiling", False)) and hasattr(pipeline, "vae") and has_method(pipeline.vae, "enable_tiling"):
+            pipeline.vae.enable_tiling()
+        if (vae.pop("enable_slicing", False)) and hasattr(pipeline, "vae") and has_method(pipeline.vae, "enable_slicing"):
+            pipeline.vae.enable_slicing()
 
     p = pipeline(**kwargs)
     video_frames = p.frames[0]
@@ -73,7 +86,9 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         video = [Image.fromarray(frame).resize((1024, 576)) for frame in video_frames]
         video_frames = upscaler(kwargs["prompt"], video=video, strength=0.6).frames
 
-    thumbnail, video_buffer = export_to_video(content_type, video_frames)
+    # export_to_video(video_frames, "output.mp4", fps=8)
+
+    thumbnail, video_buffer = export_to_video(content_type, video_frames, True)
 
     results = {"primary": make_result(video_buffer, thumbnail, content_type)}
     return (results, pipeline.config)

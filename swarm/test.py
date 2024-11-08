@@ -270,7 +270,7 @@ flux_fast_job = {
     "id": "__test__",
     "workflow": "txt2img",
     "model_name": "black-forest-labs/FLUX.1-schnell",
-    "prompt": "a marmot holding a sign that says 'feed me mojos!'",
+    "prompt": "A frog holding a sign that says 'onchain engagement farming'",
     "guidance_scale": 0,
     "num_inference_steps": 5,
     "content_type": "image/jpeg",
@@ -292,18 +292,22 @@ flux_fast_job = {
 cog_video_job = {
     "id": "__test__",
     "workflow": "txt2vid",
-    "model_name": "THUDM/CogVideoX-2b",
-    "prompt": "Tracking shot,late afternoon light casting long shadows,a cyclist in athletic gear pedaling down a scenic mountain road,winding path with trees and a lake in the background,invigorating and adventurous atmosphere.",
+    "model_name": "THUDM/CogVideoX-5b",
+    "prompt": "Tracking shot,late afternoon light casting long shadows,a marmot wearing a tophat and dancing in scenic mountain setting, with a lake in the background, invigorating and adventurous atmosphere.",
     "guidance_scale": 6,
     "num_inference_steps": 50,
-    "content_type": "image/mp4",
+    "content_type": "image/gif",
     "num_frames": 49,
     "parameters": {
         "large_model": True,
-        "always_offload_sequential": True,
+        "always_offload": True,
         "use_bfloat16": True,
         "pipeline_type": "CogVideoXPipeline",
         "allow_user_scheduler": False,
+        "vae": {
+            "enable_tiling": True,
+            "enable_slicing": True,
+        }        
     },
     "outputs": [
         "primary"
@@ -313,23 +317,53 @@ cog_video_job = {
 sd35_job = {
     "id": "__test__",
     "workflow": "txt2img",
-    "model_name": "stabilityai/stable-diffusion-3.5-large",
-    "prompt": "A picture of Cthulhu, the many testicled god of the deep",
-    "guidance_scale": 3.5,
-    "num_inference_steps": 25,
+    "model_name": "stabilityai/stable-diffusion-3.5-medium",
+    "prompt": "A picture of Cthulhu holding a sign that says Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn",
+    "guidance_scale": 4.5,
+    "num_inference_steps": 40,
     "content_type": "image/jpeg",
     "num_images_per_prompt": 1,
     "parameters": {
         "large_model": True,
-        "always_offload": True,
+        "always_offload": False,
         "use_bfloat16": True,
         "pipeline_type": "StableDiffusion3Pipeline",
+        "allow_user_scheduler": False,
     },
     # "lora": "alvdansen/flux-koda/araminta_k_flux_koda.safetensors",
     "outputs": [
         "primary"
     ],
 }
+
+allegro_job = {
+    "id": "__test__",
+    "workflow": "txt2vid",
+    "model_name": "rhymes-ai/Allegro",
+    "prompt": "A dancing marmot",
+    "guidance_scale": 7.5,
+    "num_inference_steps": 100,
+    "content_type": "image/mp4",
+    "parameters": {
+        "large_model": True,
+        "always_offload_sequential": True,
+        "use_bfloat16": True,
+        "pipeline_type": "AllegroPipeline",
+        "allow_user_scheduler": False,
+        "max_sequence_length": 512,
+        "vae": {
+            "model_name": "rhymes-ai/Allegro",
+            "subfolder": "vae", 
+            "torch_dtype": "torch.float32",
+            "auto_encoder_type": "AutoencoderKLAllegro",
+            "enable_tiling": True,
+        }
+    },
+    "outputs": [
+        "primary"
+    ],
+}
+
 
 settings = load_settings()
 
@@ -350,4 +384,4 @@ async def run_test(job):
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test(flux_fast_job))
+    asyncio.run(run_test(cog_video_job))
