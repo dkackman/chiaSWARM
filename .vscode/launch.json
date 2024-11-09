@@ -5,15 +5,8 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "PowerShell Launch Current File",
-      "type": "PowerShell",
-      "request": "launch",
-      "script": "${file}",
-      "cwd": "${cwd}"
-    },
-    {
       "name": "Worker",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "swarm.worker",
       "cwd": "${workspaceFolder}/",
@@ -21,7 +14,7 @@
     },
     {
       "name": "Init",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "swarm.initialize",
       "cwd": "${workspaceFolder}/",
@@ -29,9 +22,17 @@
     },
     {
       "name": "test",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "swarm.test",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true
+    },
+    {
+      "name": "old_test",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "swarm.old_test",
       "cwd": "${workspaceFolder}/",
       "justMyCode": true
     }

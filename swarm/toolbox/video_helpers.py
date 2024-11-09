@@ -50,7 +50,7 @@ def make_video(images, duration_seconds):
         return images[len(images) - 1], BytesIO(tmp.read())
 
 
-def export_to_video(content_type, video_frames, save_debug = False):    
+def export_to_video(content_type, video_frames, save_debug = False, fps: int = 8):    
     if content_type.startswith("video"):
         media_info = ("mp4", "XVID") if content_type == "video/mp4" else ("webm", "VP90")
 
@@ -60,6 +60,7 @@ def export_to_video(content_type, video_frames, save_debug = False):
                 video_frames,
                 pathlib.Path(tmpdirname).joinpath(f"video.{media_info[0]}").__str__(),
                 media_info[1],
+                fps
             )
             with open(final_filepath, "rb") as video_file:
                 video_buffer = BytesIO(video_file.read())
@@ -74,7 +75,8 @@ def export_to_video(content_type, video_frames, save_debug = False):
     with tempfile.TemporaryDirectory() as tmpdirname:
         final_filepath = export_to_gif(
             video_frames,
-            pathlib.Path(tmpdirname).joinpath(f"video.gif").__str__()
+            pathlib.Path(tmpdirname).joinpath(f"video.gif").__str__(),
+            fps
         )
         with open(final_filepath, "rb") as video_file:
             video_buffer = BytesIO(video_file.read())

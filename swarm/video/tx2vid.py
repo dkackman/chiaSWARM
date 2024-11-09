@@ -22,7 +22,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     lora = kwargs.pop("lora", None)
     scheduler_args = kwargs.pop("scheduler_args", {})
     kwargs.pop("outputs", ["primary"])
-    vae = kwargs.pop("vae", None)
+    vae_args = kwargs.pop("vae", None)
     torch_dtype = torch.bfloat16 if kwargs.pop("use_bfloat16", False) else torch.float16
 
     motion_adapter = None
@@ -37,9 +37,15 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
         motion_adapter.to(device_identifier)
 
+    vae = None    
+    if vae_args is not None:
+        auto_encoder_type = vae_args.pop("auto_encoder_type", None)
+        if auto_encoder_type is not None:
+            vae = auto_encoder_type.from_pretrained(vae_args["model_name"], subfolder="vae", torch_dtype=torch.float32)
+
     pipeline = pipeline_type.from_pretrained(
         model_name,
-
+        vae=vae,
         torch_dtype=torch_dtype,
     )
 
@@ -47,9 +53,9 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
         pipeline.load_lora_weights(lora["model_name"], weight_name=lora["weight_name"], adapter_name=lora["adapter_name"])
         pipeline.set_adapters([lora["adapter_name"]], [lora["weight"]])
 
-    pipeline.scheduler = scheduler_type.from_config(
-        pipeline.scheduler.config, **scheduler_args
-    )
+    # pipeline.scheduler = scheduler_type.from_config(
+    #     pipeline.scheduler.config, **scheduler_args
+    # )
 
     if (kwargs.pop("set_unet_memory_format", False)) and hasattr(pipeline, 'unet'):
         pipeline.unet.to(memory_format=torch.channels_last)
@@ -65,10 +71,10 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
     else:
         pipeline = pipeline.to(device_identifier)
     
-    if vae is not None:
-        if (vae.pop("enable_tiling", False)) and hasattr(pipeline, "vae") and has_method(pipeline.vae, "enable_tiling"):
+    if vae_args is not None:
+        if (vae_args.pop("enable_tiling", False)) and hasattr(pipeline, "vae") and has_method(pipeline.vae, "enable_tiling"):
             pipeline.vae.enable_tiling()
-        if (vae.pop("enable_slicing", False)) and hasattr(pipeline, "vae") and has_method(pipeline.vae, "enable_slicing"):
+        if (vae_args.pop("enable_slicing", False)) and hasattr(pipeline, "vae") and has_method(pipeline.vae, "enable_slicing"):
             pipeline.vae.enable_slicing()
 
     p = pipeline(**kwargs)
@@ -88,7 +94,7 @@ def txt2vid_diffusion_callback(device_identifier, model_name, **kwargs):
 
     # export_to_video(video_frames, "output.mp4", fps=8)
 
-    thumbnail, video_buffer = export_to_video(content_type, video_frames, True)
+    thumbnail, video_buffer = export_to_video(content_type, video_frames, True, 15)
 
     results = {"primary": make_result(video_buffer, thumbnail, content_type)}
     return (results, pipeline.config)

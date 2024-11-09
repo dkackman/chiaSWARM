@@ -1,0 +1,55 @@
+{
+    "flux_fast": {
+        "id": "__test__",
+        "workflow": "txt2img",
+        "main_pipeline": {
+            "configuration": {
+                "always_offload_sequential": true,
+                "pipeline_type": "FluxPipeline"
+            },
+            "from_pretrained_arguments": {
+                "model_name": "black-forest-labs/FLUX.1-schnell",
+                "torch_dtype": "torch.bfloat16"
+            },
+            "arguments": {
+                "max_sequence_length": 256,
+                "prompt": "A frog holding a sign that says 'onchain engagement farming'",
+                "guidance_scale": 0,
+                "num_inference_steps": 5,
+                "num_images_per_prompt": 1
+            }
+        },
+        "results": {
+            "content_type": "image/jpeg",
+            "outputs": [
+                "primary"
+            ]
+        }
+    },
+    "kandinsky_job": {
+        "id": "__test__",
+        "main_pipeline": {
+            "configuration": {
+                "pipeline_type": "AutoPipelineForText2Image"
+            },
+            "from_pretrained_arguments": {
+                "model_name": "kandinsky-community/kandinsky-3",
+                "torch_dtype": "torch.bfloat16",
+                "variant": "fp16"
+            },
+            "arguments": {
+                "negative_prompt": "low quality, bad quality",
+                "prompt": "A picture of Cthulhu, the many tentectled god of the deep",
+                "guidance_scale": 4.0,
+                "num_inference_steps": 50,
+                "num_images_per_prompt": 1
+            }
+        },
+        "results": {
+            "content_type": "image/jpeg",
+            "outputs": [
+                "primary"
+            ]
+        }
+    }
+}

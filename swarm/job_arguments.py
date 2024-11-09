@@ -66,8 +66,9 @@ async def format_stitch_args(args):
 
 def format_txt2vid_args(args):
     parameters = args.pop("parameters", {})
-    if "prompt" not in args:
-        args["prompt"] = ""
+
+    prompt = args["prompt"] if "prompt" not in args else ""
+    args["prompt"] = prompt.format(prompt.lower().strip())
 
     if "num_inference_steps" not in args:
         args["num_inference_steps"] = 25
@@ -90,14 +91,15 @@ def format_txt2vid_args(args):
             "diffusers", parameters.pop("scheduler_type", "DPMSolverMultistepScheduler")
         )
 
-    if "motion_adapter" in parameters:
-        args["motion_adapter"] = parameters["motion_adapter"]
-    if "vae" in parameters:
-        args["vae"] = parameters["vae"]
-    if "lora" in parameters:
-        args["lora"] = parameters["lora"]
-    if "always_offload" in parameters:
-        args["always_offload"] = parameters["always_offload"]
+    vae = parameters.pop("vae", None)
+    if vae is not None:
+        if "auto_encoder_type" in vae:
+            vae["auto_encoder_type"] = get_type("diffusers", vae.pop("auto_encoder_type", None))
+        args["vae"] = vae
+
+    # now pass any remaining special args to the pipeline
+    for key, value in parameters.items():
+        args[key] = value
 
     for arg in parameters.pop("unsupported_pipeline_arguments", []):
         args.pop(arg, None)
