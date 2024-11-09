@@ -1,17 +1,16 @@
 from . import __version__
-from .gpu.device import Device
 from .settings import load_settings
 import json
-from .settings import load_settings
+from .pipeline_processors.arguments import prepare_args
 from .synchronous_worker import startup, do_work
 
 
-def run_test(job):
+def run_test(job, output_dir):
     settings = load_settings()
     startup()
     try:
-        func, args = format_args(job, settings, "cuda")
-        result = do_work(Device(0), func, args)
+        args = prepare_args(job)
+        result = do_work(args, output_dir)
 
         if "error" in result["pipeline_config"]:
             print(result["pipeline_config"]["error"])
@@ -30,10 +29,6 @@ if __name__ == "__main__":
         job = data.pop(job_name, None)        
     
     if job is not None:
-        run_test(job)
+        run_test(job, "./outputs")
     else:
         print("Job not found " + job_name)
-
-    
-def format_args(job, settings, device_identifier):
-    return job["worker_function"], job["args"]

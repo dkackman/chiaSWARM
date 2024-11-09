@@ -10,6 +10,12 @@ def get_type(module_name, type_name):
     module = __import__(module_name)
     return getattr(module, type_name)
 
+def load_type_from_name(type_name):
+    if "." in type_name:
+        return load_type_from_full_name(type_name)
+
+    return get_type("diffusers", type_name)
+
 
 def load_type_from_full_name(full_name):
     # Split the full name into module path and object name
