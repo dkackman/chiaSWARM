@@ -17,7 +17,7 @@ def run_test(job_id, job, output_dir):
 
 if __name__ == "__main__":
     job = None
-    job_id = "kandinsky_3_img2img"
+    job_id = "kandinsky_controlnet"
     with open('./examples.json', 'r') as file:
         data = json.load(file)
         job = data.pop(job_id, None)        

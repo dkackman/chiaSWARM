@@ -18,10 +18,13 @@ def do_work(job_id, input_job, output_dir):
     print(f"Processing {job_id}")
 
     try:
-        result = None
+        default_seed = input_job.get("seed", torch.seed())
         input_job["id"] = job_id
+        input_job["seed"] = default_seed
         job = prepare_args(input_job)
-        default_seed = job.get("seed", 0)
+
+        result = None
+        intermediate_results = {}
         for pipeline in job["pipelines"]:
             name = pipeline["name"]
             print(f"Running pipeline {name}")
@@ -30,7 +33,7 @@ def do_work(job_id, input_job, output_dir):
             configuration = pipeline["configuration"]
             configuration["seed"] = configuration["seed"] if "seed" in configuration else default_seed
 
-            result = run_pipeline(pipeline, "cuda", result)
+            result = run_pipeline(pipeline, "cuda", intermediate_results)
 
         content_type = job.get("content_type", "image/jpeg")
         extension = mimetypes.guess_extension(content_type)

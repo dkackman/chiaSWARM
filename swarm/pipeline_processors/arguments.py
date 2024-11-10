@@ -1,4 +1,3 @@
-import torch 
 import copy
 from ..external_resources import (
     get_image,
@@ -15,8 +14,6 @@ def prepare_args(input_args):
     if input_args is None:
         return {}
 
-    # set a single seed at the root to use if not set in the pipeline   
-    input_args["seed"] = input_args["seed"] if "seed" in input_args else torch.seed()
     args = copy.deepcopy(input_args)
 
     process_args(args)
@@ -27,15 +24,23 @@ def prepare_args(input_args):
 def process_args(d):
     if isinstance(d, dict):
         for k, v in d.items():
-            if isinstance(v, dict):
+            if k.endswith("_image") or k == "image":
+                d[k] = process_image(v)    
+            elif isinstance(v, dict):
                 process_args(v)
             elif isinstance(v, list):
                 for item in v:
                     process_args(item)
             elif (k.endswith("_type") or k.endswith("_dtype")) and k != "content_type":
                 d[k] = load_type_from_name(v)
-            elif k.endswith("_image") or k == "image":
-                d[k] = load_image(v)                
+            
     elif isinstance(d, list):
         for item in d:
             process_args(item)
+
+def process_image(image):
+    img = load_image(image["location"])
+    if "size" in image:
+        img = img.resize((image["size"]["height"], image["size"]["width"]))
+
+    return img

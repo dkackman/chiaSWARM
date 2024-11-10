@@ -66,10 +66,70 @@
                 "arguments": {
                     "negative_prompt": "low quality, bad quality",
                     "prompt": "A painting of the inside of a subway train with tiny raccoons.",
-                    "image": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky3/t2i.png",
+                    "image": {
+                        "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky3/t2i.png"
+                    },
                     "num_inference_steps": 25,
                     "num_images_per_prompt": 1,
                     "strength": 0.75
+                }
+            }
+        ]
+    },
+    "kandinsky_controlnet": {
+        "content_type": "image/png",
+        "pipelines": [
+            {
+                "name": "depth_estimator",
+                "configuration": {
+                    "preprocessor": "depth_estimator",
+                    "intermediate_result_name": "hint",
+                    "image": {
+                        "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinskyv22/cat.png",
+                        "size": {
+                            "height": 768,
+                            "width": 768
+                        }
+                    }
+                }
+            },
+            {
+                "name": "prior",
+                "configuration": {
+                    "pipeline_type": "KandinskyV22PriorPipeline",
+                    "intermediate_result_names": {
+                        "image_embeds": "image_embeds",
+                        "negative_image_embeds": "negative_image_embeds"
+                    }
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "kandinsky-community/kandinsky-2-2-prior",
+                    "torch_dtype": "torch.float16"
+                },
+                "arguments": {
+                    "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
+                    "prompt": "A robot, 4k photo"
+                }
+            },
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "KandinskyV22ControlnetPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "kandinsky-community/kandinsky-2-2-controlnet-depth",
+                    "torch_dtype": "torch.float16"
+                },
+                "arguments": {
+                    "num_inference_steps": 50,
+                    "num_images_per_prompt": 1,
+                    "height": 768,
+                    "width": 768,
+                    "intermediate_result_names": {
+                        "hint": "hint",
+                        "image_embeds": "image_embeds",
+                        "negative_image_embeds": "negative_image_embeds"
+                    }
                 }
             }
         ]
