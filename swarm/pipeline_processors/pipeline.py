@@ -31,14 +31,20 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
         pipeline.load_lora_weights(lora_name, **lora)
         pipeline.fuse_lora(lora_scale=lora_scale)
 
+    # create a generator that will be used by each iteration if they don't set their own seed
     seed = configuration["seed"] if "seed" in configuration else torch.seed()
-    generator = torch.Generator(device_identifier).manual_seed(seed)
+    default_generator = torch.Generator(device_identifier).manual_seed(seed)
     results = []
 
     # prepare and run pipeline iterations
     for iteration in pipeline_definition.get("iterations", []):
         arguments = iteration.get("arguments", {})
-        arguments["generator"] = generator
+
+        # each iteration can use its own seed
+        if "seed" in iteration:
+            arguments["generator"] = torch.Generator(device_identifier).manual_seed(iteration["seed"])
+        else:
+            arguments["generator"] = default_generator
 
         # if there are intermediate results requested, add them to the iteration
         intermediate_result_names = iteration.get("insert_intermediate_result_names", {})
