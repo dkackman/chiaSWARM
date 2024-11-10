@@ -123,6 +123,35 @@
         ]
     },
     {
+        "id": "cogVideoX",
+        "content_type": "video/mp4",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "offload": "sequential",
+                    "pipeline_type": "CogVideoXPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "THUDM/CogVideoX-5b",
+                    "torch_dtype": "torch.bfloat16",
+                    "use_safe_tensors": true
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "A marmot wearing a tophat dancing on a mountainside.",
+                            "num_videos_per_prompt": 1,
+                            "num_inference_steps": 50,
+                            "num_frames": 49,
+                            "guidance_scale": 6
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": "flux_fast",
         "content_type": "image/jpeg",
         "pipelines": [

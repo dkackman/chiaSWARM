@@ -9,7 +9,7 @@ from packaging import version
 from .log_setup import setup_logging
 from .pipeline_processors.pipeline import run_pipeline
 from .pipeline_processors.arguments import prepare_args
-
+from diffusers.utils import export_to_video
 from . import __version__
 
 settings = load_settings()
@@ -43,8 +43,12 @@ def do_work(job_id, input_job, output_dir):
         content_type = job.get("content_type", "image/jpeg")
         extension = mimetypes.guess_extension(content_type)
         for i, result in enumerate(results):
-            if hasattr(result, 'save'):
-                result.save(os.path.join(output_dir, f"{job_id}-{i}{extension}"))
+            output_path = os.path.join(output_dir, f"{job_id}-{i}{extension}")
+            if content_type.startswith("video"):
+                export_to_video(result, output_path)
+
+            elif hasattr(result, 'save'):
+                result.save(output_path)
 
     except Exception as e:
         print(e)

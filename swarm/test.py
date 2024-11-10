@@ -45,4 +45,3 @@ if __name__ == "__main__":
             run_test(job,  args.output_dir)
         else:
             print("Job not found " + job_id)
-

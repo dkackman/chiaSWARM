@@ -80,10 +80,13 @@ def get_result(output):
         return output.images[0]
     
     if hasattr(output, "image_embeds"):
-        output.image_embeds[0]
+        return output.image_embeds[0]
 
     if hasattr(output, "image_embeddings"):
-        output.image_embeddings[0]
+        return output.image_embeddings[0]
+
+    if hasattr(output, "frames"):
+        return output.frames[0]
     
     return None
 
