@@ -1,4 +1,70 @@
 {
+    "sd15-controlnet": {
+        "content_type": "image/jpeg",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "StableDiffusionControlNetPipeline"
+                },
+                "preprocessors": [
+                    {
+                        "name": "depth_estimator",
+                        "intermediate_result_name": "depth_mask",
+                        "image": {
+                            "location": "https://huggingface.co/lllyasviel/control_v11p_sd15_depth/resolve/main/images/input.png"
+                        }
+                    }
+                ],
+                "controlnet": {
+                    "configuration": {
+                        "pipeline_type": "ControlNetModel"
+                    },
+                    "from_pretrained_arguments": {
+                        "model_name": "lllyasviel/control_v11f1p_sd15_depth",
+                        "torch_dtype": "torch.float16"
+                    }
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "runwayml/stable-diffusion-v1-5",
+                    "torch_dtype": "torch.float16"
+                },
+                "arguments": {
+                    "prompt": "Stormtrooper's lecture in beautiful lecture hall",
+                    "num_inference_steps": 30,
+                    "intermediate_result_names": {
+                        "image": "{depth_mask}"
+                    }
+                }
+            }
+        ]
+    },
+    "sd14-lora": {
+        "content_type": "image/jpeg",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "StableDiffusionPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "CompVis/stable-diffusion-v1-4",
+                    "torch_dtype": "torch.float16"
+                },
+                "loras": [
+                    {
+                        "lora_name": "sayakpaul/sd-model-finetuned-lora-t4",
+                        "lora_scale": 0.1
+                    }
+                ],
+                "arguments": {
+                    "prompt": "A pokemon with blue eyes",
+                    "guidance_scale": 7.5,
+                    "num_inference_steps": 30
+                }
+            }
+        ]
+    },
     "flux_fast": {
         "content_type": "image/jpeg",
         "pipelines": [
@@ -15,10 +81,46 @@
                 },
                 "arguments": {
                     "max_sequence_length": 256,
-                    "prompt": "A frog holding a sign that says 'onchain engagement farming'",
+                    "prompt": "flmft style A frog holding a sign that says 'onchain engagement farming'",
                     "guidance_scale": 0,
                     "num_inference_steps": 5,
                     "num_images_per_prompt": 1
+                }
+            }
+        ]
+    },
+    "flux_dev": {
+        "content_type": "image/jpeg",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "offload": "sequential",
+                    "pipeline_type": "FluxPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "black-forest-labs/FLUX.1-dev",
+                    "torch_dtype": "torch.bfloat16",
+                    "use_safe_tensors": true
+                },
+                "loras": [
+                    {
+                        "lora_name": "alvdansen/flux-koda",
+                        "weight_name": "araminta_k_flux_koda.safetensors",
+                        "use_safe_tensors": true
+                    }
+                ],
+                "arguments": {
+                    "max_sequence_length": 512,
+                    "prompt": "A frog holding a sign that says 'onchain engagement farming'",
+                    "guidance_scale": 7,
+                    "num_inference_steps": 40,
+                    "num_images_per_prompt": 1,
+                    "height": 1024,
+                    "width": 1024,
+                    "cross_attention_kwargs": {
+                        "scale": 0.75
+                    }
                 }
             }
         ]
@@ -80,20 +182,6 @@
         "content_type": "image/png",
         "pipelines": [
             {
-                "name": "depth_estimator",
-                "configuration": {
-                    "preprocessor": "depth_estimator",
-                    "intermediate_result_name": "hint",
-                    "image": {
-                        "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinskyv22/cat.png",
-                        "size": {
-                            "height": 768,
-                            "width": 768
-                        }
-                    }
-                }
-            },
-            {
                 "name": "prior",
                 "configuration": {
                     "pipeline_type": "KandinskyV22PriorPipeline",
@@ -116,6 +204,19 @@
                 "configuration": {
                     "pipeline_type": "KandinskyV22ControlnetPipeline"
                 },
+                "preprocessors": [
+                    {
+                        "name": "depth_estimator_tensor",
+                        "intermediate_result_name": "hint",
+                        "image": {
+                            "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinskyv22/cat.png",
+                            "size": {
+                                "height": 768,
+                                "width": 768
+                            }
+                        }
+                    }
+                ],
                 "from_pretrained_arguments": {
                     "model_name": "kandinsky-community/kandinsky-2-2-controlnet-depth",
                     "torch_dtype": "torch.float16"

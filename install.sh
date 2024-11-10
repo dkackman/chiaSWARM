@@ -93,7 +93,7 @@ PYTHON_MINOR_VER=
 find_python() {
   set +e
   unset BEST_VERSION
-  for V in 311 3.11 310 3.10 39 3.9 38 3.8 37 3.7 3; do
+  for V in 312 3.12 311 3.11 310 3.10; do
     if command -v python$V >/dev/null; then
       if [ "$BEST_VERSION" = "" ]; then
         BEST_VERSION=$V
@@ -215,13 +215,6 @@ fi
 . ./activate
 # pip 20.x+ supports Linux binary wheels
 python -m pip install --upgrade pip
-python -m pip install wheel setuptools
 
-pip install torch diffusers[torch] transformers accelerate safetensors controlnet_aux qrcode sentencepiece
-pip install aiohttp matplotlib moviepy opencv-python concurrent-log-handler protobuf imageio-ffmpeg 
-
-echo ""
-echo "chiaSWARM worker installation is now complete."
-echo ""
-echo ""
-echo "Type '. ./activate' and then 'python -m swarm.initialize' to begin."
+pip install torch diffusers[torch] peft transformers accelerate safetensors controlnet_aux sentencepiece
+pip install aiohttp matplotlib moviepy opencv-python concurrent-log-handler protobuf imageio-ffmpeg qrcode

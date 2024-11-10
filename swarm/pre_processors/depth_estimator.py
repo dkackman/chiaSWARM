@@ -5,7 +5,7 @@ from torchvision import transforms
 from transformers import pipeline
 
 
-def make_hint(image, device_identifier="cuda"):
+def make_hint_tensor(image, device_identifier):
     depth_estimator = pipeline("depth-estimation", device=device_identifier)
 
     image = depth_estimator(image)["depth"]
@@ -17,8 +17,8 @@ def make_hint(image, device_identifier="cuda"):
     return hint.unsqueeze(0).half().to(device_identifier)
 
 
-def make_hint_image(image):
-    hint = make_hint(image)
+def make_hint_image(image, device_identifier):
+    hint = make_hint_tensor(image, device_identifier)
     # Convert the tensor to a Pillow image
     to_pil = transforms.ToPILImage()
     return to_pil(hint[0].cpu())

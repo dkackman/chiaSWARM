@@ -5,36 +5,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Worker",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "swarm.worker",
-      "cwd": "${workspaceFolder}/",
-      "justMyCode": true
-    },
-    {
-      "name": "Init",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "swarm.initialize",
-      "cwd": "${workspaceFolder}/",
-      "justMyCode": true
-    },
-    {
       "name": "test",
       "type": "debugpy",
       "request": "launch",
       "module": "swarm.test",
       "cwd": "${workspaceFolder}/",
-      "justMyCode": true
-    },
-    {
-      "name": "old_test",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "swarm.old_test",
-      "cwd": "${workspaceFolder}/",
-      "justMyCode": true
+      "justMyCode": true,
+      "args": [
+        "kandinsky_controlnet"
+      ]
     }
   ]
 }

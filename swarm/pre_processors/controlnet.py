@@ -18,7 +18,7 @@ from transformers import (
 )
 from .zoe_depth import colorize, load_zoe
 from .image_utils import center_crop_resize, resize_for_condition_image
-from .depth_estimator import make_hint_image
+from .depth_estimator import make_hint_image, make_hint_tensor
 import torch
 
 
@@ -33,7 +33,7 @@ def preprocess_image(image, preprocessor, device_identifier):
     if preprocessor == "depth":
         return image_to_depth(image, device_identifier)
 
-    if preprocessor == "normal bae":
+    if preprocessor == "normal_bae":
         return NormalBaeDetector.from_pretrained("lllyasviel/Annotators")(image)
 
     if preprocessor == "segmentation":
@@ -53,7 +53,7 @@ def preprocess_image(image, preprocessor, device_identifier):
             image, scribble=True
         )
 
-    if preprocessor == "soft edge":
+    if preprocessor == "soft_edge":
         return PidiNetDetector.from_pretrained("lllyasviel/Annotators")(image)
 
     if preprocessor == "shuffle":
@@ -63,14 +63,17 @@ def preprocess_image(image, preprocessor, device_identifier):
     if preprocessor == "tile":
         return resize_for_condition_image(image)
 
-    if preprocessor == "zoe depth":
+    if preprocessor == "zoe_depth":
         return get_zoe_depth_map(image, device_identifier)
 
-    if preprocessor == "center crop":
+    if preprocessor == "center_crop":
         return center_crop_resize(image)
 
-    if preprocessor == "depth estimator":
-        return make_hint_image(image)
+    if preprocessor == "depth_estimator_tensor":
+        return make_hint_tensor(image, device_identifier)    
+    
+    if preprocessor == "depth_estimator":
+        return make_hint_image(image, device_identifier)
 
     raise Exception("Unknown controlnet type")
 

@@ -10,8 +10,6 @@ class Settings:
     huggingface_token: Union[bool, str] = True  # deprecated
     log_level: str = "WARN"
     log_filename: str = "log/generator.log"
-    sdaas_token: str = ""
-    sdaas_uri: str = "http://localhost:9511"
     worker_name: str = "worker"
     lora_root_dir: str = "~/lora"
 
@@ -30,15 +28,7 @@ def load_settings():
 
     settings.log_level = settings_dict.get("log_level", "WARN")
     settings.log_filename = settings_dict.get("log_filename", "log/generator.log")
-    settings.sdaas_token = settings_dict.get("sdaas_token", "")
-    settings.sdaas_uri = settings_dict.get("sdaas_uri", "http://localhost:9511")
-    settings.worker_name = settings_dict.get("worker_name", "worker")
     settings.lora_root_dir = settings_dict.get("lora_root_dir", "~/lora")
-
-    # environment variables override settings file
-    settings.sdaas_token = os.getenv("SDAAS_TOKEN", settings.sdaas_token)
-    settings.sdaas_uri = os.getenv("SDAAS_URI", settings.sdaas_uri)
-    settings.worker_name = os.getenv("SDAAS_WORKERNAME", settings.worker_name)
 
     return settings
 
