@@ -29,13 +29,15 @@
                     "model_name": "runwayml/stable-diffusion-v1-5",
                     "torch_dtype": "torch.float16"
                 },
-                "arguments": {
-                    "prompt": "Stormtrooper's lecture in beautiful lecture hall",
-                    "num_inference_steps": 30,
-                    "intermediate_result_names": {
-                        "image": "{depth_mask}"
+                "iterations": [
+                    {
+                        "prompt": "Stormtrooper's lecture in beautiful lecture hall",
+                        "num_inference_steps": 30,
+                        "intermediate_result_names": {
+                            "image": "{depth_mask}"
+                        }
                     }
-                }
+                ]
             }
         ]
     },
@@ -57,11 +59,13 @@
                         "lora_scale": 0.1
                     }
                 ],
-                "arguments": {
-                    "prompt": "A pokemon with blue eyes",
-                    "guidance_scale": 7.5,
-                    "num_inference_steps": 30
-                }
+                "iterations": [
+                    {
+                        "prompt": "A pokemon with blue eyes",
+                        "guidance_scale": 7.5,
+                        "num_inference_steps": 30
+                    }
+                ]
             }
         ]
     },
@@ -79,13 +83,15 @@
                     "torch_dtype": "torch.bfloat16",
                     "use_safe_tensors": true
                 },
-                "arguments": {
-                    "max_sequence_length": 256,
-                    "prompt": "flmft style A frog holding a sign that says 'onchain engagement farming'",
-                    "guidance_scale": 0,
-                    "num_inference_steps": 5,
-                    "num_images_per_prompt": 1
-                }
+                "iterations": [
+                    {
+                        "max_sequence_length": 256,
+                        "prompt": "A frog holding a sign that says 'onchain engagement farming'",
+                        "guidance_scale": 0,
+                        "num_inference_steps": 5,
+                        "num_images_per_prompt": 1
+                    }
+                ]
             }
         ]
     },
@@ -103,25 +109,26 @@
                     "torch_dtype": "torch.bfloat16",
                     "use_safe_tensors": true
                 },
-                "loras": [
+                "iterations": [
                     {
-                        "lora_name": "alvdansen/flux-koda",
-                        "weight_name": "araminta_k_flux_koda.safetensors",
-                        "use_safe_tensors": true
+                        "max_sequence_length": 512,
+                        "prompt": "A visually striking dark fantasy portrait of Cthulhu and The Flying Spaghetti Monster, raging oceanic landscape. The Cthulhu's slimy green skin is a stark contrast to the Spaghetti Monster's vivid, noodle-like appendages, which seems to be made of real spaghetti. The two are locked in battle, leaving glowing, leave a trail of lightning behind, while their intense, glistening eyes reflect a fierce, unbridled energy. The background features a haunting, stormy red sky filled with ominous lightning, adding to the overall sense of mystique and intrigue. This captivating image blends the mediums of photo, painting, and portrait photography to create a unique, conceptual art piece., painting, portrait photography, vibrant, photo, conceptual art, dark fantasy",
+                        "guidance_scale": 3.5,
+                        "num_inference_steps": 50,
+                        "num_images_per_prompt": 1,
+                        "height": 1024,
+                        "width": 1024
+                    },
+                    {
+                        "max_sequence_length": 512,
+                        "prompt": "An exquisite 8K Ultra HD double exposure image, featuring a The Flying Spaghetti Monster silhouette seamlessly blended with a vivid cloud filled  sunrise. The The Flying Spaghetti Monster's details are intricately incorporated into the landscape, creating a stunning visual effect. The monochrome background highlights the The Flying Spaghetti Monster's noodly appendages, while the sharp focus and crisp lines showcase the incredible level of detail. The full color of the The Flying Spaghetti Monster contrasts with the white background, evoking a sense of awe and wonder. The overall effect is cinematic, capturing the essence of a breathtaking African sunset., illustration, photo, cinematic, typography, 3d render",
+                        "guidance_scale": 3.5,
+                        "num_inference_steps": 50,
+                        "num_images_per_prompt": 1,
+                        "height": 1024,
+                        "width": 1024
                     }
-                ],
-                "arguments": {
-                    "max_sequence_length": 512,
-                    "prompt": "A frog holding a sign that says 'onchain engagement farming'",
-                    "guidance_scale": 7,
-                    "num_inference_steps": 40,
-                    "num_images_per_prompt": 1,
-                    "height": 1024,
-                    "width": 1024,
-                    "cross_attention_kwargs": {
-                        "scale": 0.75
-                    }
-                }
+                ]
             }
         ]
     },
@@ -140,13 +147,15 @@
                     "variant": "fp16",
                     "use_safe_tensors": true
                 },
-                "arguments": {
-                    "negative_prompt": "low quality, bad quality",
-                    "prompt": "A picture of Cthulhu, the god of the deep",
-                    "guidance_scale": 4.0,
-                    "num_inference_steps": 50,
-                    "num_images_per_prompt": 1
-                }
+                "iterations": [
+                    {
+                        "negative_prompt": "low quality, bad quality",
+                        "prompt": "A picture of Cthulhu, the god of the deep",
+                        "guidance_scale": 4.0,
+                        "num_inference_steps": 50,
+                        "num_images_per_prompt": 1
+                    }
+                ]
             }
         ]
     },
@@ -165,16 +174,18 @@
                     "variant": "fp16",
                     "use_safe_tensors": true
                 },
-                "arguments": {
-                    "negative_prompt": "low quality, bad quality",
-                    "prompt": "A painting of the inside of a subway train with tiny raccoons.",
-                    "image": {
-                        "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky3/t2i.png"
-                    },
-                    "num_inference_steps": 25,
-                    "num_images_per_prompt": 1,
-                    "strength": 0.75
-                }
+                "iterations": [
+                    {
+                        "negative_prompt": "low quality, bad quality",
+                        "prompt": "A painting of the inside of a subway train with tiny raccoons.",
+                        "image": {
+                            "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinsky3/t2i.png"
+                        },
+                        "num_inference_steps": 25,
+                        "num_images_per_prompt": 1,
+                        "strength": 0.75
+                    }
+                ]
             }
         ]
     },
@@ -194,10 +205,12 @@
                     "model_name": "kandinsky-community/kandinsky-2-2-prior",
                     "torch_dtype": "torch.float16"
                 },
-                "arguments": {
-                    "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
-                    "prompt": "A robot, 4k photo"
-                }
+                "iterations": [
+                    {
+                        "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
+                        "prompt": "A robot, 4k photo"
+                    }
+                ]
             },
             {
                 "name": "main",
@@ -221,17 +234,19 @@
                     "model_name": "kandinsky-community/kandinsky-2-2-controlnet-depth",
                     "torch_dtype": "torch.float16"
                 },
-                "arguments": {
-                    "num_inference_steps": 50,
-                    "num_images_per_prompt": 1,
-                    "height": 768,
-                    "width": 768,
-                    "intermediate_result_names": {
-                        "hint": "hint",
-                        "image_embeds": "image_embeds",
-                        "negative_image_embeds": "negative_image_embeds"
+                "iterations": [
+                    {
+                        "num_inference_steps": 50,
+                        "num_images_per_prompt": 1,
+                        "height": 768,
+                        "width": 768,
+                        "intermediate_result_names": {
+                            "hint": "hint",
+                            "image_embeds": "image_embeds",
+                            "negative_image_embeds": "negative_image_embeds"
+                        }
                     }
-                }
+                ]
             }
         ]
     }

@@ -5,57 +5,59 @@ from ..pre_processors.controlnet import preprocess_image
 def run_pipeline(pipeline_definition, device_identifier, intermediate_results = {}):
     configuration, from_pretrained_arguments = validate_pipeline(pipeline_definition)
 
-    # first see if it's a preprocessor - these are always intermediate results
+    # run all the prerpocessors first
     for preprocessor in pipeline_definition.get("preprocessors", []) :          
         preprocessed_image = preprocess_image(preprocessor["image"], preprocessor["name"], device_identifier)
         intermediate_result_name = preprocessor["intermediate_result_name"]
         intermediate_results[intermediate_result_name] = preprocessed_image
     
-    if from_pretrained_arguments is None:
-        raise Exception("from_pretrained_arguments is required for a pipeline")
-    
+    # then load controlnet if present
     controlnet = pipeline_definition.get("controlnet", None)
     if controlnet is not None:
         print("Loading controlnet")
         controlnet_configuration, controlnet_from_pretrained_arguments = validate_pipeline(controlnet)
-        if controlnet_from_pretrained_arguments is None:
-            raise Exception("from_pretrained_arguments is required for a controlnet pipeline")   
-             
         controlnet_pipeline = load_and_configure_pipeline(controlnet_configuration, controlnet_from_pretrained_arguments, device_identifier)
         from_pretrained_arguments["controlnet"] = controlnet_pipeline
    
+    # load and configure the pipeline
     pipeline = load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier)
 
-    # load loras and fuse them
+    # load loras and fuse them into the pipeline
     loras = pipeline_definition.get("loras", [])        
-    default_lora_scale = [0.7] * len(loras) # default to equally distributing lora weights
     for lora in loras:
+        default_lora_scale = 0.7 / len(loras) # default to equally distributing lora weights
         lora_name = lora.pop("lora_name", None)
         lora_scale = lora.pop("lora_scale", default_lora_scale)
         pipeline.load_lora_weights(lora_name, **lora)
         pipeline.fuse_lora(lora_scale=lora_scale)
 
-    # run the pipeline
-    arguments = pipeline_definition.get("arguments", {})
-
     seed = configuration["seed"] if "seed" in configuration else torch.seed()
-    arguments["generator"] = torch.Generator(device_identifier).manual_seed(seed)
+    generator = torch.Generator(device_identifier).manual_seed(seed)
+    outputs = []
 
-    # if there are intermediate results requested, add them to the arguments
-    intermediate_result_names = arguments.pop("intermediate_result_names", {})
-    for k, v in intermediate_result_names.items():
-        arguments[k] = intermediate_results[v]
+    # prepare and run pipeline iterations
+    for iteration in pipeline_definition.get("iterations", []):
+        iteration["generator"] = generator
 
-    output = pipeline(**arguments)
+        # if there are intermediate results requested, add them to the iteration
+        intermediate_result_names = iteration.pop("intermediate_result_names", {})
+        for k, v in intermediate_result_names.items():
+            iteration[k] = intermediate_results[v]
+
+        # run the pipeline
+        output = pipeline(**iteration)
+        outputs.append(output.images[0] if hasattr(output, "images") else output.image_embeddings[0])
     
     # the presence of this configuration key indicates that the output should be
     # stored as an intermediate result, not returned as an output
+    #
+    # NOTE - this only captures the last iteration's output
     if "intermediate_result_names" in configuration:
         for i, name in enumerate(configuration["intermediate_result_names"]):
             intermediate_results[name] = output[name]
         return None
 
-    return output.images[0] if hasattr(output, "images") else output.image_embeddings[0]
+    return outputs
 
 
 def validate_pipeline(pipeline_definition):
@@ -64,6 +66,8 @@ def validate_pipeline(pipeline_definition):
         raise Exception("configuration is required for a pipeline")
     
     from_pretrained_arguments = pipeline_definition.get("from_pretrained_arguments", None)
+    if from_pretrained_arguments is None:
+        raise Exception("from_pretrained_arguments is required for a pipeline")
     
     return configuration, from_pretrained_arguments
     

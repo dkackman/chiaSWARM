@@ -23,7 +23,7 @@ def do_work(job_id, input_job, output_dir):
         input_job["seed"] = default_seed
         job = prepare_args(input_job)
 
-        result = None
+        results = []
         intermediate_results = {}
         for pipeline in job["pipelines"]:
             name = pipeline["name"]
@@ -34,14 +34,16 @@ def do_work(job_id, input_job, output_dir):
             configuration["seed"] = configuration["seed"] if "seed" in configuration else default_seed
 
             result = run_pipeline(pipeline, "cuda", intermediate_results)
+            if result is not None:
+                results.extend(result)  
+
+        with open(os.path.join(output_dir, f"{job_id}.json"), 'w') as file:
+            json.dump(input_job, file, indent=4)
 
         content_type = job.get("content_type", "image/jpeg")
         extension = mimetypes.guess_extension(content_type)
-
-        if result is not None:
-            result.save(os.path.join(output_dir, f"{job_id}{extension}"))
-            with open(os.path.join(output_dir, f"{job_id}.json"), 'w') as file:
-                json.dump(input_job, file, indent=4)
+        for i, result in enumerate(results):
+            result.save(os.path.join(output_dir, f"{job_id}-{i}{extension}"))
 
     except Exception as e:
         print(e)
