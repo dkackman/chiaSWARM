@@ -4,14 +4,18 @@ import qrcode
 from io import BytesIO
 from PIL import Image, ImageOps
 from .pre_processors.image_utils import resize_for_condition_image
+from diffusers.utils import load_image
 
 max_size = 1024
 
 
-async def get_image(uri, size):
+async def get_image(uri, size = None):
     if is_blank(uri):
         return None
 
+    if size is None:
+        return load_image(uri)
+    
     timeout = aiohttp.ClientTimeout(total=10)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.head(

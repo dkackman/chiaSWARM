@@ -1,0 +1,11 @@
+{
+    "content_type": "image/png",
+    "pipelines": [
+        {
+            "name": "main",
+            "configuration": {
+                "offload": "sequential",
+                "seed": 13007445811486241950
+            },
+            "from_pretrained_arguments": {
+                "torch_dtype": 

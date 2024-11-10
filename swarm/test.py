@@ -1,21 +1,15 @@
 from . import __version__
 from .settings import load_settings
 import json
-from .pipeline_processors.arguments import prepare_args
 from .synchronous_worker import startup, do_work
 
 
-def run_test(job, output_dir):
+def run_test(job_id, job, output_dir):
     settings = load_settings()
     startup()
     try:
-        args = prepare_args(job)
-        result = do_work(args, output_dir)
-
-        if "error" in result["pipeline_config"]:
-            print(result["pipeline_config"]["error"])
-        else:
-            print("ok")
+        do_work(job_id, job, output_dir)
+        print("ok")
 
     except Exception as e:
         print(e)
@@ -23,12 +17,12 @@ def run_test(job, output_dir):
 
 if __name__ == "__main__":
     job = None
-    job_name = "flux_fast"
+    job_id = "kandinsky_3_img2img"
     with open('./examples.json', 'r') as file:
         data = json.load(file)
-        job = data.pop(job_name, None)        
+        job = data.pop(job_id, None)        
     
     if job is not None:
-        run_test(job, "./outputs")
+        run_test(job_id, job, "./outputs")
     else:
-        print("Job not found " + job_name)
+        print("Job not found " + job_id)
