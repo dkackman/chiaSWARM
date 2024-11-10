@@ -1,5 +1,5 @@
 import torch
-from ..type_helpers import has_method
+from ..toolbox.type_helpers import has_method
 from ..pre_processors.controlnet import preprocess_image
 
 def run_pipeline(pipeline_definition, device_identifier, intermediate_results = {}):
@@ -8,10 +8,10 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
     # run all the prerpocessors first
     for preprocessor in pipeline_definition.get("preprocessors", []) :          
         preprocessed_image = preprocess_image(preprocessor["image"], preprocessor["name"], device_identifier)
-        intermediate_result_name = preprocessor["intermediate_result_name"]
+        intermediate_result_name = preprocessor["capture_intermediate_result_name"]
         intermediate_results[intermediate_result_name] = preprocessed_image
     
-    # then load controlnet if present
+    # then load the controlnet if specified
     controlnet = pipeline_definition.get("controlnet", None)
     if controlnet is not None:
         print("Loading controlnet")
@@ -33,32 +33,53 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
 
     seed = configuration["seed"] if "seed" in configuration else torch.seed()
     generator = torch.Generator(device_identifier).manual_seed(seed)
-    outputs = []
+    results = []
 
     # prepare and run pipeline iterations
     for iteration in pipeline_definition.get("iterations", []):
-        iteration["generator"] = generator
+        arguments = iteration.get("arguments", {})
+        arguments["generator"] = generator
 
         # if there are intermediate results requested, add them to the iteration
-        intermediate_result_names = iteration.pop("intermediate_result_names", {})
+        intermediate_result_names = iteration.get("insert_intermediate_result_names", {})
         for k, v in intermediate_result_names.items():
-            iteration[k] = intermediate_results[v]
+            arguments[k] = intermediate_results[v]
 
         # run the pipeline
-        output = pipeline(**iteration)
-        outputs.append(output.images[0] if hasattr(output, "images") else output.image_embeddings[0])
+        output = pipeline(**arguments)
+        result = get_result(output)
+        results.append(result)
+        #
+        # the presence of this key indicates that the output should be
+        # stored as an intermediate result, not returned as an output
+        #
+        # NOTE - the capture key can be used to diferentiate between different
+        #        iterations of the same pipeline. It is not required.
+        #
+        if "capture_intermediate_result_names" in iteration:
+            intermediate_result_names = iteration["capture_intermediate_result_names"]
+            capture_key = iteration.get("capture_key", "")
+            for k, v in intermediate_result_names.items():
+                # output can have different shapes, so we need to check if the key is present
+                if v in output:
+                    intermediate_results[k + capture_key] = output[v]
+                else:
+                    intermediate_results[k + capture_key] = result
+
+    return results
+
+
+def get_result(output):
+    if hasattr(output, "images"):
+        return output.images[0]
     
-    # the presence of this configuration key indicates that the output should be
-    # stored as an intermediate result, not returned as an output
-    #
-    # NOTE - this only captures the last iteration's output
-    if "intermediate_result_names" in configuration:
-        for i, name in enumerate(configuration["intermediate_result_names"]):
-            intermediate_results[name] = output[name]
-        return None
+    if hasattr(output, "image_embeds"):
+        output.image_embeds[0]
 
-    return outputs
-
+    if hasattr(output, "image_embeddings"):
+        output.image_embeddings[0]
+    
+    return None
 
 def validate_pipeline(pipeline_definition):
     configuration = pipeline_definition.get("configuration", None)

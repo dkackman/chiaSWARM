@@ -12,7 +12,20 @@
       "cwd": "${workspaceFolder}/",
       "justMyCode": true,
       "args": [
-        "flux_dev"
+        "./examples.json",
+        "sd15-upscale"
+      ]
+    },
+    {
+      "name": "test-all",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "swarm.test",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true,
+      "args": [
+        "./examples.json",
+        "*"
       ]
     }
   ]

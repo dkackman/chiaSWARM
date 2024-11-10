@@ -216,5 +216,5 @@ fi
 # pip 20.x+ supports Linux binary wheels
 python -m pip install --upgrade pip
 
-pip install torch diffusers[torch] peft transformers accelerate safetensors controlnet_aux sentencepiece
+pip install torch diffusers[torch] peft transformers accelerate safetensors controlnet_aux sentencepiece mediapipe
 pip install aiohttp matplotlib moviepy opencv-python concurrent-log-handler protobuf imageio-ffmpeg qrcode

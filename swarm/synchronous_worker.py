@@ -43,7 +43,8 @@ def do_work(job_id, input_job, output_dir):
         content_type = job.get("content_type", "image/jpeg")
         extension = mimetypes.guess_extension(content_type)
         for i, result in enumerate(results):
-            result.save(os.path.join(output_dir, f"{job_id}-{i}{extension}"))
+            if hasattr(result, 'save'):
+                result.save(os.path.join(output_dir, f"{job_id}-{i}{extension}"))
 
     except Exception as e:
         print(e)

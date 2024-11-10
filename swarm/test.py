@@ -1,29 +1,48 @@
 import argparse
 import json
-from .settings import load_settings
 from .synchronous_worker import startup, do_work
 
-def run_test(job_id, job, output_dir):
-    settings = load_settings()
+def run_test(job, output_dir):
     startup()
-    try:
+    job_id = job.get("id")
+    try:        
         do_work(job_id, job, output_dir)
         print("ok")
     except Exception as e:
+        print(f"error running job {job_id}")
         print(e)
 
+
+def load_job_file(file_spec):
+    with open(file_spec, 'r') as file:
+        return json.load(file)
+    
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run a job with the specified job_id.")
+    parser = argparse.ArgumentParser(description="Run a job from a file.")
+    parser.add_argument("file_name", type=str, help="The filespec of a files with job definitions")
     parser.add_argument("job_id", type=str, help="The ID of the job to run")
+    parser.add_argument("output_dir", type=str, nargs='?', default="./outputs", help="The folder to write the output to")
     args = parser.parse_args()
 
     job_id = args.job_id
     job = None
-    with open('./examples.json', 'r') as file:
-        data = json.load(file)
-        job = data.pop(job_id, None)        
+    data = load_job_file(args.file_name)
     
-    if job is not None:
-        run_test(job_id, job, "./outputs")
+    if job_id == "*":
+        print("Running all jobs")
+        for job in data:
+            run_test(job, args.output_dir)
+
     else:
-        print("Job not found " + job_id)
+        job = None
+        for item in data:
+            if item.get("id") == job_id:
+                job = item
+                break      
+
+        if job is not None:
+            run_test(job,  args.output_dir)
+        else:
+            print("Job not found " + job_id)
+

@@ -3,7 +3,7 @@ import asyncio
 import qrcode
 from io import BytesIO
 from PIL import Image, ImageOps
-from .pre_processors.image_utils import resize_for_condition_image
+from ..pre_processors.image_utils import resize_for_condition_image
 from diffusers.utils import load_image
 
 max_size = 1024
