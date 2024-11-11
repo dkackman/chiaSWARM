@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import os
 import json
+import soundfile
 from .settings import (load_settings, resolve_path)
 from packaging import version
 from .log_setup import setup_logging
@@ -41,17 +42,31 @@ def do_work(job_id, input_job, output_dir):
             json.dump(input_job, file, indent=4)
 
         content_type = job.get("content_type", "image/jpeg")
-        extension = mimetypes.guess_extension(content_type)
+        extension = guess_extension(content_type)
         for i, result in enumerate(results):
             output_path = os.path.join(output_dir, f"{job_id}-{i}{extension}")
             if content_type.startswith("video"):
                 export_to_video(result, output_path, fps=8)
+
+            elif content_type.startswith("audio"):
+                soundfile.write(output_path, result, 44100)
 
             elif hasattr(result, 'save'):
                 result.save(output_path)
 
     except Exception as e:
         print(e)
+
+
+def guess_extension(content_type):
+    ext = mimetypes.guess_extension(content_type)
+    if ext is not None:
+        return ext
+
+    if content_type == "audio/wav":
+        return ".wav"
+    
+    return ""
 
 
 def startup():

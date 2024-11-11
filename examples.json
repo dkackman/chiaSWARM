@@ -391,5 +391,32 @@
                 ]
             }
         ]
+    },
+    {
+        "id": "stable-audio-open-1.0",
+        "content_type": "audio/wav",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "StableAudioPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "stabilityai/stable-audio-open-1.0",
+                    "torch_dtype": "torch.float16"
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "The sound of a hammer hitting a wooden surface.",
+                            "negative_prompt": "Low quality.",
+                            "num_inference_steps": 200,
+                            "audio_end_in_s": 10.0,
+                            "num_waveforms_per_prompt": 3
+                        }
+                    }
+                ]
+            }
+        ]
     }
 ]

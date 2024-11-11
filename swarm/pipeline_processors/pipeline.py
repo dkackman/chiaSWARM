@@ -88,6 +88,9 @@ def get_result(output):
     if hasattr(output, "frames"):
         return output.frames[0]
     
+    if hasattr(output, "audios"):
+        return output.audios[0].T.float().cpu().numpy()
+    
     return None
 
 def validate_pipeline(pipeline_definition):
