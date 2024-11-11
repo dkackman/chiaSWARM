@@ -8,8 +8,8 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
     # run all the prerpocessors first
     for preprocessor in pipeline_definition.get("preprocessors", []) :          
         preprocessed_image = preprocess_image(preprocessor["image"], preprocessor["name"], device_identifier)
-        intermediate_result_name = preprocessor["capture_intermediate_result_name"]
-        intermediate_results[intermediate_result_name] = preprocessed_image
+        intermediate_result = preprocessor["capture_intermediate_result"]
+        intermediate_results[intermediate_result] = preprocessed_image
     
     # then load the controlnet if specified
     controlnet = pipeline_definition.get("controlnet", None)
@@ -47,7 +47,7 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
             arguments["generator"] = default_generator
 
         # if there are intermediate results requested, add them to the iteration
-        intermediate_result_names = iteration.get("insert_intermediate_result_names", {})
+        intermediate_result_names = iteration.get("intermediate_results", {})
         for k, v in intermediate_result_names.items():
             arguments[k] = intermediate_results[v]
 
@@ -62,8 +62,8 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
         # NOTE - the capture key can be used to diferentiate between different
         #        iterations of the same pipeline. It is not required.
         #
-        if "capture_intermediate_result_names" in iteration:
-            intermediate_result_names = iteration["capture_intermediate_result_names"]
+        if "capture_intermediate_results" in iteration:
+            intermediate_result_names = iteration["capture_intermediate_results"]
             capture_key = iteration.get("capture_key", "")
             for k, v in intermediate_result_names.items():
                 # output can have different shapes, so we need to check if the key is present

@@ -13,7 +13,7 @@
       "justMyCode": true,
       "args": [
         "./examples.json",
-        "stable-audio-open-1.0"
+        "sd-x2-latent-upscaler"
       ]
     },
     {

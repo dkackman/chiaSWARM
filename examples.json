@@ -1,6 +1,54 @@
 [
     {
-        "id": "sd15-upscale",
+        "id": "sd-x2-latent-upscaler",
+        "content_type": "image/jpeg",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "StableDiffusionPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+                    "torch_dtype": "torch.float16"
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "Stormtrooper's lecture in beautiful lecture hall",
+                            "num_inference_steps": 30,
+                            "output_type": "{latent}"
+                        },
+                        "capture_intermediate_results": {
+                            "low_res_latents": "image"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "upscale",
+                "configuration": {
+                    "pipeline_type": "StableDiffusionLatentUpscalePipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "stabilityai/sd-x2-latent-upscaler",
+                    "torch_dtype": "torch.float16"
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "Stormtrooper's lecture in beautiful lecture hall"
+                        },
+                        "intermediate_results": {
+                            "image": "low_res_latents"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "stable-diffusion-x4-upscaler",
         "content_type": "image/jpeg",
         "pipelines": [
             {
@@ -18,7 +66,7 @@
                             "prompt": "Stormtrooper's lecture in beautiful lecture hall",
                             "num_inference_steps": 30
                         },
-                        "capture_intermediate_result_names": {
+                        "capture_intermediate_results": {
                             "low_res_image": "image"
                         }
                     }
@@ -38,7 +86,7 @@
                         "arguments": {
                             "prompt": "Stormtrooper's lecture in beautiful lecture hall"
                         },
-                        "insert_intermediate_result_names": {
+                        "intermediate_results": {
                             "image": "low_res_image"
                         }
                     }
@@ -58,7 +106,7 @@
                 "preprocessors": [
                     {
                         "name": "depth_estimator",
-                        "capture_intermediate_result_name": "depth_mask",
+                        "capture_intermediate_result": "depth_mask",
                         "image": {
                             "location": "https://huggingface.co/lllyasviel/control_v11p_sd15_depth/resolve/main/images/input.png"
                         }
@@ -83,7 +131,7 @@
                             "prompt": "Stormtrooper's lecture in beautiful lecture hall",
                             "num_inference_steps": 30
                         },
-                        "insert_intermediate_result_names": {
+                        "intermediate_results": {
                             "image": "{depth_mask}"
                         }
                     }
@@ -345,7 +393,7 @@
                             "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
                             "prompt": "A robot, 4k photo"
                         },
-                        "capture_intermediate_result_names": {
+                        "capture_intermediate_results": {
                             "image_embeds": "image_embeds",
                             "negative_image_embeds": "negative_image_embeds"
                         }
@@ -360,7 +408,7 @@
                 "preprocessors": [
                     {
                         "name": "depth_estimator_tensor",
-                        "capture_intermediate_result_name": "hint",
+                        "capture_intermediate_result": "hint",
                         "image": {
                             "location": "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/kandinskyv22/cat.png",
                             "size": {
@@ -382,7 +430,7 @@
                             "height": 768,
                             "width": 768
                         },
-                        "insert_intermediate_result_names": {
+                        "intermediate_results": {
                             "hint": "hint",
                             "image_embeds": "image_embeds",
                             "negative_image_embeds": "negative_image_embeds"

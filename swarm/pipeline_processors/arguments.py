@@ -24,9 +24,11 @@ def process_args(d):
                     for item in v:
                         process_args(item)
                 elif (k.endswith("_type") or k.endswith("_dtype")) and k != "content_type":
-                    d[k] = load_type_from_name(v)
-                elif (k.startswith("{") and k.endswith("}")):
-                    d[k] = load_type_from_name(v)                    
+                    # use {} to escape values that are not types
+                    if (isinstance(v, str) and v.startswith("{") and v.endswith("}")):
+                        d[k] = v.strip("{}")
+                    else:
+                        d[k] = load_type_from_name(v)                  
             
     elif isinstance(d, list):
         for item in d:
