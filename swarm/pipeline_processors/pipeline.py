@@ -124,4 +124,11 @@ def load_and_configure_pipeline(configuration, from_pretrained_arguments, device
     else:
         pipeline = pipeline.to(device_identifier)
 
+    vae = configuration.get("vae", {})
+    if vae.get("enable_slicing", False):
+        pipeline.vae.enable_slicing()
+
+    if vae.get("enable_tiling", False):
+        pipeline.vae.enable_tiling()
+
     return pipeline

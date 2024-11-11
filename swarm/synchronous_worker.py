@@ -45,7 +45,7 @@ def do_work(job_id, input_job, output_dir):
         for i, result in enumerate(results):
             output_path = os.path.join(output_dir, f"{job_id}-{i}{extension}")
             if content_type.startswith("video"):
-                export_to_video(result, output_path)
+                export_to_video(result, output_path, fps=8)
 
             elif hasattr(result, 'save'):
                 result.save(output_path)

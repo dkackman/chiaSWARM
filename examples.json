@@ -123,6 +123,43 @@
         ]
     },
     {
+        "id": "cogVideoX5bI2V",
+        "content_type": "video/mp4",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "offload": "sequential",
+                    "pipeline_type": "CogVideoXImageToVideoPipeline",
+                    "vae": {
+                        "enable_slicing": true,
+                        "enable_tiling": true
+                    }
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "THUDM/CogVideoX-5b-I2V",
+                    "torch_dtype": "torch.bfloat16",
+                    "use_safe_tensors": true
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "A man laughing",
+                            "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, weird, deformed",
+                            "image": {
+                                "location": "https://regmedia.co.uk/2021/07/03/gene_hoffman_photo.jpg"
+                            },
+                            "num_videos_per_prompt": 1,
+                            "num_inference_steps": 50,
+                            "num_frames": 49,
+                            "guidance_scale": 6
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": "cogVideoX",
         "content_type": "video/mp4",
         "pipelines": [
@@ -130,7 +167,11 @@
                 "name": "main",
                 "configuration": {
                     "offload": "sequential",
-                    "pipeline_type": "CogVideoXPipeline"
+                    "pipeline_type": "CogVideoXPipeline",
+                    "vae": {
+                        "enable_slicing": true,
+                        "enable_tiling": true
+                    }
                 },
                 "from_pretrained_arguments": {
                     "model_name": "THUDM/CogVideoX-5b",
@@ -140,9 +181,9 @@
                 "iterations": [
                     {
                         "arguments": {
-                            "prompt": "A marmot wearing a tophat dancing on a mountainside.",
+                            "prompt": "A marmot wearing a top hat, dancing on a mountainside.",
                             "num_videos_per_prompt": 1,
-                            "num_inference_steps": 50,
+                            "num_inference_steps": 35,
                             "num_frames": 49,
                             "guidance_scale": 6
                         }
