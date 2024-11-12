@@ -5,7 +5,7 @@ from ..pre_processors.controlnet import preprocess_image
 
 
 def run_pipeline(pipeline_definition, device_identifier, intermediate_results = {}):
-    configuration, from_pretrained_arguments = validate_pipeline(pipeline_definition)
+    configuration, from_pretrained_arguments = validate_definition(pipeline_definition)
 
     # run all the prerpocessors first
     for preprocessor in pipeline_definition.get("preprocessors", []) :          
@@ -85,7 +85,7 @@ def load_and_configure_component(parent_definition, component_name, device_ident
     component_definition = parent_definition.get(component_name, None)
     if component_definition is not None:
         print(f"Loading {component_name}")
-        component_configuration, component_from_pretrained_arguments = validate_pipeline(component_definition)
+        component_configuration, component_from_pretrained_arguments = validate_definition(component_definition)
         return load_and_configure_pipeline(component_configuration, component_from_pretrained_arguments, device_identifier)
 
     return None
@@ -110,7 +110,7 @@ def get_result(output):
     return None
 
 
-def validate_pipeline(pipeline_definition):
+def validate_definition(pipeline_definition):
     configuration = pipeline_definition.get("configuration", None)
     if configuration is None:
         raise Exception("configuration is required for a pipeline")
