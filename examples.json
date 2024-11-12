@@ -5,22 +5,24 @@
         "pipelines": [
             {
                 "name": "main",
-                "configuration": {
-                    "pipeline_type": "StableDiffusion3Pipeline",
-                    "offload": "full",
-                    "transformer": {
-                        "transformer_type": "SD3Transformer2DModel",
-                        "bits_and_bytes_config": {
+                "transformer": {
+                    "configuration": {
+                        "pipeline_type": "SD3Transformer2DModel",
+                        "bits_and_bytes_configuration": {
                             "load_in_4bit": true,
                             "bnb_4bit_quant_type": "{nf4}",
                             "bnb_4bit_compute_dtype": "torch.bfloat16"
-                        },
-                        "from_pretrained_arguments": {
-                            "model_name": "stabilityai/stable-diffusion-3.5-large",
-                            "subfolder": "transformer",
-                            "torch_dtype": "torch.bfloat16"
                         }
+                    },
+                    "from_pretrained_arguments": {
+                        "model_name": "stabilityai/stable-diffusion-3.5-large",
+                        "subfolder": "transformer",
+                        "torch_dtype": "torch.bfloat16"
                     }
+                },
+                "configuration": {
+                    "pipeline_type": "StableDiffusion3Pipeline",
+                    "offload": "full"
                 },
                 "from_pretrained_arguments": {
                     "model_name": "stabilityai/stable-diffusion-3.5-large",
@@ -363,6 +365,15 @@
                             "num_inference_steps": 5,
                             "num_images_per_prompt": 1
                         }
+                    },
+                    {
+                        "arguments": {
+                            "max_sequence_length": 256,
+                            "prompt": "A marmot holding a sign that says 'onchain engagement farming'",
+                            "guidance_scale": 0,
+                            "num_inference_steps": 5,
+                            "num_images_per_prompt": 1
+                        }
                     }
                 ]
             }
@@ -388,17 +399,6 @@
                         "arguments": {
                             "max_sequence_length": 512,
                             "prompt": "A visually striking dark fantasy portrait of Cthulhu and The Flying Spaghetti Monster, raging oceanic landscape. The Cthulhu's slimy green skin is a stark contrast to the Spaghetti Monster's vivid, noodle-like appendages, which seems to be made of real spaghetti. The two are locked in battle, leaving glowing, leave a trail of lightning behind, while their intense, glistening eyes reflect a fierce, unbridled energy. The background features a haunting, stormy red sky filled with ominous lightning, adding to the overall sense of mystique and intrigue. This captivating image blends the mediums of photo, painting, and portrait photography to create a unique, conceptual art piece., painting, portrait photography, vibrant, photo, conceptual art, dark fantasy",
-                            "guidance_scale": 3.5,
-                            "num_inference_steps": 50,
-                            "num_images_per_prompt": 1,
-                            "height": 1024,
-                            "width": 1024
-                        }
-                    },
-                    {
-                        "arguments": {
-                            "max_sequence_length": 512,
-                            "prompt": "An exquisite 8K Ultra HD double exposure image, featuring a The Flying Spaghetti Monster silhouette seamlessly blended with a vivid cloud filled  sunrise. The The Flying Spaghetti Monster's details are intricately incorporated into the landscape, creating a stunning visual effect. The monochrome background highlights the The Flying Spaghetti Monster's noodly appendages, while the sharp focus and crisp lines showcase the incredible level of detail. The full color of the The Flying Spaghetti Monster contrasts with the white background, evoking a sense of awe and wonder. The overall effect is cinematic, capturing the essence of a breathtaking African sunset., illustration, photo, cinematic, typography, 3d render",
                             "guidance_scale": 3.5,
                             "num_inference_steps": 50,
                             "num_images_per_prompt": 1,

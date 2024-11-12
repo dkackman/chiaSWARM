@@ -3,11 +3,11 @@ import json
 from .synchronous_worker import startup, do_work
 
 def run_test(job, output_dir):
-    startup()
     job_id = job.get("id")
     try:        
         do_work(job_id, job, output_dir)
         print("ok")
+
     except Exception as e:
         print(f"error running job {job_id}")
         print(e)
@@ -26,9 +26,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     job_id = args.job_id
-    job = None
     data = load_job_file(args.file_name)
-    
+
+    startup()
+
     if job_id == "*":
         print("Running all jobs")
         for job in data:

@@ -18,44 +18,40 @@ settings = load_settings()
 def do_work(job_id, input_job, output_dir):
     print(f"Processing {job_id}")
 
-    try:
-        default_seed = input_job.get("seed", torch.seed())
-        input_job["id"] = job_id
-        input_job["seed"] = default_seed
-        job = prepare_args(input_job)
+    default_seed = input_job.get("seed", torch.seed())
+    input_job["id"] = job_id
+    input_job["seed"] = default_seed
+    job = prepare_args(input_job)
 
-        results = []
-        intermediate_results = {}
-        for pipeline in job["pipelines"]:
-            name = pipeline["name"]
-            print(f"Running pipeline {name}")
+    results = []
+    intermediate_results = {}
+    for pipeline in job["pipelines"]:
+        name = pipeline["name"]
+        print(f"Running pipeline {name}")
 
-            # if the pipeline's configuration doesn't have a seed use the default from above
-            configuration = pipeline["configuration"]
-            configuration["seed"] = configuration["seed"] if "seed" in configuration else default_seed
+        # if the pipeline's configuration doesn't have a seed use the default from above
+        configuration = pipeline["configuration"]
+        configuration["seed"] = configuration["seed"] if "seed" in configuration else default_seed
 
-            result = run_pipeline(pipeline, "cuda", intermediate_results)
-            if result is not None:
-                results.extend(result)  
+        result = run_pipeline(pipeline, "cuda", intermediate_results)
+        if result is not None:
+            results.extend(result)  
 
-        with open(os.path.join(output_dir, f"{job_id}.json"), 'w') as file:
-            json.dump(input_job, file, indent=4)
+    with open(os.path.join(output_dir, f"{job_id}.json"), 'w') as file:
+        json.dump(input_job, file, indent=4)
 
-        content_type = job.get("content_type", "image/jpeg")
-        extension = guess_extension(content_type)
-        for i, result in enumerate(results):
-            output_path = os.path.join(output_dir, f"{job_id}-{i}{extension}")
-            if content_type.startswith("video"):
-                export_to_video(result, output_path, fps=8)
+    content_type = job.get("content_type", "image/jpeg")
+    extension = guess_extension(content_type)
+    for i, result in enumerate(results):
+        output_path = os.path.join(output_dir, f"{job_id}-{i}{extension}")
+        if content_type.startswith("video"):
+            export_to_video(result, output_path, fps=8)
 
-            elif content_type.startswith("audio"):
-                soundfile.write(output_path, result, 44100)
+        elif content_type.startswith("audio"):
+            soundfile.write(output_path, result, 44100)
 
-            elif hasattr(result, 'save'):
-                result.save(output_path)
-
-    except Exception as e:
-        print(e)
+        elif hasattr(result, 'save'):
+            result.save(output_path)
 
 
 def guess_extension(content_type):

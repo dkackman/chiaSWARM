@@ -14,13 +14,15 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
         intermediate_results[intermediate_result] = preprocessed_image
     
     # then load the controlnet if specified
-    controlnet = pipeline_definition.get("controlnet", None)
+    controlnet = load_and_configure_component(pipeline_definition, "controlnet", device_identifier)
     if controlnet is not None:
-        print("Loading controlnet")
-        controlnet_configuration, controlnet_from_pretrained_arguments = validate_pipeline(controlnet)
-        controlnet_pipeline = load_and_configure_pipeline(controlnet_configuration, controlnet_from_pretrained_arguments, device_identifier)
-        from_pretrained_arguments["controlnet"] = controlnet_pipeline
-   
+        from_pretrained_arguments["controlnet"] = controlnet
+
+    # then load the transformer if specified
+    transformer = load_and_configure_component(pipeline_definition, "transformer", device_identifier)
+    if transformer is not None:
+        from_pretrained_arguments["transformer"] = transformer
+
     # load and configure the pipeline
     pipeline = load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier)
 
@@ -78,6 +80,17 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
     return results
 
 
+def load_and_configure_component(parent_definition, component_name, device_identifier):
+    # then load the transformer if specified
+    component_definition = parent_definition.get(component_name, None)
+    if component_definition is not None:
+        print(f"Loading {component_name}")
+        component_configuration, component_from_pretrained_arguments = validate_pipeline(component_definition)
+        return load_and_configure_pipeline(component_configuration, component_from_pretrained_arguments, device_identifier)
+
+    return None
+
+
 def get_result(output):
     if hasattr(output, "images"):
         return output.images[0]
@@ -110,10 +123,10 @@ def validate_pipeline(pipeline_definition):
     
 
 def load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier):
-    # load optional transformer
-    transformer = load_and_configure_transformer(configuration.get("transformer", None))
-    if transformer is not None:
-        from_pretrained_arguments["transformer"] = transformer
+    bits_and_bytes_config = configuration.get("bits_and_bytes_configuration", None)
+    if bits_and_bytes_config is not None:
+        print("Loading bits and bytes config")
+        from_pretrained_arguments["quantization_config"] = BitsAndBytesConfig(**bits_and_bytes_config)
 
     # load the pipeline
     pipeline_type = configuration.get("pipeline_type", None)
@@ -146,21 +159,3 @@ def load_and_configure_pipeline(configuration, from_pretrained_arguments, device
         pipeline.vae.enable_tiling()
 
     return pipeline
-
-
-def load_and_configure_transformer(transformer_configuration):
-    if transformer_configuration is None:
-        return None
-    
-    from_pretrained_args = transformer_configuration.get("from_pretrained_arguments", {})
-    bits_and_bytes_config = transformer_configuration.get("bits_and_bytes_config", None)
-    if bits_and_bytes_config is not None:
-        print("Loading bits and bytes config")
-        from_pretrained_args["quantization_config"] = BitsAndBytesConfig(**bits_and_bytes_config)
-
-    transformer_type = transformer_configuration.get("transformer_type", None)
-    model_name = from_pretrained_args.pop("model_name", None)
-
-    print(f"Loading transformer {model_name}...")
-
-    return transformer_type.from_pretrained(model_name, **from_pretrained_args)

@@ -13,7 +13,7 @@
       "justMyCode": true,
       "args": [
         "./examples.json",
-        "sd35"
+        "flux_fast"
       ]
     },
     {
