@@ -23,8 +23,10 @@ def do_work(job_id, input_job, output_dir):
     input_job["seed"] = default_seed
     job = prepare_args(input_job)
 
+    # collections that are passed between pipelines to share state
     results = []
     intermediate_results = {}
+    shared_components = {}
     for pipeline in job["pipelines"]:
         name = pipeline["name"]
         print(f"Running pipeline {name}")
@@ -33,7 +35,7 @@ def do_work(job_id, input_job, output_dir):
         configuration = pipeline["configuration"]
         configuration["seed"] = configuration["seed"] if "seed" in configuration else default_seed
 
-        result = run_pipeline(pipeline, "cuda", intermediate_results)
+        result = run_pipeline(pipeline, "cuda", intermediate_results, shared_components)
         if result is not None:
             results.extend(result)  
 

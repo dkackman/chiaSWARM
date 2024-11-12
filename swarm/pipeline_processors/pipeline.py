@@ -4,7 +4,7 @@ from ..toolbox.type_helpers import has_method
 from ..pre_processors.controlnet import preprocess_image
 
 
-def run_pipeline(pipeline_definition, device_identifier, intermediate_results = {}):
+def run_pipeline(pipeline_definition, device_identifier, intermediate_results, shared_components):
     configuration, from_pretrained_arguments = validate_definition(pipeline_definition)
 
     # run all the prerpocessors first
@@ -13,18 +13,26 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
         intermediate_result = preprocessor["capture_intermediate_result"]
         intermediate_results[intermediate_result] = preprocessed_image
     
-    # then load the controlnet if specified
+    # put any shared components into the from_pretrained_arguments
+    for reused_component_name in pipeline_definition.get("reused_components", []):
+        from_pretrained_arguments[reused_component_name] = shared_components[reused_component_name]
+
+    # load the controlnet if specified
     controlnet = load_and_configure_component(pipeline_definition, "controlnet", device_identifier)
     if controlnet is not None:
         from_pretrained_arguments["controlnet"] = controlnet
 
-    # then load the transformer if specified
+    # load the transformer if specified
     transformer = load_and_configure_component(pipeline_definition, "transformer", device_identifier)
     if transformer is not None:
         from_pretrained_arguments["transformer"] = transformer
 
     # load and configure the pipeline
     pipeline = load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier)
+
+    # store any shared components for future use by other pipelines
+    for shared_component_name in pipeline_definition.get("shared_components", []):
+        shared_components[shared_component_name] = getattr(pipeline, shared_component_name)
 
     # load loras and fuse them into the pipeline
     loras = pipeline_definition.get("loras", [])        
@@ -64,7 +72,7 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
         # the presence of this key indicates that the output should be
         # stored as an intermediate result, not returned as an output
         #
-        # NOTE - the capture key can be used to diferentiate between different
+        # NOTE - the capture key can be used to differentiate between different
         #        iterations of the same pipeline. It is not required.
         #
         if "capture_intermediate_results" in iteration:
@@ -81,7 +89,6 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
 
 
 def load_and_configure_component(parent_definition, component_name, device_identifier):
-    # then load the transformer if specified
     component_definition = parent_definition.get(component_name, None)
     if component_definition is not None:
         print(f"Loading {component_name}")
