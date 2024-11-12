@@ -1,6 +1,8 @@
 import torch
+from diffusers import BitsAndBytesConfig
 from ..toolbox.type_helpers import has_method
 from ..pre_processors.controlnet import preprocess_image
+
 
 def run_pipeline(pipeline_definition, device_identifier, intermediate_results = {}):
     configuration, from_pretrained_arguments = validate_pipeline(pipeline_definition)
@@ -27,6 +29,7 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results = 
     for lora in loras:
         default_lora_scale = 0.7 / len(loras) # default to equally distributing lora weights
         lora_name = lora.pop("lora_name", None)
+        print(f"Loading lora {lora_name}...")
         lora_scale = lora.pop("lora_scale", default_lora_scale)
         pipeline.load_lora_weights(lora_name, **lora)
         pipeline.fuse_lora(lora_scale=lora_scale)
@@ -93,6 +96,7 @@ def get_result(output):
     
     return None
 
+
 def validate_pipeline(pipeline_definition):
     configuration = pipeline_definition.get("configuration", None)
     if configuration is None:
@@ -106,17 +110,24 @@ def validate_pipeline(pipeline_definition):
     
 
 def load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier):
+    # load optional transformer
+    transformer = load_and_configure_transformer(configuration.get("transformer", None))
+    if transformer is not None:
+        from_pretrained_arguments["transformer"] = transformer
+
     # load the pipeline
-    pipeline_type = configuration.pop("pipeline_type", None)
-    model_name = from_pretrained_arguments.pop("model_name", None)    
+    pipeline_type = configuration.get("pipeline_type", None)
+    model_name = from_pretrained_arguments.pop("model_name", None)  
+    print(f"Loading pipeline {model_name}...")
+
     pipeline = pipeline_type.from_pretrained(model_name, **from_pretrained_arguments)
             
     # configure the pipeline
-    if (configuration.pop("set_unet_memory_format", False)) and hasattr(pipeline, 'unet'):
+    if (configuration.get("set_unet_memory_format", False)) and hasattr(pipeline, 'unet'):
         pipeline.unet.to(memory_format=torch.channels_last)
-    if (configuration.pop("enable_vae_slicing", False)) and has_method(pipeline, "enable_vae_slicing"):
+    if (configuration.get("enable_vae_slicing", False)) and has_method(pipeline, "enable_vae_slicing"):
         pipeline.enable_vae_slicing()
-    if (configuration.pop("enable_vae_tiling", False)) and has_method(pipeline, "enable_vae_tiling"):
+    if (configuration.get("enable_vae_tiling", False)) and has_method(pipeline, "enable_vae_tiling"):
         pipeline.enable_vae_tiling()
 
     offload = configuration.get("offload", None)
@@ -135,3 +146,21 @@ def load_and_configure_pipeline(configuration, from_pretrained_arguments, device
         pipeline.vae.enable_tiling()
 
     return pipeline
+
+
+def load_and_configure_transformer(transformer_configuration):
+    if transformer_configuration is None:
+        return None
+    
+    from_pretrained_args = transformer_configuration.get("from_pretrained_arguments", {})
+    bits_and_bytes_config = transformer_configuration.get("bits_and_bytes_config", None)
+    if bits_and_bytes_config is not None:
+        print("Loading bits and bytes config")
+        from_pretrained_args["quantization_config"] = BitsAndBytesConfig(**bits_and_bytes_config)
+
+    transformer_type = transformer_configuration.get("transformer_type", None)
+    model_name = from_pretrained_args.pop("model_name", None)
+
+    print(f"Loading transformer {model_name}...")
+
+    return transformer_type.from_pretrained(model_name, **from_pretrained_args)

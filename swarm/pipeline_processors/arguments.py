@@ -12,23 +12,27 @@ def prepare_args(input_args):
 
     return args
 
-
+#
+# This recursvively processes the arguments of a pipeline
+# replacing type references with the actual types
+# loading any images from their locations
+#
 def process_args(d):    
     if isinstance(d, dict):
         for k, v in d.items():
-                if k.endswith("_image") or k == "image":
-                    d[k] = process_image(v)    
-                elif isinstance(v, dict):
-                    process_args(v)
-                elif isinstance(v, list):
-                    for item in v:
-                        process_args(item)
-                elif (k.endswith("_type") or k.endswith("_dtype")) and k != "content_type":
-                    # use {} to escape values that are not types
-                    if (isinstance(v, str) and v.startswith("{") and v.endswith("}")):
-                        d[k] = v.strip("{}")
-                    else:
-                        d[k] = load_type_from_name(v)                  
+            if k.endswith("_image") or k == "image":
+                d[k] = process_image(v)    
+            elif isinstance(v, dict):
+                process_args(v)
+            elif isinstance(v, list):
+                for item in v:
+                    process_args(item)
+            elif (k.endswith("_type") or k.endswith("_dtype")) and k != "content_type":
+                # use {} to escape values that are not types
+                if (isinstance(v, str) and v.startswith("{") and v.endswith("}")):
+                    d[k] = v.strip("{}")
+                else:
+                    d[k] = load_type_from_name(v)                  
             
     elif isinstance(d, list):
         for item in d:
