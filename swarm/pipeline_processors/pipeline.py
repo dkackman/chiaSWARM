@@ -1,6 +1,5 @@
 import torch
 from diffusers import BitsAndBytesConfig
-from ..toolbox.type_helpers import has_method
 from ..pre_processors.controlnet import preprocess_image
 
 
@@ -130,10 +129,10 @@ def validate_definition(pipeline_definition):
     
 
 def load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier):
-    bits_and_bytes_config = configuration.get("bits_and_bytes_configuration", None)
-    if bits_and_bytes_config is not None:
-        print("Loading bits and bytes config")
-        from_pretrained_arguments["quantization_config"] = BitsAndBytesConfig(**bits_and_bytes_config)
+    bits_and_bytes_configuration = configuration.get("bits_and_bytes_configuration", None)
+    if bits_and_bytes_configuration is not None:
+        print("Loading bits and bytes configuration")
+        from_pretrained_arguments["quantization_config"] = BitsAndBytesConfig(**bits_and_bytes_configuration)
 
     # load the pipeline
     pipeline_type = configuration.get("pipeline_type", None)
@@ -143,17 +142,17 @@ def load_and_configure_pipeline(configuration, from_pretrained_arguments, device
     pipeline = pipeline_type.from_pretrained(model_name, **from_pretrained_arguments)
             
     # configure the pipeline
-    if (configuration.get("set_unet_memory_format", False)) and hasattr(pipeline, 'unet'):
+    if (configuration.get("set_unet_memory_format", False)):
         pipeline.unet.to(memory_format=torch.channels_last)
-    if (configuration.get("enable_vae_slicing", False)) and has_method(pipeline, "enable_vae_slicing"):
+    if (configuration.get("enable_vae_slicing", False)):
         pipeline.enable_vae_slicing()
-    if (configuration.get("enable_vae_tiling", False)) and has_method(pipeline, "enable_vae_tiling"):
+    if (configuration.get("enable_vae_tiling", False)):
         pipeline.enable_vae_tiling()
 
     offload = configuration.get("offload", None)
-    if offload == "full" and has_method(pipeline, "enable_model_cpu_offload"):
+    if offload == "full":
         pipeline.enable_model_cpu_offload()
-    elif offload == "sequential" and has_method(pipeline, "enable_sequential_cpu_offload"):
+    elif offload == "sequential":
         pipeline.enable_sequential_cpu_offload()
     else:
         pipeline = pipeline.to(device_identifier)
