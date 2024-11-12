@@ -1,5 +1,60 @@
 [
     {
+        "id": "sdxl",
+        "content_type": "image/jpeg",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "DiffusionPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "stabilityai/stable-diffusion-xl-base-1.0",
+                    "torch_dtype": "torch.float16",
+                    "variant": "fp16",
+                    "use_safetensors": true
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "A majestic lion jumping from a big stone at night",
+                            "num_inference_steps": 40,
+                            "denoising_end": 0.8,
+                            "output_type": "{latent}"
+                        },
+                        "capture_intermediate_results": {
+                            "base_image": "image"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "DiffusionPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "stabilityai/stable-diffusion-xl-refiner-1.0",
+                    "torch_dtype": "torch.float16",
+                    "variant": "fp16",
+                    "use_safetensors": true
+                },
+                "iterations": [
+                    {
+                        "intermediate_results": {
+                            "image": "{base_image}"
+                        },
+                        "arguments": {
+                            "prompt": "A majestic lion jumping from a big stone at night",
+                            "num_inference_steps": 40,
+                            "denoising_start": 0.8
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": "sd35",
         "content_type": "image/jpeg",
         "pipelines": [
