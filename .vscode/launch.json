@@ -12,7 +12,7 @@
       "cwd": "${workspaceFolder}/",
       "justMyCode": true,
       "args": [
-        "./examples.json",
+        "./examples/tests.json",
         "cogview"
       ]
     },
@@ -24,9 +24,20 @@
       "cwd": "${workspaceFolder}/",
       "justMyCode": true,
       "args": [
-        "./examples.json",
+        "./examples/tests.json",
         "*"
       ]
-    }
+    },
+    {
+      "name": "scratch",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "swarm.test",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true,
+      "args": [
+        "./examples/scratch.json",
+      ]
+    },
   ]
 }

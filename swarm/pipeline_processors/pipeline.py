@@ -12,7 +12,7 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
         intermediate_result = preprocessor["capture_intermediate_result"]
         intermediate_results[intermediate_result] = preprocessed_image
     
-    # put any shared components into the from_pretrained_arguments
+    # grab any previously shared components and put them into from_pretrained_arguments
     for reused_component_name in pipeline_definition.get("reused_components", []):
         from_pretrained_arguments[reused_component_name] = shared_components[reused_component_name]
 
@@ -29,7 +29,7 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
     # load and configure the pipeline
     pipeline = load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier)
 
-    # store any shared components for future use by other pipelines
+    # store any shared pipeline components for future use by other pipelines
     for shared_component_name in pipeline_definition.get("shared_components", []):
         shared_components[shared_component_name] = getattr(pipeline, shared_component_name)
 

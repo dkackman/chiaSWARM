@@ -21,7 +21,7 @@ def load_job_file(file_spec):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a job from a file.")
     parser.add_argument("file_name", type=str, help="The filespec of a files with job definitions")
-    parser.add_argument("job_id", type=str, help="The ID of the job to run")
+    parser.add_argument("job_id", type=str, nargs='?', help="The ID of the job to run")
     parser.add_argument("output_dir", type=str, nargs='?', default="./outputs", help="The folder to write the output to")
     args = parser.parse_args()
 
@@ -30,19 +30,23 @@ if __name__ == "__main__":
 
     startup()
 
-    if job_id == "*":
-        print("Running all jobs")
-        for job in data:
-            run_test(job, args.output_dir)
+    if isinstance(data, list):
+        if job_id == "*":
+            print("Running all jobs")
+            for job in data:
+                run_test(job, args.output_dir)
+
+        else:
+            job = None
+            for item in data:
+                if item.get("id") == job_id:
+                    job = item
+                    break      
+
+            if job is not None:
+                run_test(job,  args.output_dir)
+            else:
+                print("Job not found " + job_id)
 
     else:
-        job = None
-        for item in data:
-            if item.get("id") == job_id:
-                job = item
-                break      
-
-        if job is not None:
-            run_test(job,  args.output_dir)
-        else:
-            print("Job not found " + job_id)
+        run_test(data, args.output_dir)
