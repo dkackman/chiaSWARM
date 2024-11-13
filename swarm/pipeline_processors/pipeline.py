@@ -13,6 +13,8 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
         intermediate_results[intermediate_result] = preprocessed_image
     
     # grab any previously shared components and put them into from_pretrained_arguments
+    # if a pipeline asks for both a shared component and specifies a configruation for 
+    # that component, the configuration will take precedence
     for reused_component_name in pipeline_definition.get("reused_components", []):
         from_pretrained_arguments[reused_component_name] = shared_components[reused_component_name]
 
@@ -29,6 +31,9 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
     # load and configure the pipeline
     pipeline = load_and_configure_pipeline(configuration, from_pretrained_arguments, device_identifier)
 
+    # load and configure any custom scheduler
+    load_and_configure_scheduler(pipeline_definition.get("scheduler", None), pipeline)
+    
     # store any shared pipeline components for future use by other pipelines
     for shared_component_name in pipeline_definition.get("shared_components", []):
         shared_components[shared_component_name] = getattr(pipeline, shared_component_name)
@@ -85,6 +90,17 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
                     intermediate_results[k + capture_key] = result
 
     return results
+
+
+def load_and_configure_scheduler(scheduler_definition, pipeline):
+    if scheduler_definition is not None:
+        print(f"Loading scheduler")
+        scheduler_configuration = scheduler_definition.get("configuration", None)
+        if scheduler_configuration is None:
+            raise Exception("configuration is required for a scheduler")
+        
+        scheduler_type = scheduler_configuration.get("scheduler_type", None)
+        pipeline.scheduler = scheduler_type.from_config(pipeline.scheduler.config, **scheduler_configuration)
 
 
 def load_and_configure_component(parent_definition, component_name, device_identifier):

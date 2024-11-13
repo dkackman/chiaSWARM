@@ -13,7 +13,7 @@
       "justMyCode": true,
       "args": [
         "./examples/tests.json",
-        "cogview"
+        "sd15_scheduler"
       ]
     },
     {

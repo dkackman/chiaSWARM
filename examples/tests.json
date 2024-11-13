@@ -176,6 +176,40 @@
         ]
     },
     {
+        "id": "sd15_scheduler",
+        "content_type": "image/jpeg",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "pipeline_type": "StableDiffusionPipeline"
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "runwayml/stable-diffusion-v1-5",
+                    "torch_dtype": "torch.float16"
+                },
+                "scheduler": {
+                    "configuration": {
+                        "scheduler_type": "EulerDiscreteScheduler"
+                    },
+                    "from_config_args": {
+                        "use_karras_sigmas": true
+                    }
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "prompt": "a billboard in NYC with a qrcode",
+                            "negative_prompt": "ugly, disfigured, low quality, blurry, nsfw",
+                            "guidance_scale": 20,
+                            "num_inference_steps": 150
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": "sd15_qrcode",
         "content_type": "image/jpeg",
         "pipelines": [
