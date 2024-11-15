@@ -5,9 +5,9 @@ from .synchronous_worker import startup, do_work
 
 
 def run_test(job, output_dir):
-    job_id = job.get("id")
+    job_id = job["id"]
     try:
-        do_work(job_id, job, output_dir)
+        do_work(job, output_dir)
         print("ok")
 
     except Exception as e:

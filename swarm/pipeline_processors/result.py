@@ -1,9 +1,17 @@
+import soundfile
+import mimetypes
+from diffusers.utils import export_to_video
+
 class Result:
-    def __init__(self, result):
+    def __init__(self, result, properties={}):
         self.result = result
+        self.properties = properties
 
     def __repr__(self):
         return f"Result({self.result})"
+    
+    def get_raw_result(self):
+        return self.result
     
     def get_result(self):
         if hasattr(self.result, "images"):
@@ -22,3 +30,27 @@ class Result:
             return self.result.audios[0].T.float().cpu().numpy()
         
         return None
+    
+    def guess_extension(self):
+        content_type = self.properties.get("content_type", None)
+        ext = mimetypes.guess_extension(content_type)
+        if ext is not None:
+            return ext
+
+        if content_type == "audio/wav":
+            return ".wav"
+        
+        return ""
+
+    def save(self, output_path):
+        content_type = self.properties.get("content_type", None)
+        result = self.get_result()
+
+        if content_type.startswith("video"):
+            export_to_video(result, output_path, fps=self.properties.get("fps", 8))
+
+        elif content_type.startswith("audio"):
+            soundfile.write(output_path, result, self.properties.get("sample_rate", 44100))
+
+        elif hasattr(result, 'save'):
+            result.save(output_path)        

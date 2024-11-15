@@ -1,7 +1,6 @@
 [
     {
         "id": "flux_controlnet",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -24,9 +23,12 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "A girl in city, 25 years old, cool, futuristic",
-                            "num_inference_steps": 28,
+                            "num_inference_steps": 10,
                             "controlnet_conditioning_scale": 0.6,
                             "guidance_scale": 3.5,
                             "control_image": {
@@ -40,7 +42,6 @@
     },
     {
         "id": "sdxl",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -59,9 +60,12 @@
                 ],
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "A majestic lion jumping from a big stone at night",
-                            "num_inference_steps": 40,
+                            "num_inference_steps": 25,
                             "denoising_end": 0.8,
                             "output_type": "{latent}"
                         },
@@ -93,7 +97,7 @@
                         },
                         "arguments": {
                             "prompt": "A majestic lion jumping from a big stone at night",
-                            "num_inference_steps": 40,
+                            "num_inference_steps": 25,
                             "denoising_start": 0.8
                         }
                     }
@@ -103,7 +107,6 @@
     },
     {
         "id": "cogview",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -121,9 +124,12 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "A vibrant cherry red sports car sits proudly under the gleaming sun, it's polished exterior smooth and flawless, casting a mirror-like reflection. The car features a low, aerodynamic body, angular headlights that gaze forward like predatory eyes, and a set of black, high-gloss racing rims that contrast starkly with the red. A subtle hint of chrome embellishes the grille and exhaust, while the tinted windows suggest a luxurious and private interior. The scene conveys a sense of speed and elegance, the car appearing as if it's about to burst into a sprint along a coastal road, with the ocean's azure waves crashing in the background.",
-                            "num_inference_steps": 50,
+                            "num_inference_steps": 25,
                             "guidance_scale": 7.0,
                             "width": 1024,
                             "height": 1024
@@ -135,7 +141,6 @@
     },
     {
         "id": "sd35",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -164,9 +169,12 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "A whimsical and creative image depicting a hybrid creature that is a mix of a waffle and a marmot, basking in a river of melted butter amidst a breakfast-themed landscape. It features the distinctive, plump body shape of a marmot. However, instead of the usual brown fur, the creature's body resembles a golden-brown, crispy waffle fresh off the griddle. The fur is textured with the familiar grid pattern of a waffle, each square filled with a glistening sheen of syrup. The environment combines the natural habitat of a marmot with elements of a breakfast table setting, a river of warm, melted butter, with oversized utensils or plates peeking out from the lush, pancake-like foliage in the background, a towering pepper mill standing in for a tree.  As the sun rises in this fantastical world, it casts a warm, buttery glow over the scene. The creature, content in its butter river, lets out a yawn. Nearby, a flock of birds take flight",
-                            "num_inference_steps": 28,
+                            "num_inference_steps": 25,
                             "guidance_scale": 4.5,
                             "max_sequence_length": 512
                         }
@@ -177,7 +185,6 @@
     },
     {
         "id": "sd15_scheduler",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -198,11 +205,14 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "a billboard in NYC with a qrcode",
                             "negative_prompt": "ugly, disfigured, low quality, blurry, nsfw",
                             "guidance_scale": 20,
-                            "num_inference_steps": 150
+                            "num_inference_steps": 25
                         }
                     }
                 ]
@@ -257,7 +267,7 @@
                             "guidance_scale": 20,
                             "controlnet_conditioning_scale": 1.5,
                             "strength": 0.9,
-                            "num_inference_steps": 150
+                            "num_inference_steps": 25
                         },
                         "intermediate_results": {
                             "image": "{init_image}",
@@ -270,7 +280,6 @@
     },
     {
         "id": "sd-x2-latent-upscaler",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -283,9 +292,12 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "Stormtrooper's lecture in beautiful lecture hall",
-                            "num_inference_steps": 30,
+                            "num_inference_steps": 25,
                             "output_type": "{latent}"
                         },
                         "capture_intermediate_results": {
@@ -318,7 +330,6 @@
     },
     {
         "id": "stable-diffusion-x4-upscaler",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -331,9 +342,12 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "Stormtrooper's lecture in beautiful lecture hall",
-                            "num_inference_steps": 30
+                            "num_inference_steps": 25
                         },
                         "capture_intermediate_results": {
                             "low_res_image": "image"
@@ -365,7 +379,6 @@
     },
     {
         "id": "sd15-controlnet",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -396,9 +409,12 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "Stormtrooper's lecture in beautiful lecture hall",
-                            "num_inference_steps": 30
+                            "num_inference_steps": 25
                         },
                         "intermediate_results": {
                             "image": "{depth_mask}"
@@ -410,7 +426,6 @@
     },
     {
         "id": "sd14-lora",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -429,10 +444,13 @@
                 ],
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "prompt": "A pokemon with blue eyes",
                             "guidance_scale": 7.5,
-                            "num_inference_steps": 30
+                            "num_inference_steps": 25
                         }
                     }
                 ]
@@ -441,7 +459,6 @@
     },
     {
         "id": "svd",
-        "content_type": "video/mp4",
         "pipelines": [
             {
                 "name": "main",
@@ -460,6 +477,9 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "video/mp4"
+                        },
                         "arguments": {
                             "image": {
                                 "location": "https://pbs.twimg.com/profile_images/1708153260853383168/s8DMOcLj_400x400.jpg"
@@ -474,7 +494,6 @@
     },
     {
         "id": "cogVideoX5bI2V",
-        "content_type": "video/mp4",
         "pipelines": [
             {
                 "name": "main",
@@ -493,6 +512,9 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "video/mp4"
+                        },
                         "arguments": {
                             "prompt": "A man laughing",
                             "negative_prompt": "lowres, text, error, cropped, worst quality, low quality, weird, deformed",
@@ -500,7 +522,7 @@
                                 "location": "https://regmedia.co.uk/2021/07/03/gene_hoffman_photo.jpg"
                             },
                             "num_videos_per_prompt": 1,
-                            "num_inference_steps": 50,
+                            "num_inference_steps": 25,
                             "num_frames": 49,
                             "guidance_scale": 6
                         }
@@ -511,7 +533,6 @@
     },
     {
         "id": "cogVideoX",
-        "content_type": "video/mp4",
         "pipelines": [
             {
                 "name": "main",
@@ -530,10 +551,13 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "video/mp4"
+                        },
                         "arguments": {
                             "prompt": "A marmot wearing a top hat, dancing on a mountainside.",
                             "num_videos_per_prompt": 1,
-                            "num_inference_steps": 35,
+                            "num_inference_steps": 25,
                             "num_frames": 49,
                             "guidance_scale": 6
                         }
@@ -544,7 +568,6 @@
     },
     {
         "id": "flux_fast",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -559,6 +582,9 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "max_sequence_length": 256,
                             "prompt": "A frog holding a sign that says 'onchain engagement farming'",
@@ -568,6 +594,9 @@
                         }
                     },
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "max_sequence_length": 256,
                             "prompt": "A marmot holding a sign that says 'onchain engagement farming'",
@@ -582,7 +611,6 @@
     },
     {
         "id": "flux_dev",
-        "content_type": "image/jpeg",
         "pipelines": [
             {
                 "name": "main",
@@ -597,11 +625,14 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "max_sequence_length": 512,
                             "prompt": "A visually striking dark fantasy portrait of Cthulhu and The Flying Spaghetti Monster, raging oceanic landscape. The Cthulhu's slimy green skin is a stark contrast to the Spaghetti Monster's vivid, noodle-like appendages, which seems to be made of real spaghetti. The two are locked in battle, leaving glowing, leave a trail of lightning behind, while their intense, glistening eyes reflect a fierce, unbridled energy. The background features a haunting, stormy red sky filled with ominous lightning, adding to the overall sense of mystique and intrigue. This captivating image blends the mediums of photo, painting, and portrait photography to create a unique, conceptual art piece., painting, portrait photography, vibrant, photo, conceptual art, dark fantasy",
                             "guidance_scale": 3.5,
-                            "num_inference_steps": 50,
+                            "num_inference_steps": 25,
                             "num_images_per_prompt": 1,
                             "height": 1024,
                             "width": 1024
@@ -613,7 +644,6 @@
     },
     {
         "id": "kandinsky_3",
-        "content_type": "image/png",
         "pipelines": [
             {
                 "name": "main",
@@ -629,11 +659,14 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/png"
+                        },
                         "arguments": {
                             "negative_prompt": "low quality, bad quality",
                             "prompt": "A picture of Cthulhu, the god of the deep",
                             "guidance_scale": 4.0,
-                            "num_inference_steps": 50,
+                            "num_inference_steps": 25,
                             "num_images_per_prompt": 1
                         }
                     }
@@ -643,7 +676,6 @@
     },
     {
         "id": "kandinsky_3_img2img",
-        "content_type": "image/png",
         "pipelines": [
             {
                 "name": "main",
@@ -659,6 +691,9 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "arguments": {
                             "negative_prompt": "low quality, bad quality",
                             "prompt": "A painting of the inside of a subway train with tiny raccoons.",
@@ -676,7 +711,6 @@
     },
     {
         "id": "kandinsky_controlnet",
-        "content_type": "image/png",
         "pipelines": [
             {
                 "name": "prior",
@@ -707,6 +741,9 @@
                 },
                 "preprocessors": [
                     {
+                        "result_properties": {
+                            "content_type": "image/jpeg"
+                        },
                         "name": "depth_estimator_tensor",
                         "capture_intermediate_result": "hint",
                         "image": {
@@ -725,7 +762,7 @@
                 "iterations": [
                     {
                         "arguments": {
-                            "num_inference_steps": 50,
+                            "num_inference_steps": 25,
                             "num_images_per_prompt": 1,
                             "height": 768,
                             "width": 768
@@ -742,7 +779,6 @@
     },
     {
         "id": "stable-audio-open-1.0",
-        "content_type": "audio/wav",
         "pipelines": [
             {
                 "name": "main",
@@ -755,10 +791,13 @@
                 },
                 "iterations": [
                     {
+                        "result_properties": {
+                            "content_type": "audio/wav"
+                        },
                         "arguments": {
                             "prompt": "The sound of a hammer hitting a wooden surface.",
                             "negative_prompt": "Low quality.",
-                            "num_inference_steps": 200,
+                            "num_inference_steps": 100,
                             "audio_end_in_s": 10.0,
                             "num_waveforms_per_prompt": 3
                         }

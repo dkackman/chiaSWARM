@@ -13,7 +13,7 @@
       "justMyCode": true,
       "args": [
         "./examples/tests.json",
-        "sd15_scheduler"
+        "sdxl"
       ]
     },
     {

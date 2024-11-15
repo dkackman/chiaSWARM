@@ -69,8 +69,8 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
             arguments[k] = intermediate_results[v]
 
         # run the pipeline
-        output = Result(pipeline(**arguments))
-        results.append(output.get_result())
+        result = Result(pipeline(**arguments), iteration.get("result_properties", {"content_type": "image/png"}))
+        results.append(result)
         #
         # the presence of this key indicates that the output should be
         # stored as an intermediate result, not returned as an output
@@ -82,12 +82,10 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
             intermediate_result_names = iteration["capture_intermediate_results"]
             capture_key = iteration.get("capture_key", "")
             for k, v in intermediate_result_names.items():
+                raw_result = result.get_raw_result()
                 # output can have different shapes, so we need to check if the key is present
                 # if it is, capture that property of the result, otherwise just capture the result itself
-                if v in output:
-                    intermediate_results[k + capture_key] = output[v]
-                else:
-                    intermediate_results[k + capture_key] = output.get_result()
+                intermediate_results[k + capture_key] = raw_result.get(v, result.get_result())
 
     return results
 
