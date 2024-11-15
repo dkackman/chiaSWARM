@@ -1,7 +1,7 @@
 import torch
 from diffusers import BitsAndBytesConfig
 from ..pre_processors.controlnet import preprocess_image
-
+from .result import Result
 
 def run_pipeline(pipeline_definition, device_identifier, intermediate_results, shared_components):
     configuration, from_pretrained_arguments = validate_definition(pipeline_definition)
@@ -69,9 +69,8 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
             arguments[k] = intermediate_results[v]
 
         # run the pipeline
-        output = pipeline(**arguments)
-        result = get_result(output)
-        results.append(result)
+        output = Result(pipeline(**arguments))
+        results.append(output.get_result())
         #
         # the presence of this key indicates that the output should be
         # stored as an intermediate result, not returned as an output
@@ -84,10 +83,11 @@ def run_pipeline(pipeline_definition, device_identifier, intermediate_results, s
             capture_key = iteration.get("capture_key", "")
             for k, v in intermediate_result_names.items():
                 # output can have different shapes, so we need to check if the key is present
+                # if it is, capture that property of the result, otherwise just capture the result itself
                 if v in output:
                     intermediate_results[k + capture_key] = output[v]
                 else:
-                    intermediate_results[k + capture_key] = result
+                    intermediate_results[k + capture_key] = output.get_result()
 
     return results
 
@@ -110,25 +110,6 @@ def load_and_configure_component(parent_definition, component_name, device_ident
         component_configuration, component_from_pretrained_arguments = validate_definition(component_definition)
         return load_and_configure_pipeline(component_configuration, component_from_pretrained_arguments, device_identifier)
 
-    return None
-
-
-def get_result(output):
-    if hasattr(output, "images"):
-        return output.images[0]
-    
-    if hasattr(output, "image_embeds"):
-        return output.image_embeds[0]
-
-    if hasattr(output, "image_embeddings"):
-        return output.image_embeddings[0]
-
-    if hasattr(output, "frames"):
-        return output.frames[0]
-    
-    if hasattr(output, "audios"):
-        return output.audios[0].T.float().cpu().numpy()
-    
     return None
 
 

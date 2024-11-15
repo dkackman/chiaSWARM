@@ -1,30 +1,31 @@
 {
-    "id": "svd",
-    "content_type": "video/mp4",
+    "id": "sd15_scheduler",
+    "content_type": "image/jpeg",
     "pipelines": [
         {
             "name": "main",
             "configuration": {
-                "offload": "sequential",
-                "pipeline_type": "StableVideoDiffusionPipeline",
-                "unet": {
-                    "enable_forward_chunking": true
-                }
+                "pipeline_type": "StableDiffusionPipeline"
             },
             "from_pretrained_arguments": {
-                "model_name": "stabilityai/stable-video-diffusion-img2vid",
-                "torch_dtype": "torch.float16",
-                "use_safe_tensors": true,
-                "variant": "fp16"
+                "model_name": "runwayml/stable-diffusion-v1-5",
+                "torch_dtype": "torch.float16"
+            },
+            "scheduler": {
+                "configuration": {
+                    "scheduler_type": "EulerDiscreteScheduler"
+                },
+                "from_config_args": {
+                    "use_karras_sigmas": true
+                }
             },
             "iterations": [
                 {
                     "arguments": {
-                        "image": {
-                            "location": "https://regmedia.co.uk/2021/07/03/gene_hoffman_photo.jpg"
-                        },
-                        "num_frames": 25,
-                        "decode_chunk_size": 2
+                        "prompt": "a billboard in NYC with a qrcode",
+                        "negative_prompt": "ugly, disfigured, low quality, blurry, nsfw",
+                        "guidance_scale": 20,
+                        "num_inference_steps": 150
                     }
                 }
             ]
