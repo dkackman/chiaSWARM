@@ -1,39 +1,30 @@
 {
-    "id": "sd35",
-    "content_type": "image/jpeg",
+    "id": "svd",
+    "content_type": "video/mp4",
     "pipelines": [
         {
             "name": "main",
-            "transformer": {
-                "configuration": {
-                    "pipeline_type": "SD3Transformer2DModel",
-                    "bits_and_bytes_configuration": {
-                        "load_in_4bit": true,
-                        "bnb_4bit_quant_type": "{nf4}",
-                        "bnb_4bit_compute_dtype": "torch.bfloat16"
-                    }
-                },
-                "from_pretrained_arguments": {
-                    "model_name": "stabilityai/stable-diffusion-3.5-large",
-                    "subfolder": "transformer",
-                    "torch_dtype": "torch.bfloat16"
+            "configuration": {
+                "offload": "sequential",
+                "pipeline_type": "StableVideoDiffusionPipeline",
+                "unet": {
+                    "enable_forward_chunking": true
                 }
             },
-            "configuration": {
-                "pipeline_type": "StableDiffusion3Pipeline",
-                "offload": "full"
-            },
             "from_pretrained_arguments": {
-                "model_name": "stabilityai/stable-diffusion-3.5-large",
-                "torch_dtype": "torch.bfloat16"
+                "model_name": "stabilityai/stable-video-diffusion-img2vid",
+                "torch_dtype": "torch.float16",
+                "use_safe_tensors": true,
+                "variant": "fp16"
             },
             "iterations": [
                 {
                     "arguments": {
-                        "prompt": "A whimsical and creative image depicting a hone office environment with a marmot, wearing an accountants visor working at a desk. It features the distinctive, plump body shape of a marmot.  The environment combines the natural habitat of a marmot with elements of a computer, an office, oversized pencils and pens, a towering rocket ship standing in for a desk lamp.  As the sun rises in the window, it casts a warm, buttery glow over the scene. The marmot, content sitting at the desk, lets out a yawn. Nearby, a flock of birds take flight.",
-                        "num_inference_steps": 28,
-                        "guidance_scale": 4.5,
-                        "max_sequence_length": 512
+                        "image": {
+                            "location": "https://regmedia.co.uk/2021/07/03/gene_hoffman_photo.jpg"
+                        },
+                        "num_frames": 25,
+                        "decode_chunk_size": 2
                     }
                 }
             ]

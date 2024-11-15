@@ -180,4 +180,8 @@ def load_and_configure_pipeline(configuration, from_pretrained_arguments, device
     if vae.get("enable_tiling", False):
         pipeline.vae.enable_tiling()
 
+    unet = configuration.get("unet", {})
+    if unet.get("enable_forward_chunking", False):
+        pipeline.unet.enable_forward_chunking()
+
     return pipeline

@@ -440,6 +440,39 @@
         ]
     },
     {
+        "id": "svd",
+        "content_type": "video/mp4",
+        "pipelines": [
+            {
+                "name": "main",
+                "configuration": {
+                    "offload": "sequential",
+                    "pipeline_type": "StableVideoDiffusionPipeline",
+                    "unet": {
+                        "enable_forward_chunking": true
+                    }
+                },
+                "from_pretrained_arguments": {
+                    "model_name": "stabilityai/stable-video-diffusion-img2vid",
+                    "torch_dtype": "torch.float16",
+                    "use_safe_tensors": true,
+                    "variant": "fp16"
+                },
+                "iterations": [
+                    {
+                        "arguments": {
+                            "image": {
+                                "location": "https://regmedia.co.uk/2021/07/03/gene_hoffman_photo.jpg"
+                            },
+                            "num_frames": 25,
+                            "decode_chunk_size": 2
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": "cogVideoX5bI2V",
         "content_type": "video/mp4",
         "pipelines": [
