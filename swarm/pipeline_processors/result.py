@@ -1,3 +1,4 @@
+import os
 import soundfile
 import mimetypes
 from diffusers.utils import export_to_video
@@ -13,7 +14,7 @@ class Result:
     def get_raw_result(self):
         return self.result
     
-    def get_result(self):
+    def get_output(self):
         if hasattr(self.result, "images"):
             return self.result.images[0]
         
@@ -42,15 +43,17 @@ class Result:
         
         return ""
 
-    def save(self, output_path):
-        content_type = self.properties.get("content_type", None)
-        result = self.get_result()
+    def save(self, output_dir, default_name):
+        file_name = self.properties.get("file_name", default_name)  
+        output_path = os.path.join(output_dir, file_name)
 
+        output = self.get_output()
+        content_type = self.properties.get("content_type", "")
         if content_type.startswith("video"):
-            export_to_video(result, output_path, fps=self.properties.get("fps", 8))
+            export_to_video(output, output_path, fps=self.properties.get("fps", 8))
 
         elif content_type.startswith("audio"):
-            soundfile.write(output_path, result, self.properties.get("sample_rate", 44100))
+            soundfile.write(output_path, output, self.properties.get("sample_rate", 44100))
 
-        elif hasattr(result, 'save'):
-            result.save(output_path)        
+        elif hasattr(output, 'save'):
+            output.save(output_path)        

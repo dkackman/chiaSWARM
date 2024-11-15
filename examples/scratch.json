@@ -1,35 +1,39 @@
 {
-    "id": "cogview",
+    "id": "cogVideoX5bI2V",
     "pipelines": [
         {
             "name": "main",
             "configuration": {
-                "pipeline_type": "CogView3PlusPipeline",
                 "offload": "sequential",
+                "pipeline_type": "CogVideoXImageToVideoPipeline",
                 "vae": {
                     "enable_slicing": true,
                     "enable_tiling": true
                 }
             },
             "from_pretrained_arguments": {
-                "model_name": "THUDM/CogView3-Plus-3B",
-                "torch_dtype": "torch.bfloat16"
+                "model_name": "THUDM/CogVideoX-5b-I2V",
+                "torch_dtype": "torch.bfloat16",
+                "use_safe_tensors": true
             },
             "iterations": [
                 {
                     "result_properties": {
-                        "content_type": "image/jpeg"
+                        "content_type": "video/mp4",
+                        "file_name": "owl.mp4"
                     },
                     "arguments": {
-                        "prompt": "A vibrant cherry red sports car sits proudly under the gleaming sun, it's polished exterior smooth and flawless, casting a mirror-like reflection. The car features a low, aerodynamic body, angular headlights that gaze forward like predatory eyes, and a set of black, high-gloss racing rims that contrast starkly with the red. A subtle hint of chrome embellishes the grille and exhaust, while the tinted windows suggest a luxurious and private interior. The scene conveys a sense of speed and elegance, the car appearing as if it's about to burst into a sprint along a coastal road, with the ocean's azure waves crashing in the background.",
+                        "prompt": "The owl stares intently and blinks",
+                        "image": {
+                            "location": "https://pbs.twimg.com/media/Gcb4faUWgAABw3F?format=jpg&name=medium"
+                        },
+                        "num_videos_per_prompt": 1,
                         "num_inference_steps": 50,
-                        "guidance_scale": 7.0,
-                        "width": 1024,
-                        "height": 1024
+                        "num_frames": 49,
+                        "guidance_scale": 6
                     }
                 }
             ]
         }
-    ],
-    "seed": 17311312140847744198
+    ]
 }

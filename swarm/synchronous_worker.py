@@ -41,8 +41,8 @@ def do_work(input_job, output_dir):
         json.dump(input_job, file, indent=4)
 
     for i, result in enumerate(results):
-        output_path = os.path.join(output_dir, f"{job_id}-{i}{result.guess_extension()}")
-        result.save(output_path)
+        default_name = f"{job_id}-{i}{result.guess_extension()}"
+        result.save(output_dir, default_name)
 
 
 def startup():

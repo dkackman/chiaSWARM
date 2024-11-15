@@ -17,6 +17,17 @@
       ]
     },
     {
+      "name": "img2video workflow",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "swarm.test",
+      "cwd": "${workspaceFolder}/",
+      "justMyCode": true,
+      "args": [
+        "./examples/sd35.json"
+      ]
+    },
+    {
       "name": "test-all",
       "type": "debugpy",
       "request": "launch",
